@@ -1,0 +1,34 @@
+{
+  "tasks": [
+    {
+      "type": "cppbuild",
+      "label": "C/C++: g++ build active file",
+      "command": "/usr/bin/g++",
+      "args": [
+        "-g",
+        "${file}",
+        "-o",
+        "${fileDirname}/${fileBasenameNoExtension}"
+      ],
+      "options": {
+        "cwd": "/usr/bin"
+      },
+      "problemMatcher": [
+        "$gcc"
+      ],
+      "group": "build",
+      "detail": "Generated task by Debugger"
+    },
+    {
+      "type": "shell",
+      "label": "C/C++: make active file",
+      "command": "make",
+      "options": {
+        "cwd": "${workspaceRoot}"
+      },
+      "problemMatcher": [],
+      "group": "build",
+    }
+  ],
+  "version": "2.0.0"
+}
