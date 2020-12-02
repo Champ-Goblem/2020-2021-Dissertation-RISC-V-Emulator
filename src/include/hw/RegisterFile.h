@@ -36,6 +36,8 @@ class RegisterFile {
   RegisterFile(ushort XLEN, bool isRV32E);
   bytes get(ushort reg);
   void write(ushort reg, bytes val);
+  void writePC(bytes addr);
+  bytes getPC();
   void debug();
 };
 
