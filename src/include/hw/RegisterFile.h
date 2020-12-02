@@ -1,6 +1,7 @@
 #ifndef __RegisterFile__
 #define __RegisterFile__
 
+#include <exception>
 #define REG32 32
 #define REG16 16
 
@@ -9,6 +10,20 @@
 
 typedef map<ushort, bytes> RegisterMap;
 typedef RegisterMap::iterator RegisterIterator;
+
+class RegisterFileException: public exception {
+  private:
+  const char* message;
+
+  public:
+  RegisterFileException() {}
+  RegisterFileException(const char* message, ...) {
+    this->message = message;
+  }
+  const char* getMessage() {
+    return message;
+  }
+};
 
 class RegisterFile {
   private:

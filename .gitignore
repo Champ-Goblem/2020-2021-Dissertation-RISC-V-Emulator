@@ -1,1 +1,4 @@
 obj/*
+*.o
+*.test
+tests/emu-tests/*/*.cpp
