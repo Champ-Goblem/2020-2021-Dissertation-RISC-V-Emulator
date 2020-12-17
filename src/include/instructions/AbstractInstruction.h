@@ -2,6 +2,21 @@
 #define __ABSTRACTINSTRUCTION__
 
 #include "../emustd.h"
+#include "../bytemanip.h"
+
+class AbstractInstructionException: public exception {
+  private:
+  const char* message;
+
+  public:
+  AbstractInstructionException() {}
+  AbstractInstructionException(const char* message, ...) {
+    this->message = message;
+  }
+  const char* getMessage() {
+    return message;
+  }
+};
 
 class AbstractInstruction {
   protected:
@@ -14,7 +29,6 @@ class AbstractInstruction {
   bytes imm = bytes (4);
   
   public:
-  AbstractInstruction(bytes inst);
   byte getOpcode();
   byte getRS1();
   byte getRS2();

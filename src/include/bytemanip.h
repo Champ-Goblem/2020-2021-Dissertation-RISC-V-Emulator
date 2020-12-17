@@ -17,4 +17,17 @@ static string getBytesForPrint(bytes data) {
   return str.str();
 }
 
+
+// Returns a byte mask with all 1s up to position defined by position in the byte
+static byte getByteMaskForPosition(ushort position) {
+  if (position >= 8) {
+    return 255;
+  }
+  byte out = 0;
+  for (int i=0; i<position; i++) {
+    out += pow(2, i);
+  }
+  return out;
+}
+
 #endif

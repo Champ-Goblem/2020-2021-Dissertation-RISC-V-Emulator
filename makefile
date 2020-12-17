@@ -17,7 +17,7 @@ vpath %.c $(SDIR)
 vpath %.o $(ODIR)
 vpath %.h $(IDIR)
 
-DIRS=hw
+DIRS=hw instructions units
 SOURCEDIRS=$(SDIR) $(foreach dir, $(DIRS), $(addprefix $(SDIR)/, $(dir)))
 TARGETDIRS=$(ODIR) $(foreach dir, $(DIRS), $(addprefix $(ODIR)/, $(dir)))
 DEPSDIRS=$(IDIR) $(foreach dir, $(DIRS), $(addprefix $(IDIR)/, $(dir)))
@@ -69,6 +69,12 @@ $(1)/%_Tests: $(1)/%_Tests.h $(subst $(TDIR), $(ODIR), $(1))/%.o
 endef
 
 $(foreach targetdir, $(TESTDIRS), $(eval $(call compiletest, $(targetdir))))
+
+# tests/emu-tests/instructions/AbstractInstruction_Tests: tests/emu-tests/instructions/AbstractInstruction_Tests.h
+# 	@echo Making test $@
+# 	$(TESTBIN) --error-printer -o $@.cpp $<
+# 	$(CXX) -o $@.test $@.cpp $(TESTBUILDFLAGS)
+# 	$@.test
 
 clean: testclean
 	find $(ODIR) -type f -name '*.o' -delete

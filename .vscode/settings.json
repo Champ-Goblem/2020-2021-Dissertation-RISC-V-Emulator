@@ -13,6 +13,8 @@
     "initializer_list": "cpp",
     "ranges": "cpp",
     "utility": "cpp",
-    "valarray": "cpp"
+    "valarray": "cpp",
+    "chrono": "cpp",
+    "cmath": "cpp"
   }
 }
