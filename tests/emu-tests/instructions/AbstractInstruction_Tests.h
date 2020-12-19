@@ -8,7 +8,7 @@ class AbstractInstructionTester: public AbstractInstruction {
   }
 };
 
-class RegisterFileTests : public CxxTest::TestSuite
+class AbstractInstructionTests : public CxxTest::TestSuite
 {
   public:
   void testGetConstrainedImm(void) {

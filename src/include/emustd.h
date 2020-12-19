@@ -13,4 +13,18 @@ typedef unsigned short ushort;
 typedef unsigned long ulong;
 typedef vector<byte> bytes;
 
+class EmulatorException: public exception {
+  private:
+  const char* message;
+
+  public:
+  EmulatorException() {}
+  EmulatorException(const char* message, ...) {
+    this->message = message;
+  }
+  const char* getMessage() {
+    return message;
+  }
+};
+
 #endif
