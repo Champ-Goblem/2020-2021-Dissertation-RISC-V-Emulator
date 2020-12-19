@@ -1,18 +1,18 @@
 #include "include/main.h"
 #include "include/bytemanip.h"
+#include "include/instructions/AbstractInstruction.h"
 #include <string>
 
-int main(int argc, char** argv) {
-  Memory* m = new Memory(1024);
-  m->writeQWord(24, bytes {255, 0, 254, 0, 253, 0, 252, 0});
-  m->printRegion(24, 8, 4);
-  ulong size = 8;
-  m = new Memory(size);
-  bytes b = bytes {255, 0, 255, 0, 255, 0, 255, 0};
-  try {
-    m->writeQWord(1, b);
-  } catch (MemoryException* e) {
-    printf(e->getMessage());
+class AbstractInstructionTester: public AbstractInstruction {
+  public:
+  AbstractInstructionTester(bytes imm) {
+    this->imm = imm;
   }
+};
+
+int main(int argc, char** argv) {
+  AbstractInstructionTester i = AbstractInstructionTester(bytes {113, 0, 0, 0});
+  bytes ans = i.getImm(0, 6);
+  printf(getBytesForPrint(ans).c_str());
   return 0;
 }

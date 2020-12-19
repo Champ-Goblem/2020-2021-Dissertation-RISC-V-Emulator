@@ -13,9 +13,15 @@ class RegisterFileTests : public CxxTest::TestSuite
   public:
   void testGetConstrainedImm(void) {
     // 0000 0000   0000 1000   1110 1000   0010 0000
-    AbstractInstructionTester* i = new AbstractInstructionTester(bytes {0, 16, 23, 4});
-    bytes ans = i->getImm(12, 26);
-    // printf(getBytesForPrint(ans).c_str());
-    TS_ASSERT(ans == (bytes{23, 65}));
+    AbstractInstructionTester i = AbstractInstructionTester(bytes {0, 16, 23, 4});
+    bytes ans = i.getImm(12, 26);
+    TS_ASSERT(ans == (bytes{113, 65}));
+  }
+
+  void testGetConstrainedImmHighLtnOffset(void) {
+    // 1000 1110
+    AbstractInstructionTester i = AbstractInstructionTester(bytes {113, 0, 0, 0});
+    bytes ans = i.getImm(0, 6);
+    TS_ASSERT(ans == (bytes{49}));
   }
 };
