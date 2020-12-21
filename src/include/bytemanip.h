@@ -62,12 +62,12 @@ static bytes getContrainedBits(bytes imm, ushort low, ushort high) {
       ushort c = ((start + 2 + i) * 8) - high - 1;
       // lshift the bits we want to high
       byte hiTmp = imm[start + i + 1] << c;
-      hiTmp >>= c - offset;
-      tmp |= hiTmp;
+      byte newHiTmp = hiTmp >> abs(offset - c);
+      tmp |= newHiTmp;
     // 3. high < end of this byte, only take the high - low number of bits
     } else if (high < ((start + 1 + i) * 8)) {
       ushort c = high - ((start + i) * 8);
-      ushort a = getByteMaskForPosition(c + offset);
+      ushort a = getByteMaskForPosition(c - offset);
       tmp &= a;
     }
     // 4. high = end of this byte, do nothing

@@ -19,4 +19,18 @@ class RTypeInstructionTests : public CxxTest::TestSuite
     TS_ASSERT(r.getRS2() == 31);
     TS_ASSERT(r.getFunc7() == 127);
   }
+
+  void testDecode(void) {
+    // 0     6 7   1 2 4 5   9 0   4 5     1
+    // 0110110 00000 010 11110 11111 1000010
+    // 0110 1100 0000 0101 1110 1111 1100 0010
+    RTypeInstruction r = RTypeInstruction();
+    r.decode(bytes{54, 160, 247, 67});
+    TS_ASSERT(r.getOpcode() == 54);
+    TS_ASSERT(r.getRD() == 0);
+    TS_ASSERT(r.getFunc3() == 2);
+    TS_ASSERT(r.getRS1() == 15);
+    TS_ASSERT(r.getRS2() == 31);
+    TS_ASSERT(r.getFunc7() == 33);
+  }
 };

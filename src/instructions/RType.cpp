@@ -6,7 +6,7 @@ RTypeInstruction::RTypeInstruction() {
   this->rs2 = 0;
   this->rd = 0;
   this->func3 = 0;
-  this-> func7 = 0;
+  this->func7 = 0;
   this->imm = bytes(4);
 }
 
@@ -41,12 +41,12 @@ void RTypeInstruction::decode(bytes instruction) {
     throw new AbstractInstructionException("Failed to decode instruction, instructions not 4 bytes");
   }
   try {
-    this->opcode = getContrainedBits(instruction, 0, 6)[1];
-    this->rd = getContrainedBits(instruction, 7, 11)[1];
-    this->func3 = getContrainedBits(instruction, 12, 14)[1];
-    this->rs1 = getContrainedBits(instruction, 15, 19)[1];
-    this->rs2 = getContrainedBits(instruction, 20, 24)[1];
-    this->func7 = getContrainedBits(instruction, 25, 31)[1];
+    this->opcode = getContrainedBits(instruction, 0, 6)[0];
+    this->rd = getContrainedBits(instruction, 7, 11)[0];
+    this->func3 = getContrainedBits(instruction, 12, 14)[0];
+    this->rs1 = getContrainedBits(instruction, 15, 19)[0];
+    this->rs2 = getContrainedBits(instruction, 20, 24)[0];
+    this->func7 = getContrainedBits(instruction, 25, 31)[0];
   } catch (exception e) {
     throw e;
   }
