@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<testsuite name="cxxtest" date="Mon Dec 21 23:11:32 2020" tests="35" errors="0" failures="1" time="0" >
+    <testcase classname="MemoryTests" name="testMemorySize" line="6" />
+    <testcase classname="MemoryTests" name="testMax" line="15" />
+    <testcase classname="MemoryTests" name="testWriteReadByte" line="22" />
+    <testcase classname="MemoryTests" name="testWriteReadWord" line="30" />
+    <testcase classname="MemoryTests" name="testWriteReadDWord" line="39" />
+    <testcase classname="MemoryTests" name="testWriteReadQWord" line="48" />
+    <testcase classname="MemoryTests" name="testWrongSizeWriteWord" line="57" />
+    <testcase classname="MemoryTests" name="testWrongSizeWriteDWord" line="65" />
+    <testcase classname="MemoryTests" name="testWrongSizeWriteQWord" line="73" />
+    <testcase classname="MemoryTests" name="testWriteOutOfMemoryWord" line="81" />
+    <testcase classname="MemoryTests" name="testWriteOutOfMemoryDWord" line="89" />
+    <testcase classname="MemoryTests" name="testWriteOutOfMemoryQWord" line="97" />
+    <testcase classname="RegisterFileTests" name="testRV32ERegisterCount" line="7" />
+    <testcase classname="RegisterFileTests" name="testNonRV32ERegisterCount" line="19" />
+    <testcase classname="RegisterFileTests" name="testSize" line="32" />
+    <testcase classname="RegisterFileTests" name="testRegisterFunction" line="39" />
+    <testcase classname="RegisterFileTests" name="testRegisterZero" line="47" />
+    <testcase classname="RegisterFileTests" name="testWriteWrongSize" line="55" />
+    <testcase classname="RegisterFileTests" name="testWriteToHighReg" line="62" />
+    <testcase classname="RegisterFileTests" name="testPC" line="69" />
+    <testcase classname="RegisterFileTests" name="testWrongSizePCWrite" line="77" />
+    <testcase classname="AbstractInstructionTests" name="testGetConstrainedImm" line="14" />
+    <testcase classname="AbstractInstructionTests" name="testGetConstrainedImmHighLtnOffset" line="21">
+        <failure file="/home/administrator/University/Computer Science/Dissertation/RISC-V-Emulator/tests/emu-tests/instructions/AbstractInstruction_Tests.h" line="25" type="failedAssert" >Assertion failed: ans == (bytes{49})</failure>
+        <system-out >
+In AbstractInstructionTests::testGetConstrainedImmHighLtnOffset:
+/home/administrator/University/Computer Science/Dissertation/RISC-V-Emulator/tests/emu-tests/instructions/AbstractInstruction_Tests.h:25: Error: Assertion failed: ans == (bytes{49})
+</system-out>
+    </testcase>
+    <testcase classname="ITypeInstructionTests" name="testCreateFromNothing" line="9" />
+    <testcase classname="ITypeInstructionTests" name="testDecode" line="22" />
+    <testcase classname="RTypeInstructionTests" name="testCreateFromNothing" line="9" />
+    <testcase classname="RTypeInstructionTests" name="testCreateFromArgs" line="13" />
+    <testcase classname="RTypeInstructionTests" name="testDecode" line="23" />
+    <testcase classname="RTypeInstructionTests" name="testCreateWithLargeOpcode" line="37" />
+    <testcase classname="RTypeInstructionTests" name="testCreateWithLargeRD" line="41" />
+    <testcase classname="RTypeInstructionTests" name="testCreateWithLargeFunc3" line="45" />
+    <testcase classname="RTypeInstructionTests" name="testCreateWithLargeRS1" line="49" />
+    <testcase classname="RTypeInstructionTests" name="testCreateWithLargeRS2" line="53" />
+    <testcase classname="RTypeInstructionTests" name="testCreateWithLargeFunc7" line="57" />
+    <testcase classname="RTypeInstructionTests" name="testDecodeWithBadInstruction" line="61" />
+</testsuite>

@@ -25,7 +25,7 @@ static byte getByteMaskForPosition(ushort position) {
     return 255;
   }
   byte out = 0;
-  for (int i=0; i<position; i++) {
+  for (int i=0; i<=position; i++) {
     out += pow(2, i);
   }
   return out;
@@ -75,6 +75,18 @@ static bytes getContrainedBits(bytes imm, ushort low, ushort high) {
   }
 
   return constrainedImm;
+}
+
+static ulong getBytesToULong(bytes val) {
+  if (val.size() > 8) {
+    throw new EmulatorException("Number of bytes of value is greater than ulong, possible overflow [%d]", val.size());
+  }
+  ulong result = 0;
+  for (int i=0; i < val.size(); i++) {
+    result += val[i] * pow(2, 8 * i);
+  }
+
+  return result;
 }
 
 #endif

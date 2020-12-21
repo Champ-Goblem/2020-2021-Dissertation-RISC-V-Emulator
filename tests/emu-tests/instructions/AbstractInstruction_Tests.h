@@ -22,6 +22,6 @@ class AbstractInstructionTests : public CxxTest::TestSuite
     // 1000 1110
     AbstractInstructionTester i = AbstractInstructionTester(bytes {113, 0, 0, 0});
     bytes ans = i.getImm(0, 6);
-    TS_ASSERT(ans == (bytes{49}));
+    TS_ASSERT(ans == (bytes{113}));
   }
 };

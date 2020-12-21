@@ -4,6 +4,12 @@
 #include "../emustd.h"
 #include "../bytemanip.h"
 
+#define OPCODE_MAX 127
+#define R_MAX 31
+#define FUNC3_MAX 7
+#define FUNC7_MAX 127
+#define INSTRUCTION_SIZE 4
+
 class AbstractInstructionException: public exception {
   private:
   const char* message;

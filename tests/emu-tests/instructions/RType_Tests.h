@@ -33,4 +33,33 @@ class RTypeInstructionTests : public CxxTest::TestSuite
     TS_ASSERT(r.getRS2() == 31);
     TS_ASSERT(r.getFunc7() == 33);
   }
+
+  void testCreateWithLargeOpcode(void) {
+    TS_ASSERT_THROWS_ANYTHING(RTypeInstruction r = RTypeInstruction(128, 31, 7, 31, 31, 127));
+  }
+
+  void testCreateWithLargeRD(void) {
+    TS_ASSERT_THROWS_ANYTHING(RTypeInstruction r = RTypeInstruction(127, 32, 7, 31, 31, 127));
+  }
+
+  void testCreateWithLargeFunc3(void) {
+    TS_ASSERT_THROWS_ANYTHING(RTypeInstruction r = RTypeInstruction(127, 31, 8, 31, 31, 127));
+  }
+
+  void testCreateWithLargeRS1(void) {
+    TS_ASSERT_THROWS_ANYTHING(RTypeInstruction r = RTypeInstruction(127, 31, 7, 32, 31, 127));
+  }
+
+  void testCreateWithLargeRS2(void) {
+    TS_ASSERT_THROWS_ANYTHING(RTypeInstruction r = RTypeInstruction(127, 31, 7, 31, 32, 127));
+  }
+
+  void testCreateWithLargeFunc7(void) {
+    TS_ASSERT_THROWS_ANYTHING(RTypeInstruction r = RTypeInstruction(127, 31, 7, 31, 31, 128));
+  }
+
+  void testDecodeWithBadInstruction(void) {
+    RTypeInstruction r = RTypeInstruction();
+    TS_ASSERT_THROWS_ANYTHING(r.decode(bytes{255, 255}));
+  }
 };

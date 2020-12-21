@@ -80,7 +80,7 @@ endef
 
 $(foreach targetdir, $(TESTDIRS), $(eval $(call compiletest, $(targetdir))))
 
-testall: $(TEST_TARGET)
+testall: testclean $(TEST_TARGET)
 
 $(TEST_TARGET): $(SOURCES_WO_MAIN) $(TESTPARTS)
 	@echo Bulding runner
