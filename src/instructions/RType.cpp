@@ -8,6 +8,7 @@ RTypeInstruction::RTypeInstruction() {
   this->func3 = 0;
   this->func7 = 0;
   this->imm = bytes(4);
+  this->type = InstructionType::R;
 }
 
 RTypeInstruction::RTypeInstruction(byte opcode, byte rd, byte func3, byte rs1, byte rs2, byte func7) {
@@ -40,6 +41,8 @@ RTypeInstruction::RTypeInstruction(byte opcode, byte rd, byte func3, byte rs1, b
     throw new AbstractInstructionException("Failed to set func7, greater than 127 [%d]", func7);
   }
   this->func7 = func7;
+
+  this->type = InstructionType::R;
 }
 
 void RTypeInstruction::decode(bytes instruction) {
@@ -57,4 +60,5 @@ void RTypeInstruction::decode(bytes instruction) {
     throw e;
   }
 
+  this->type = InstructionType::R;
 }

@@ -6,6 +6,7 @@ ITypeInstruction::ITypeInstruction() {
   this->func3 = 0;
   this->rs1 = 0;
   this->imm = bytes(2);
+  this->type = InstructionType::I;
 }
 
 ITypeInstruction::ITypeInstruction(byte opcode, byte rd, byte func3, byte rs1, bytes imm) {
@@ -38,6 +39,8 @@ ITypeInstruction::ITypeInstruction(byte opcode, byte rd, byte func3, byte rs1, b
   }
   this->rs1 = rs1;
   this->imm = imm;
+
+  this->type = InstructionType::I;
 }
 
 void ITypeInstruction::decode(bytes instruction) {
@@ -54,4 +57,13 @@ void ITypeInstruction::decode(bytes instruction) {
   } catch (exception e) {
     throw e;
   }
+
+  this->type = InstructionType::I;
+}
+
+bytes ITypeInstruction::getImm(ushort low, ushort high) {
+  if (low == 20 && high == 31) {
+    return this->imm; 
+  }
+  throw new AbstractInstructionException("Failed to get imm, wrong position [low: %d, high: %d]", low, high);
 }

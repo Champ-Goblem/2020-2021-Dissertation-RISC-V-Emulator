@@ -28,13 +28,10 @@ bytes AbstractInstruction::getImm() {
   return imm;
 };
 
-// 0  3 4  7   8  1  2  5   6  9 0  3   4   7 8  1
-// 0000 0000   0000 |1000   1110 1000   001|0 0000
-//                   1000   1110 1000   0010
 bytes AbstractInstruction::getImm(ushort low, ushort high) {
-  try {
-    return getContrainedBits(this->imm, low, high);
-  } catch (EmulatorException e) {
-    throw new AbstractInstructionException(e.getMessage());
-  }
+  throw new AbstractInstructionException("Failed to get imm, does not exist on this instruction type");
 };
+
+InstructionType AbstractInstruction::getType() {
+  return type;
+}

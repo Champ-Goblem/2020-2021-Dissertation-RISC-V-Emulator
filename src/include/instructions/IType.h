@@ -12,6 +12,7 @@ class ITypeInstruction: public AbstractInstruction {
   ITypeInstruction(byte opcode, byte rd, byte func3, byte rs1, bytes imm);
 
   void decode(bytes instruction);
+  bytes getImm(ushort low, ushort high);
 };
 
 #endif

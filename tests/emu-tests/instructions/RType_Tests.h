@@ -62,4 +62,9 @@ class RTypeInstructionTests : public CxxTest::TestSuite
     RTypeInstruction r = RTypeInstruction();
     TS_ASSERT_THROWS_ANYTHING(r.decode(bytes{255, 255}));
   }
+
+  void testGetImm(void) {
+    RTypeInstruction r = RTypeInstruction();
+    TS_ASSERT_THROWS(r.getImm(0, 1), AbstractInstructionException*);
+  }
 };

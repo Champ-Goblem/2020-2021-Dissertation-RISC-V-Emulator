@@ -10,6 +10,15 @@
 #define FUNC7_MAX 127
 #define INSTRUCTION_SIZE 4
 
+enum InstructionType {
+  R,
+  I,
+  S,
+  B,
+  U,
+  J
+};
+
 class AbstractInstructionException: public exception {
   private:
   const char* message;
@@ -32,7 +41,8 @@ class AbstractInstruction {
   byte rd;
   byte func3;
   byte func7;
-  bytes imm = bytes (4);
+  bytes imm;
+  InstructionType type;
   
   public:
   byte getOpcode();
@@ -43,6 +53,7 @@ class AbstractInstruction {
   byte getFunc7();
   bytes getImm();
   bytes getImm(ushort low, ushort high);
+  InstructionType getType();
 };
 
 #endif
