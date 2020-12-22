@@ -14,7 +14,7 @@
 
 int main( int argc, char *argv[] ) {
  int status;
-    std::ofstream ofstr("./tests/results/1608665404.result.xml");
+    std::ofstream ofstr("./tests/results/1608669914.result.xml");
     CxxTest::XUnitPrinter tmp(ofstr);
     CxxTest::RealWorldDescription::_worldName = "cxxtest";
     status = CxxTest::Main< CxxTest::XUnitPrinter >( tmp, argc, argv );

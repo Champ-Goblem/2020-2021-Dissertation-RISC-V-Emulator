@@ -1,27 +1,31 @@
-#include "../include/instructions/SType.h"
+#include "../include/instructions/BType.h"
 
-STypeInstruction::STypeInstruction() {
+BTypeInstruction::BTypeInstruction() {
   this->opcode = 0;
-  this->rd = 0;
   this->func3 = 0;
   this->rs1 = 0;
   this->rs2 = 0;
   this->imm = bytes(2);
-  this->type = InstructionType::S;
+  this->type = InstructionType::B;
 }
 
-STypeInstruction::STypeInstruction(byte opcode, byte imm5, byte func3, byte rs1, byte rs2, byte imm7) {
+BTypeInstruction::BTypeInstruction(byte opcode, byte imm1, byte imm4, byte func3, byte rs1, byte rs2, byte imm6, byte imm31) {
   this->imm = bytes(2);
-  
+
   if (opcode > OPCODE_MAX) {
     throw new AbstractInstructionException("Failed to set opcode, greater than 63 [%d]", opcode);
   }
   this->opcode = opcode;
 
-  if (imm5 > IMM5_MAX) {
-    throw new AbstractInstructionException("Failed to set imm5, greater than 31 [%d]", imm5);
+  if (imm1 > IMM1_MAX) {
+    throw new AbstractInstructionException("Failed to set imm1, greater than 1 [%d]", imm1);
   }
-  this->imm[0] = imm5;
+  this->imm[0] = imm1;
+
+  if (imm4 > IMM4_MAX) {
+    throw new AbstractInstructionException("Failed to set imm4, greater than 15 [%d]", imm4);
+  }
+  this->imm[0] |= imm4 << 1;
 
   if (func3 > FUNC3_MAX) {
     throw new AbstractInstructionException("Failed to set func3, greater than 7 [%d]", func3);
@@ -38,16 +42,21 @@ STypeInstruction::STypeInstruction(byte opcode, byte imm5, byte func3, byte rs1,
   }
   this->rs2 = rs2;
 
-  if (imm7 > IMM7_MAX) {
-    throw new AbstractInstructionException("Failed to set imm7, greater than 127 [%d]", imm7);
+  if (imm6 > IMM6_MAX) {
+    throw new AbstractInstructionException("Failed to set imm6, greater than 63 [%d]", imm6);
   }
-  this->imm[0] |= imm7 << 5;
-  this->imm[1] |= imm7 >> 3;
+  this->imm[0] |= imm6 << 5;
+  this->imm[1] = imm6 >> 3;
 
-  this->type = InstructionType::S;
+  if (imm31 > IMM1_MAX) {
+    throw new AbstractInstructionException("Failed to set imm31, greater than 1 [%d]", imm31);
+  }
+  this->imm[1] |= imm31 << 3;
+
+  this->type = InstructionType::B;
 }
 
-void STypeInstruction::decode(bytes instruction) {
+void BTypeInstruction::decode(bytes instruction) {
   if (instruction.size() != INSTRUCTION_SIZE) {
     throw new AbstractInstructionException("Failed to decode instruction, not 4 bytes in length [%d]", instruction.size());
   }
@@ -60,25 +69,32 @@ void STypeInstruction::decode(bytes instruction) {
     this->rs2 = getContrainedBits(instruction, 20, 24)[0];
     byte imm7 = getContrainedBits(instruction, 25, 31)[0];
     this->imm[0] |= imm7 << 5;
-    this->imm[1] = imm7 >> 3;
+    this->imm[1] = imm7 >> 3; 
   } catch (exception e) {
     throw (e);
   }
 
-  this->type = InstructionType::S;
+  this->type = InstructionType::B;
 }
 
-bytes STypeInstruction::getImm(ushort low, ushort high) {
-  if (low == 7 && high == 11) {
+bytes BTypeInstruction::getImm(ushort low, ushort high) {
+  if (low == 7 && high == 7) {
     bytes imm = bytes(1);
-    imm[0] = this->imm[0] & 31;
+    imm[0] = this->imm[0] & 1;
     return imm;
-  } else if (low == 25 && high == 31) {
+  } else if (low == 8 && high == 11) {
+    return getContrainedBits(this->imm, 1, 4);
+  } else if (low == 25 && high == 30) {
     bytes imm = bytes(1);
     imm[0] = this->imm[0] >> 5;
     imm[0] |= this->imm[1] << 3;
+    imm[0] &= 63;
+    return imm;
+  } else if (low == 31 && high == 31) {
+    bytes imm = bytes(1);
+    imm[0] = (this->imm[1] & 8) >> 3;
     return imm;
   }
-  
+
   throw new AbstractInstructionException("Failed to get imm, does not exist in this instruction type [low: %d, high: %d]", low, high);
 }
