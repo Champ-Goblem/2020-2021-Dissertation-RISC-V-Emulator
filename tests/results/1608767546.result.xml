@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<testsuite name="cxxtest" date="Wed Dec 23 23:52:36 2020" tests="79" errors="0" failures="1" time="0" >
+    <testcase classname="MemoryTests" name="testMemorySize" line="6" />
+    <testcase classname="MemoryTests" name="testMax" line="15" />
+    <testcase classname="MemoryTests" name="testWriteReadByte" line="22" />
+    <testcase classname="MemoryTests" name="testWriteReadWord" line="30" />
+    <testcase classname="MemoryTests" name="testWriteReadDWord" line="39" />
+    <testcase classname="MemoryTests" name="testWriteReadQWord" line="48" />
+    <testcase classname="MemoryTests" name="testWrongSizeWriteWord" line="57" />
+    <testcase classname="MemoryTests" name="testWrongSizeWriteDWord" line="65" />
+    <testcase classname="MemoryTests" name="testWrongSizeWriteQWord" line="73" />
+    <testcase classname="MemoryTests" name="testWriteOutOfMemoryWord" line="81" />
+    <testcase classname="MemoryTests" name="testWriteOutOfMemoryDWord" line="89" />
+    <testcase classname="MemoryTests" name="testWriteOutOfMemoryQWord" line="97" />
+    <testcase classname="RegisterFileTests" name="testRV32ERegisterCount" line="7" />
+    <testcase classname="RegisterFileTests" name="testNonRV32ERegisterCount" line="19" />
+    <testcase classname="RegisterFileTests" name="testSize" line="32" />
+    <testcase classname="RegisterFileTests" name="testRegisterFunction" line="39" />
+    <testcase classname="RegisterFileTests" name="testRegisterZero" line="47" />
+    <testcase classname="RegisterFileTests" name="testWriteWrongSize" line="55" />
+    <testcase classname="RegisterFileTests" name="testWriteToHighReg" line="62" />
+    <testcase classname="RegisterFileTests" name="testPC" line="69" />
+    <testcase classname="RegisterFileTests" name="testWrongSizePCWrite" line="77" />
+    <testcase classname="BTypeInstructionTests" name="testCreateFromNothing" line="9" />
+    <testcase classname="BTypeInstructionTests" name="testCreateFromArgs" line="13" />
+    <testcase classname="BTypeInstructionTests" name="testDecode" line="25" />
+    <testcase classname="BTypeInstructionTests" name="testCreateWithLargeOpcode" line="40" />
+    <testcase classname="BTypeInstructionTests" name="testCreateWithLargeImm1" line="44" />
+    <testcase classname="BTypeInstructionTests" name="testCreateWithLargeImm4" line="48" />
+    <testcase classname="BTypeInstructionTests" name="testCreateWithLargeFunc3" line="52" />
+    <testcase classname="BTypeInstructionTests" name="testCreateWithLargeRS1" line="56" />
+    <testcase classname="BTypeInstructionTests" name="testCreateWithLargeRS2" line="60" />
+    <testcase classname="BTypeInstructionTests" name="testCreateWithLargeImm6" line="64" />
+    <testcase classname="BTypeInstructionTests" name="testCreateWithLargeImm31" line="68" />
+    <testcase classname="BTypeInstructionTests" name="testDecodeWithWrongSizeInstruction" line="72" />
+    <testcase classname="BTypeInstructionTests" name="testGetImmWrongPosition" line="77" />
+    <testcase classname="ITypeInstructionTests" name="testCreateFromNothing" line="9" />
+    <testcase classname="ITypeInstructionTests" name="testCreateFromArgs" line="13" />
+    <testcase classname="ITypeInstructionTests" name="testDecode" line="23" />
+    <testcase classname="ITypeInstructionTests" name="testCreateWithLargeOpcode" line="37" />
+    <testcase classname="ITypeInstructionTests" name="testCreateWithLargeRD" line="41" />
+    <testcase classname="ITypeInstructionTests" name="testCreateWithLargeFunc3" line="45" />
+    <testcase classname="ITypeInstructionTests" name="testCreateWithLargeRS1" line="49" />
+    <testcase classname="ITypeInstructionTests" name="testCreateWithLargeImm" line="53" />
+    <testcase classname="ITypeInstructionTests" name="testCreateWithWrongSizeImm" line="57" />
+    <testcase classname="ITypeInstructionTests" name="testDecodeWithWrongSizeInstruction" line="61" />
+    <testcase classname="ITypeInstructionTests" name="testGetImm" line="66" />
+    <testcase classname="ITypeInstructionTests" name="testGetImmWrongPosition" line="72" />
+    <testcase classname="JTypeInstructionTests" name="testCreateFromNothing" line="8" />
+    <testcase classname="JTypeInstructionTests" name="testCreateFromArgs" line="12">
+        <failure file="/home/administrator/University/Computer Science/Dissertation/RISC-V-Emulator/tests/emu-tests/instructions/JType_Tests.h" line="19" type="failedAssert" >Assertion failed: j.getImm(21, 30) == imm10</failure>
+        <system-out >
+In JTypeInstructionTests::testCreateFromArgs:
+/home/administrator/University/Computer Science/Dissertation/RISC-V-Emulator/tests/emu-tests/instructions/JType_Tests.h:19: Error: Assertion failed: j.getImm(21, 30) == imm10
+</system-out>
+    </testcase>
+    <testcase classname="JTypeInstructionTests" name="testDecode" line="23" />
+    <testcase classname="RTypeInstructionTests" name="testCreateFromNothing" line="9" />
+    <testcase classname="RTypeInstructionTests" name="testCreateFromArgs" line="13" />
+    <testcase classname="RTypeInstructionTests" name="testDecode" line="23" />
+    <testcase classname="RTypeInstructionTests" name="testCreateWithLargeOpcode" line="37" />
+    <testcase classname="RTypeInstructionTests" name="testCreateWithLargeRD" line="41" />
+    <testcase classname="RTypeInstructionTests" name="testCreateWithLargeFunc3" line="45" />
+    <testcase classname="RTypeInstructionTests" name="testCreateWithLargeRS1" line="49" />
+    <testcase classname="RTypeInstructionTests" name="testCreateWithLargeRS2" line="53" />
+    <testcase classname="RTypeInstructionTests" name="testCreateWithLargeFunc7" line="57" />
+    <testcase classname="RTypeInstructionTests" name="testDecodeWithBadInstruction" line="61" />
+    <testcase classname="RTypeInstructionTests" name="testGetImm" line="66" />
+    <testcase classname="STypeInstructionTests" name="testCreateFromNothing" line="8" />
+    <testcase classname="STypeInstructionTests" name="testCreateFromArgs" line="12" />
+    <testcase classname="STypeInstructionTests" name="testDecode" line="22" />
+    <testcase classname="STypeInstructionTests" name="testCreateWithLargeOpcode" line="36" />
+    <testcase classname="STypeInstructionTests" name="testCreateWithLargeImm5" line="40" />
+    <testcase classname="STypeInstructionTests" name="testCreateWithLargeFunc3" line="44" />
+    <testcase classname="STypeInstructionTests" name="testCreateWithLargeRS1" line="48" />
+    <testcase classname="STypeInstructionTests" name="testCreateWithLargeRS2" line="52" />
+    <testcase classname="STypeInstructionTests" name="testCreateWithLargeImm7" line="56" />
+    <testcase classname="STypeInstructionTests" name="testDecodeWithWrongSizeInstruction" line="60" />
+    <testcase classname="STypeInstructionTests" name="testGetImmAtWrongPosition" line="65" />
+    <testcase classname="UTypeInstructionTests" name="testCreateFromNothing" line="8" />
+    <testcase classname="UTypeInstructionTests" name="testCreateFromArgs" line="12" />
+    <testcase classname="UTypeInstructionTests" name="testDecode" line="20" />
+    <testcase classname="UTypeInstructionTests" name="testCreateWithLargeOpcode" line="32" />
+    <testcase classname="UTypeInstructionTests" name="testCreateWithLargeRD" line="36" />
+    <testcase classname="UTypeInstructionTests" name="testCreateWithLargeImm" line="40" />
+    <testcase classname="UTypeInstructionTests" name="testDecodeWithWrongSizeInstruction" line="44" />
+    <testcase classname="UTypeInstructionTests" name="testGetImmAtWrongPosition" line="49" />
+</testsuite>
