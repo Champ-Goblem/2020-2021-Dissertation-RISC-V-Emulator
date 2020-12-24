@@ -33,4 +33,35 @@ class JTypeInstructionTests : public CxxTest::TestSuite
     TS_ASSERT(j.getImm(21, 30) == imm10);
     TS_ASSERT(j.getImm(31, 31)[0] == 1); 
   }
+
+  void testCreateWithLargeOpcode(void) {
+    TS_ASSERT_THROWS(JTypeInstruction j = JTypeInstruction(128, 0, 0, 0, bytes{0, 0}, 0), AbstractInstructionException*);
+  }
+
+  void testCreateWithLargeRD(void) {
+    TS_ASSERT_THROWS(JTypeInstruction j = JTypeInstruction(0, 32, 0, 0, bytes{0, 0}, 0), AbstractInstructionException*);
+  }
+
+  void testCreateWithLargeImm1(void) {
+    TS_ASSERT_THROWS(JTypeInstruction j = JTypeInstruction(0, 0, 0, 2, bytes{0, 0}, 0), AbstractInstructionException*);
+  }
+
+  void testCreateWithLargeImm10(void) {
+    TS_ASSERT_THROWS(JTypeInstruction j = JTypeInstruction(128, 0, 0, 0, bytes{255, 4}, 0), AbstractInstructionException*);
+  }
+
+  void testCreateWithLargeImm31(void) {
+    TS_ASSERT_THROWS(JTypeInstruction j = JTypeInstruction(128, 0, 0, 0, bytes{0, 0}, 2), AbstractInstructionException*);
+  }
+
+  void testDecodeWithWrongSizeInstruction(void) {
+    JTypeInstruction j = JTypeInstruction();
+    TS_ASSERT_THROWS(j.decode(bytes{0, 255, 0, 255, 0}), AbstractInstructionException*);
+  }
+
+  void testGetImmWrongPosition(void) {
+    JTypeInstruction j = JTypeInstruction(0, 0, 0, 0, bytes{255, 0}, 0);
+    TS_ASSERT_THROWS(j.getImm(0, 1), AbstractInstructionException*);
+  }
+  
 };
