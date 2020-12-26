@@ -35,32 +35,32 @@ class ITypeInstructionTests : public CxxTest::TestSuite
   }
 
   void testCreateWithLargeOpcode(void) {
-    TS_ASSERT_THROWS(ITypeInstruction i = ITypeInstruction(128, 0, 0, 0, bytes{0, 0}), AbstractInstructionException*);
+    TS_ASSERT_THROWS(ITypeInstruction i = ITypeInstruction(128, 0, 0, 0, bytes{0, 0}), InstructionException*);
   }
 
   void testCreateWithLargeRD(void) {
-    TS_ASSERT_THROWS(ITypeInstruction i = ITypeInstruction(0, 32, 0, 0, bytes{0, 0}), AbstractInstructionException*);
+    TS_ASSERT_THROWS(ITypeInstruction i = ITypeInstruction(0, 32, 0, 0, bytes{0, 0}), InstructionException*);
   }
 
   void testCreateWithLargeFunc3(void) {
-    TS_ASSERT_THROWS(ITypeInstruction i = ITypeInstruction(0, 0, 10, 0, bytes{0, 0}), AbstractInstructionException*);
+    TS_ASSERT_THROWS(ITypeInstruction i = ITypeInstruction(0, 0, 10, 0, bytes{0, 0}), InstructionException*);
   }
 
   void testCreateWithLargeRS1(void) {
-    TS_ASSERT_THROWS(ITypeInstruction i = ITypeInstruction(0, 0, 0, 32, bytes{0, 0}), AbstractInstructionException*);
+    TS_ASSERT_THROWS(ITypeInstruction i = ITypeInstruction(0, 0, 0, 32, bytes{0, 0}), InstructionException*);
   }
 
   void testCreateWithLargeImm(void) {
-    TS_ASSERT_THROWS(ITypeInstruction i = ITypeInstruction(0, 0, 0, 0, bytes{255, 255}), AbstractInstructionException*);
+    TS_ASSERT_THROWS(ITypeInstruction i = ITypeInstruction(0, 0, 0, 0, bytes{255, 255}), InstructionException*);
   }
 
   void testCreateWithWrongSizeImm(void) {
-    TS_ASSERT_THROWS(ITypeInstruction i = ITypeInstruction(0, 0, 0, 0, bytes{0, 0, 0}), AbstractInstructionException*);
+    TS_ASSERT_THROWS(ITypeInstruction i = ITypeInstruction(0, 0, 0, 0, bytes{0, 0, 0}), InstructionException*);
   }
 
   void testDecodeWithWrongSizeInstruction(void) {
     ITypeInstruction i = ITypeInstruction();
-    TS_ASSERT_THROWS(i.decode(bytes{0, 255, 0, 255, 0}), AbstractInstructionException*);
+    TS_ASSERT_THROWS(i.decode(bytes{0, 255, 0, 255, 0}), InstructionException*);
   }
 
   void testGetImm(void) {
@@ -71,6 +71,6 @@ class ITypeInstructionTests : public CxxTest::TestSuite
 
   void testGetImmWrongPosition(void) {
     ITypeInstruction i = ITypeInstruction(0, 0, 0, 0, bytes{255, 0});
-    TS_ASSERT_THROWS(i.getImm(0, 1), AbstractInstructionException*);
+    TS_ASSERT_THROWS(i.getImm(0, 1), InstructionException*);
   }
 };

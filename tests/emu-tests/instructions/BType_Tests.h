@@ -38,44 +38,44 @@ class BTypeInstructionTests : public CxxTest::TestSuite
   }
 
   void testCreateWithLargeOpcode(void) {
-    TS_ASSERT_THROWS(BTypeInstruction b = BTypeInstruction(128, 0, 0, 0, 0, 0, 0, 0), AbstractInstructionException*);
+    TS_ASSERT_THROWS(BTypeInstruction b = BTypeInstruction(128, 0, 0, 0, 0, 0, 0, 0), InstructionException*);
   }
 
   void testCreateWithLargeImm1(void) {
-    TS_ASSERT_THROWS(BTypeInstruction b = BTypeInstruction(0, 2, 0, 0, 0, 0, 0, 0), AbstractInstructionException*);
+    TS_ASSERT_THROWS(BTypeInstruction b = BTypeInstruction(0, 2, 0, 0, 0, 0, 0, 0), InstructionException*);
   }
 
   void testCreateWithLargeImm4(void) {
-    TS_ASSERT_THROWS(BTypeInstruction b = BTypeInstruction(0, 0, 16, 0, 0, 0, 0, 0), AbstractInstructionException*);
+    TS_ASSERT_THROWS(BTypeInstruction b = BTypeInstruction(0, 0, 16, 0, 0, 0, 0, 0), InstructionException*);
   }
 
   void testCreateWithLargeFunc3(void) {
-    TS_ASSERT_THROWS(BTypeInstruction b = BTypeInstruction(0, 0, 0, 8, 0, 0, 0, 0), AbstractInstructionException*);
+    TS_ASSERT_THROWS(BTypeInstruction b = BTypeInstruction(0, 0, 0, 8, 0, 0, 0, 0), InstructionException*);
   }
 
   void testCreateWithLargeRS1(void) {
-    TS_ASSERT_THROWS(BTypeInstruction b = BTypeInstruction(0, 0, 0, 0, 32, 0, 0, 0), AbstractInstructionException*);
+    TS_ASSERT_THROWS(BTypeInstruction b = BTypeInstruction(0, 0, 0, 0, 32, 0, 0, 0), InstructionException*);
   }
 
   void testCreateWithLargeRS2(void) {
-    TS_ASSERT_THROWS(BTypeInstruction b = BTypeInstruction(0, 0, 0, 0, 0, 32, 0, 0), AbstractInstructionException*);
+    TS_ASSERT_THROWS(BTypeInstruction b = BTypeInstruction(0, 0, 0, 0, 0, 32, 0, 0), InstructionException*);
   }
 
   void testCreateWithLargeImm6(void) {
-    TS_ASSERT_THROWS(BTypeInstruction b = BTypeInstruction(0, 0, 0, 0, 0, 0, 64, 0), AbstractInstructionException*);
+    TS_ASSERT_THROWS(BTypeInstruction b = BTypeInstruction(0, 0, 0, 0, 0, 0, 64, 0), InstructionException*);
   }
 
   void testCreateWithLargeImm31(void) {
-    TS_ASSERT_THROWS(BTypeInstruction b = BTypeInstruction(0, 0, 0, 0, 0, 0, 0, 2), AbstractInstructionException*);
+    TS_ASSERT_THROWS(BTypeInstruction b = BTypeInstruction(0, 0, 0, 0, 0, 0, 0, 2), InstructionException*);
   }
 
   void testDecodeWithWrongSizeInstruction(void) {
     BTypeInstruction b = BTypeInstruction();
-    TS_ASSERT_THROWS(b.decode(bytes{0, 255, 0, 255, 0}), AbstractInstructionException*);
+    TS_ASSERT_THROWS(b.decode(bytes{0, 255, 0, 255, 0}), InstructionException*);
   }
 
   void testGetImmWrongPosition(void) {
     BTypeInstruction b = BTypeInstruction(0, 0, 0, 0, 0, 0, 0, 0);
-    TS_ASSERT_THROWS(b.getImm(0, 1), AbstractInstructionException*);
+    TS_ASSERT_THROWS(b.getImm(0, 1), InstructionException*);
   }
 };

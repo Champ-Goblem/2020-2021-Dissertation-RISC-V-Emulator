@@ -30,24 +30,24 @@ class UTypeInstructionTests : public CxxTest::TestSuite
   }
 
   void testCreateWithLargeOpcode(void) {
-    TS_ASSERT_THROWS(UTypeInstruction u = UTypeInstruction(128, 0, bytes{0, 0, 0}), AbstractInstructionException*);
+    TS_ASSERT_THROWS(UTypeInstruction u = UTypeInstruction(128, 0, bytes{0, 0, 0}), InstructionException*);
   }
 
   void testCreateWithLargeRD(void) {
-    TS_ASSERT_THROWS(UTypeInstruction u = UTypeInstruction(0, 32, bytes{0, 0, 0}), AbstractInstructionException*);
+    TS_ASSERT_THROWS(UTypeInstruction u = UTypeInstruction(0, 32, bytes{0, 0, 0}), InstructionException*);
   }
 
   void testCreateWithLargeImm(void) {
-    TS_ASSERT_THROWS(UTypeInstruction u = UTypeInstruction(0, 0, bytes{255, 255, 16}), AbstractInstructionException*);
+    TS_ASSERT_THROWS(UTypeInstruction u = UTypeInstruction(0, 0, bytes{255, 255, 16}), InstructionException*);
   }
 
   void testDecodeWithWrongSizeInstruction(void) {
     UTypeInstruction u = UTypeInstruction();
-    TS_ASSERT_THROWS(u.decode(bytes{255, 255, 255, 255, 255}), AbstractInstructionException*);
+    TS_ASSERT_THROWS(u.decode(bytes{255, 255, 255, 255, 255}), InstructionException*);
   }
 
   void testGetImmAtWrongPosition(void) {
     UTypeInstruction u = UTypeInstruction(127, 31, bytes{255, 255, 15});
-    TS_ASSERT_THROWS(u.getImm(0, 1), AbstractInstructionException*);
+    TS_ASSERT_THROWS(u.getImm(0, 1), InstructionException*);
   }
 };

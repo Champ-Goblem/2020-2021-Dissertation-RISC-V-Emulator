@@ -19,13 +19,13 @@ enum InstructionType {
   J
 };
 
-class AbstractInstructionException: public exception {
+class InstructionException: public exception {
   private:
   const char* message;
 
   public:
-  AbstractInstructionException() {}
-  AbstractInstructionException(const char* message, ...) {
+  InstructionException() {}
+  InstructionException(const char* message, ...) {
     this->message = message;
   }
   const char* getMessage() {

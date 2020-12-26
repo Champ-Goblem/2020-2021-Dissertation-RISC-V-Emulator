@@ -34,36 +34,36 @@ class STypeInstructionTests : public CxxTest::TestSuite
   }
 
   void testCreateWithLargeOpcode(void) {
-    TS_ASSERT_THROWS(STypeInstruction s = STypeInstruction(128, 0, 0, 0, 0, 0), AbstractInstructionException*);
+    TS_ASSERT_THROWS(STypeInstruction s = STypeInstruction(128, 0, 0, 0, 0, 0), InstructionException*);
   }
 
   void testCreateWithLargeImm5(void) {
-    TS_ASSERT_THROWS(STypeInstruction s = STypeInstruction(0, 32, 0, 0, 0, 0), AbstractInstructionException*);
+    TS_ASSERT_THROWS(STypeInstruction s = STypeInstruction(0, 32, 0, 0, 0, 0), InstructionException*);
   }
 
   void testCreateWithLargeFunc3(void) {
-    TS_ASSERT_THROWS(STypeInstruction s = STypeInstruction(0, 0, 8, 0, 0, 0), AbstractInstructionException*);
+    TS_ASSERT_THROWS(STypeInstruction s = STypeInstruction(0, 0, 8, 0, 0, 0), InstructionException*);
   }
 
   void testCreateWithLargeRS1(void) {
-    TS_ASSERT_THROWS(STypeInstruction s = STypeInstruction(0, 0, 0, 32, 0, 0), AbstractInstructionException*);
+    TS_ASSERT_THROWS(STypeInstruction s = STypeInstruction(0, 0, 0, 32, 0, 0), InstructionException*);
   }
 
   void testCreateWithLargeRS2(void) {
-    TS_ASSERT_THROWS(STypeInstruction s = STypeInstruction(0, 0, 0, 0, 32, 0), AbstractInstructionException*);
+    TS_ASSERT_THROWS(STypeInstruction s = STypeInstruction(0, 0, 0, 0, 32, 0), InstructionException*);
   }
 
   void testCreateWithLargeImm7(void) {
-    TS_ASSERT_THROWS(STypeInstruction s = STypeInstruction(0, 0, 0, 0, 0, 128), AbstractInstructionException*);
+    TS_ASSERT_THROWS(STypeInstruction s = STypeInstruction(0, 0, 0, 0, 0, 128), InstructionException*);
   }
 
   void testDecodeWithWrongSizeInstruction(void) {
     STypeInstruction s = STypeInstruction();
-    TS_ASSERT_THROWS(s.decode(bytes{0, 255}), AbstractInstructionException*);
+    TS_ASSERT_THROWS(s.decode(bytes{0, 255}), InstructionException*);
   }
 
   void testGetImmAtWrongPosition(void) {
     STypeInstruction s = STypeInstruction();
-    TS_ASSERT_THROWS(s.getImm(0, 1), AbstractInstructionException*);
+    TS_ASSERT_THROWS(s.getImm(0, 1), InstructionException*);
   }
 };
