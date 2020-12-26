@@ -55,7 +55,7 @@ directories:
 
 $(TARGET): $(OBJS)
 	@echo Linking $@
-	$(CXX) -o $(TARGET) $(OBJS) $(BUILD)
+	$(CXX) -o $(TARGET) $(OBJS) $(BUILD) -pthread
 
 define generateRules
 $(1)/%.o: $(subst $(ODIR), $(SDIR), $(1))/%.cpp

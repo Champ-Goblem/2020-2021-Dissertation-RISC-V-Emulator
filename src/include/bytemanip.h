@@ -89,4 +89,28 @@ static ulong getBytesToULong(bytes val) {
   return result;
 }
 
+static bytes addByteToBytes(bytes val, byte operand) {
+  if (val.size() == 0) {
+    throw new EmulatorException("Failed to add a byte to bytes, size of bytes is zero");
+  }
+
+  bytes ret = bytes(val.size());
+  byte firstByte = val[0];
+  ret[0] = firstByte + operand;
+  ushort remainder = ((ushort)firstByte + operand) % 255;
+  ushort currentByte = 1;
+  while(remainder > 0 && currentByte < val.size()) {
+    byte tmp = val[currentByte];
+    ret[currentByte] = tmp + remainder;
+    remainder = ((ushort)tmp + remainder) % 255;
+    currentByte++;
+  }
+
+  if (remainder != 0) {
+    throw new EmulatorException("Overflow when adding a byte to bytes");
+  }
+
+  return ret;
+}
+
 #endif

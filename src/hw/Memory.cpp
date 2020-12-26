@@ -81,6 +81,10 @@ bytes Memory::readQWord(ulong addr) {
   return bytes {memory[addr], memory[addr+1], memory[addr+2], memory[addr+3], memory[addr+4], memory[addr+5], memory[addr+6], memory[addr+7]};
 }
 
+ulong Memory::getSize() {
+  return this->size;
+}
+
 void Memory::printRegion(ulong start, ulong count, ushort outWidth) {
   if (start > size || start + count > size) {
     throw new MemoryException("Address out of range of memory region [addr: %d, off: %d, max: %d]", start, count, size);

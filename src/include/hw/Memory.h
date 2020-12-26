@@ -11,6 +11,7 @@
 class MemoryException: public exception {
   private:
   const char* message;
+  ulong size;
 
   public:
   MemoryException() {}
@@ -37,6 +38,7 @@ class Memory {
   bytes readDWord(ulong addr);
   void writeQWord(ulong addr, bytes val);
   bytes readQWord(ulong addr);
+  ulong getSize();
 
   void printRegion(ulong start, ulong count, ushort outWidth);
 };
