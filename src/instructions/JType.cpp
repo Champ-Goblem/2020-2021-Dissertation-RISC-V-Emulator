@@ -23,25 +23,25 @@ JTypeInstruction::JTypeInstruction(byte opcode, byte rd, byte imm8, byte imm1, b
   if (imm8 > IMM8_MAX) {
     throw new InstructionException("Failed to set imm8, greater than 255 [%d]", imm8);
   }
-  this->imm[0] = imm8;
+  this->imm[1] = imm8 << 4;
+  this->imm[2] = imm8 >> 4;
 
   if (imm1 > IMM1_MAX) {
     throw new InstructionException("Failed to set imm1, greater than 1 [%d]", imm1);
   }
-  this->imm[1] = imm1;
+  this->imm[1] |= imm1 << 3;
 
-  ulong imm10Size = getBytesToULong(imm10);
-  if (imm10.size() != IMM10_SIZE || imm10Size > IMM10_MAX) {
-    throw new InstructionException("Failed to set imm10, greater than 1023 [%d]", imm10Size);
+  if (imm10.size() != IMM10_SIZE || getBytesToULong(imm10) > IMM10_MAX) {
+    throw new InstructionException("Failed to set imm10, greater than 1023 [%d]", getBytesToULong(imm10));
   }
-  this->imm[1] |= imm10[0] << 1;
-  this->imm[2] = imm10[0] >> 7;
-  this->imm[2] |= imm10[1] << 1;
+  this->imm[0] = imm10[0] << 1;
+  this->imm[1] |= (imm10[0] & 128) >> 7;
+  this->imm[1] |= imm10[1] << 1;
 
   if (imm31 > IMM1_MAX) {
     throw new InstructionException("Failed to set imm10, greater than 1 [%d]", imm31);
   }
-  this->imm[2] |= imm31 << 3;
+  this->imm[2] |= imm31 << 4;
   
   this->type = InstructionType::J;
 }
@@ -54,7 +54,13 @@ void JTypeInstruction::decode(bytes instruction) {
   try {
     this->opcode = getContrainedBits(instruction, 0, 6)[0];
     this->rd = getContrainedBits(instruction, 7, 11)[0];
-    this->imm = getContrainedBits(instruction, 12, 31);
+    bytes fullImm = getContrainedBits(instruction, 12, 31);
+    this->imm[0] = (fullImm[1] & 254);
+    this->imm[1] = fullImm[2] & 7;
+    this->imm[1] |= (fullImm[1] & 1) << 3;
+    this->imm[1] |= fullImm[0] << 4;
+    this->imm[2] = fullImm[0] >> 4;
+    this->imm[2] |= (fullImm[2] & 8) << 1;
   } catch (exception e) {
     throw (e);
   }
@@ -64,20 +70,16 @@ void JTypeInstruction::decode(bytes instruction) {
 
 bytes JTypeInstruction::getImm(ushort low, ushort high) {
   if (low == 12 && high == 19) {
-    return bytes{this->imm[0]};
+    return getContrainedBits(this->imm, 12, 19);
   } else if (low == 20 && high == 20) {
     bytes imm = bytes(1);
-    imm[0] = this->imm[1] & 1;
+    imm[0] = (this->imm[1] >> 3) & 1;
     return imm;
   } else if (low == 21 && high == 30) {
-    bytes imm = bytes(2);
-    imm[0] = this->imm[1] >> 1;
-    imm[0] |= this->imm[2] << 7;
-    imm[1] = (this->imm[2] >> 1) & 3;
-    return imm;
+    return getContrainedBits(this->imm, 1, 10);
   } else if (low == 31 && high == 31) {
     bytes imm = bytes(1);
-    imm[0] = this->imm[2] >> 3;
+    imm[0] = this->imm[2] >> 4;
     return imm;
   }
 

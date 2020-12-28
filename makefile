@@ -85,7 +85,7 @@ testall: testclean $(TEST_TARGET)
 $(TEST_TARGET): $(SOURCES_WO_MAIN) $(TESTPARTS)
 	@echo Bulding runner
 	$(TESTBIN) --root --xunit-printer --xunit-file=$(TEST_XML_RESULTS) -o $(TDIR)/runner.cpp
-	$(CXX) -o $@ -I$(TESTROOT) $(TDIR)/runner.cpp $(SOURCES_WO_MAIN) $(TESTPARTS)
+	$(CXX) -o $@ -I$(TESTROOT) $(TDIR)/runner.cpp $(SOURCES_WO_MAIN) $(TESTPARTS) -pthread
 	$@
 
 define compiletestparts

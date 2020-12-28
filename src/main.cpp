@@ -4,7 +4,6 @@
 #include <string>
 
 int main(int argc, char** argv) {
-  bytes a = bytes{255, 255};
-  addByteToBytes(a, 1);
+  JTypeInstruction j = JTypeInstruction(127, 31, 255, 1, bytes{255, 3}, 1);
   return 0;
 }

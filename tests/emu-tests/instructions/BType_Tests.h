@@ -25,6 +25,7 @@ class BTypeInstructionTests : public CxxTest::TestSuite
   void testDecode(void) {
     // 1101001 0 1001 101 11001 00110 100100 1
     // 1101 0010 1001 1011 1001 0011 0100 1001
+    // imm: 0100 1100 1000 1
     BTypeInstruction b = BTypeInstruction();
     b.decode(bytes{75, 217, 201, 146});
     TS_ASSERT(b.getOpcode() == 75);

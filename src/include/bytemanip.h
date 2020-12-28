@@ -94,7 +94,7 @@ static bytes addByteToBytes(bytes val, byte operand) {
     throw new EmulatorException("Failed to add a byte to bytes, size of bytes is zero");
   }
 
-  bytes ret = bytes(val.size());
+  bytes ret = bytes(val);
   byte firstByte = val[0];
   ret[0] = firstByte + operand;
   ushort remainder = ((ushort)firstByte + operand) % 255;
@@ -108,6 +108,44 @@ static bytes addByteToBytes(bytes val, byte operand) {
 
   if (remainder != 0) {
     throw new EmulatorException("Overflow when adding a byte to bytes");
+  }
+
+  return ret;
+}
+
+static bytes addBytesToBytes(bytes val, bytes operand) {
+  if (val.size() == 0 || operand.size() == 0) {
+    throw new EmulatorException("Failed to add bytes to bytes, size of operand is zero");
+  }
+
+  bytes ret = bytes(val);
+  byte remainder = 0;
+  for (uint i=0; i<operand.size(); i++) {
+    ret[i] = val[i] + operand[i] + remainder;
+    remainder = ((ushort)val[i] + operand[i] + remainder) % 255;
+  }
+
+  if (remainder != 0) {
+    throw new EmulatorException("Overflow when adding bytes to bytes");
+  }
+
+  return ret;
+}
+
+static bytes subBytesFromBytes(bytes val, bytes operand) {
+  if (val.size() == 0 || operand.size() == 0) {
+    throw new EmulatorException("Failed to subtract bytes from bytes, size of operand is zero");
+  }
+
+  bytes ret = bytes(val);
+  byte remainder = 0;
+  for (uint i=0; i<operand.size(); i++) {
+    ret[i] = val[i] - operand[i] - remainder;
+    remainder = ((ushort)val[i] - operand[i] - remainder) % 255;
+  }
+
+  if (remainder != 0) {
+    throw new EmulatorException("Underflow when subtracting bytes from bytes");
   }
 
   return ret;

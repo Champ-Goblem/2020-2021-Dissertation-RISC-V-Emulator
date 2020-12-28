@@ -6,6 +6,9 @@
 #include <condition_variable>
 
 #include "AbstractBranchPredictor.h"
+#include "../instructions/BType.h"
+#include "../instructions/IType.h"
+#include "../instructions/JType.h"
 
 class SimpleBranchPredictor: public AbstractBranchPredictor {
   private:
@@ -18,8 +21,9 @@ class SimpleBranchPredictor: public AbstractBranchPredictor {
   condition_variable queueCV;
 
   public:
-  SimpleBranchPredictor(Memory* memory, ushort XLEN, bytes initialPC);
+  SimpleBranchPredictor(Memory* memory, ushort XLEN, RegisterFile* registerFile, bytes initialPC);
   bytes getNextPC();
+  bool checkPrediction(bytes pc, bytes address);
 
   private:
   void predictionWorkloop();

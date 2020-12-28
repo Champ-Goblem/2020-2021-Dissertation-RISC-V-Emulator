@@ -4,6 +4,7 @@
 #include "../emustd.h"
 #include "../hw/Memory.h"
 #include "AbstractUnit.h"
+#include "../hw/RegisterFile.h"
 
 class BranchPredictorException: public EmulatorException {
   public:
@@ -13,12 +14,12 @@ class BranchPredictorException: public EmulatorException {
 class AbstractBranchPredictor: public AbstractUnit {
   protected:
   Memory* memory;
+  RegisterFile* registerFile;
   ushort XLEN;
 
   public:
-  AbstractBranchPredictor(Memory* memory, ushort XLEN);
-  virtual bytes getNextPC();
-  virtual bool checkPrediction(bytes pc, bytes addr);
+  virtual bytes getNextPC(){};
+  virtual bool checkPrediction(bytes pc, bytes addr){};
 };
 
 #endif

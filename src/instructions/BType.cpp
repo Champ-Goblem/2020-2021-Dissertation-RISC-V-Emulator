@@ -20,12 +20,12 @@ BTypeInstruction::BTypeInstruction(byte opcode, byte imm1, byte imm4, byte func3
   if (imm1 > IMM1_MAX) {
     throw new InstructionException("Failed to set imm1, greater than 1 [%d]", imm1);
   }
-  this->imm[0] = imm1;
+  this->imm[1] = imm1 << 3;
 
   if (imm4 > IMM4_MAX) {
     throw new InstructionException("Failed to set imm4, greater than 15 [%d]", imm4);
   }
-  this->imm[0] |= imm4 << 1;
+  this->imm[0] = imm4 << 1;
 
   if (func3 > FUNC3_MAX) {
     throw new InstructionException("Failed to set func3, greater than 7 [%d]", func3);
@@ -46,12 +46,12 @@ BTypeInstruction::BTypeInstruction(byte opcode, byte imm1, byte imm4, byte func3
     throw new InstructionException("Failed to set imm6, greater than 63 [%d]", imm6);
   }
   this->imm[0] |= imm6 << 5;
-  this->imm[1] = imm6 >> 3;
+  this->imm[1] |= imm6 >> 3;
 
   if (imm31 > IMM1_MAX) {
     throw new InstructionException("Failed to set imm31, greater than 1 [%d]", imm31);
   }
-  this->imm[1] |= imm31 << 3;
+  this->imm[1] |= imm31 << 4;
 
   this->type = InstructionType::B;
 }
@@ -63,13 +63,19 @@ void BTypeInstruction::decode(bytes instruction) {
 
   try {
     this->opcode = getContrainedBits(instruction, 0, 6)[0];
-    this->imm[0] = getContrainedBits(instruction, 7, 11)[0];
+    // Imm bit 11 is at position 7 in instruction
+    byte imm11 = instruction[0] & 128;
+    // Imm bits 1-4 are at positions 8-11 in instruction, needs to be shifted by 1
+    this->imm[0] = getContrainedBits(instruction, 8, 11)[0] << 1;
     this->func3 = getContrainedBits(instruction, 12, 14)[0];
     this->rs1 = getContrainedBits(instruction, 15, 19)[0];
     this->rs2 = getContrainedBits(instruction, 20, 24)[0];
-    byte imm7 = getContrainedBits(instruction, 25, 31)[0];
-    this->imm[0] |= imm7 << 5;
-    this->imm[1] = imm7 >> 3; 
+    byte imm510 = getContrainedBits(instruction, 25, 30)[0];
+    byte imm12 = instruction[3] & 128;
+    this->imm[0] |= imm510 << 5;
+    this->imm[1] = imm510 >> 3; 
+    this->imm[1] |= imm11 >> 4;
+    this->imm[1] |= imm12 >> 3;
   } catch (exception e) {
     throw (e);
   }
@@ -80,7 +86,7 @@ void BTypeInstruction::decode(bytes instruction) {
 bytes BTypeInstruction::getImm(ushort low, ushort high) {
   if (low == 7 && high == 7) {
     bytes imm = bytes(1);
-    imm[0] = this->imm[0] & 1;
+    imm[0] = (this->imm[1] & 8) >> 3;
     return imm;
   } else if (low == 8 && high == 11) {
     return getContrainedBits(this->imm, 1, 4);
@@ -92,7 +98,7 @@ bytes BTypeInstruction::getImm(ushort low, ushort high) {
     return imm;
   } else if (low == 31 && high == 31) {
     bytes imm = bytes(1);
-    imm[0] = (this->imm[1] & 8) >> 3;
+    imm[0] = this->imm[1] >> 4;
     return imm;
   }
 
