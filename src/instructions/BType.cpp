@@ -13,43 +13,43 @@ BTypeInstruction::BTypeInstruction(byte opcode, byte imm1, byte imm4, byte func3
   this->imm = bytes(2);
 
   if (opcode > OPCODE_MAX) {
-    throw new InstructionException("Failed to set opcode, greater than 63 [%d]", opcode);
+    throw new InstructionException("Failed to set opcode, greater than 63 [%d]\n", opcode);
   }
   this->opcode = opcode;
 
   if (imm1 > IMM1_MAX) {
-    throw new InstructionException("Failed to set imm1, greater than 1 [%d]", imm1);
+    throw new InstructionException("Failed to set imm1, greater than 1 [%d]\n", imm1);
   }
   this->imm[1] = imm1 << 3;
 
   if (imm4 > IMM4_MAX) {
-    throw new InstructionException("Failed to set imm4, greater than 15 [%d]", imm4);
+    throw new InstructionException("Failed to set imm4, greater than 15 [%d]\n", imm4);
   }
   this->imm[0] = imm4 << 1;
 
   if (func3 > FUNC3_MAX) {
-    throw new InstructionException("Failed to set func3, greater than 7 [%d]", func3);
+    throw new InstructionException("Failed to set func3, greater than 7 [%d]\n", func3);
   }
   this->func3 = func3;
 
   if (rs1 > R_MAX) {
-    throw new InstructionException("Failed to set rs1, greater than 31 [%d]", rs1);
+    throw new InstructionException("Failed to set rs1, greater than 31 [%d]\n", rs1);
   }
   this->rs1 = rs1;
 
   if (rs2 > R_MAX) {
-    throw new InstructionException("Failed to set rs2, greater than 31 [%d]", rs2);
+    throw new InstructionException("Failed to set rs2, greater than 31 [%d]\n", rs2);
   }
   this->rs2 = rs2;
 
   if (imm6 > IMM6_MAX) {
-    throw new InstructionException("Failed to set imm6, greater than 63 [%d]", imm6);
+    throw new InstructionException("Failed to set imm6, greater than 63 [%d]\n", imm6);
   }
   this->imm[0] |= imm6 << 5;
   this->imm[1] |= imm6 >> 3;
 
   if (imm31 > IMM1_MAX) {
-    throw new InstructionException("Failed to set imm31, greater than 1 [%d]", imm31);
+    throw new InstructionException("Failed to set imm31, greater than 1 [%d]\n", imm31);
   }
   this->imm[1] |= imm31 << 4;
 
@@ -58,7 +58,7 @@ BTypeInstruction::BTypeInstruction(byte opcode, byte imm1, byte imm4, byte func3
 
 void BTypeInstruction::decode(bytes instruction) {
   if (instruction.size() != INSTRUCTION_SIZE) {
-    throw new InstructionException("Failed to decode instruction, not 4 bytes in length [%d]", instruction.size());
+    throw new InstructionException("Failed to decode instruction, not 4 bytes in length [%d]\n", instruction.size());
   }
 
   try {
@@ -102,5 +102,5 @@ bytes BTypeInstruction::getImm(ushort low, ushort high) {
     return imm;
   }
 
-  throw new InstructionException("Failed to get imm, does not exist in this instruction type [low: %d, high: %d]", low, high);
+  throw new InstructionException("Failed to get imm, does not exist in this instruction type [low: %d, high: %d]\n", low, high);
 }

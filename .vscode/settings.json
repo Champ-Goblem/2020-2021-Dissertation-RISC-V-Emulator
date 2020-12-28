@@ -15,6 +15,9 @@
     "utility": "cpp",
     "valarray": "cpp",
     "chrono": "cpp",
-    "cmath": "cpp"
+    "cmath": "cpp",
+    "iosfwd": "cpp",
+    "system_error": "cpp",
+    "thread": "cpp"
   }
 }

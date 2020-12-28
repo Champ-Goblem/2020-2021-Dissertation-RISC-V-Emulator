@@ -29,7 +29,7 @@ bytes AbstractInstruction::getImm() {
 };
 
 bytes AbstractInstruction::getImm(ushort low, ushort high) {
-  throw new InstructionException("Failed to get imm, does not exist on this instruction type");
+  throw new InstructionException("Failed to get imm, does not exist on this instruction type\n");
 };
 
 InstructionType AbstractInstruction::getType() {

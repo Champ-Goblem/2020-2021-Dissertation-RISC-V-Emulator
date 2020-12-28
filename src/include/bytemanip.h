@@ -14,7 +14,6 @@ static string getBytesForPrint(bytes data) {
   for (int i=0; i < size; i++) {
     str << setw(2) << setfill('0') << hex << (int) data[size - 1 - i] << " ";
   }
-  str << "\n";
   return str.str();
 }
 
@@ -34,10 +33,10 @@ static byte getByteMaskForPosition(ushort position) {
 static bytes getContrainedBits(bytes imm, ushort low, ushort high) {
   // assumes low is 0 and high is 31
   if (low >= imm.size() * 8 || high >= imm.size() * 8) {
-    throw new EmulatorException("Failed to get immediate, access to out of bounds index [lo: %d, hi: %d, max: %d]", low, high, imm.size() * 8);
+    throw new EmulatorException("Failed to get immediate, access to out of bounds index");
   }
   if (low > high) {
-    throw new EmulatorException("Failed to get immediate, low bigger than high [lo: %d, hi: %d]", low, high);
+    throw new EmulatorException("Failed to get immediate, low bigger than high");
   }
 
   ushort noBytes = ceil((float)(high - low) / 8);
@@ -79,7 +78,7 @@ static bytes getContrainedBits(bytes imm, ushort low, ushort high) {
 
 static ulong getBytesToULong(bytes val) {
   if (val.size() > 8) {
-    throw new EmulatorException("Number of bytes of value is greater than ulong, possible overflow [%d]", val.size());
+    throw new EmulatorException("Number of bytes of value is greater than ulong, possible overflow");
   }
   ulong result = 0;
   for (int i=0; i < val.size(); i++) {
@@ -91,23 +90,23 @@ static ulong getBytesToULong(bytes val) {
 
 static bytes addByteToBytes(bytes val, byte operand) {
   if (val.size() == 0) {
-    throw new EmulatorException("Failed to add a byte to bytes, size of bytes is zero");
+    throw new EmulatorException("Failed to add a byte to bytes, size of bytes is zero\n");
   }
 
   bytes ret = bytes(val);
   byte firstByte = val[0];
   ret[0] = firstByte + operand;
-  ushort remainder = ((ushort)firstByte + operand) % 255;
+  ushort remainder = ((ushort)firstByte + operand) / 255;
   ushort currentByte = 1;
   while(remainder > 0 && currentByte < val.size()) {
     byte tmp = val[currentByte];
     ret[currentByte] = tmp + remainder;
-    remainder = ((ushort)tmp + remainder) % 255;
+    remainder = ((ushort)tmp + remainder) / pow(2, 8 * (1 + currentByte));
     currentByte++;
   }
 
   if (remainder != 0) {
-    throw new EmulatorException("Overflow when adding a byte to bytes");
+    throw new EmulatorException("Overflow when adding a byte to bytes\n");
   }
 
   return ret;
@@ -115,18 +114,18 @@ static bytes addByteToBytes(bytes val, byte operand) {
 
 static bytes addBytesToBytes(bytes val, bytes operand) {
   if (val.size() == 0 || operand.size() == 0) {
-    throw new EmulatorException("Failed to add bytes to bytes, size of operand is zero");
+    throw new EmulatorException("Failed to add bytes to bytes, size of operand is zero\n");
   }
 
   bytes ret = bytes(val);
   byte remainder = 0;
   for (uint i=0; i<operand.size(); i++) {
     ret[i] = val[i] + operand[i] + remainder;
-    remainder = ((ushort)val[i] + operand[i] + remainder) % 255;
+    remainder = ((ushort)val[i] + operand[i] + remainder) / pow(2, 8 * (1 + i));
   }
 
   if (remainder != 0) {
-    throw new EmulatorException("Overflow when adding bytes to bytes");
+    throw new EmulatorException("Overflow when adding bytes to bytes\n");
   }
 
   return ret;
@@ -134,18 +133,18 @@ static bytes addBytesToBytes(bytes val, bytes operand) {
 
 static bytes subBytesFromBytes(bytes val, bytes operand) {
   if (val.size() == 0 || operand.size() == 0) {
-    throw new EmulatorException("Failed to subtract bytes from bytes, size of operand is zero");
+    throw new EmulatorException("Failed to subtract bytes from bytes, size of operand is zero\n");
   }
 
   bytes ret = bytes(val);
   byte remainder = 0;
   for (uint i=0; i<operand.size(); i++) {
     ret[i] = val[i] - operand[i] - remainder;
-    remainder = ((ushort)val[i] - operand[i] - remainder) % 255;
+    remainder = ((ushort)val[i] - operand[i] - remainder) / pow(2, 8 * (1 + i));
   }
 
   if (remainder != 0) {
-    throw new EmulatorException("Underflow when subtracting bytes from bytes");
+    throw new EmulatorException("Underflow when subtracting bytes from bytes\n");
   }
 
   return ret;

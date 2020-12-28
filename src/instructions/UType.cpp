@@ -9,18 +9,18 @@ UTypeInstruction::UTypeInstruction() {
 
 UTypeInstruction::UTypeInstruction(byte opcode, byte rd, bytes imm) {
   if (opcode > OPCODE_MAX) {
-    throw new InstructionException("Failed to set opcode, greater than 63 [%d]", opcode);
+    throw new InstructionException("Failed to set opcode, greater than 63 [%d]\n", opcode);
   }
   this->opcode = opcode;
 
   if (rd > R_MAX) {
-    throw new InstructionException("Failed to set rd, greater than 31 [%d]", rd);
+    throw new InstructionException("Failed to set rd, greater than 31 [%d]\n", rd);
   }
   this->rd = rd;
 
   ulong size = getBytesToULong(imm);
   if (imm.size() != IMM_SIZE || size > IMM_MAX) {
-    throw new InstructionException("Failed to set rd, greater than 1048575 [%d]", size);
+    throw new InstructionException("Failed to set rd, greater than 1048575 [%d]\n", size);
   }
   this->imm = imm;
 
@@ -29,7 +29,7 @@ UTypeInstruction::UTypeInstruction(byte opcode, byte rd, bytes imm) {
 
 void UTypeInstruction::decode(bytes instruction) {
   if (instruction.size() != INSTRUCTION_SIZE) {
-    throw new InstructionException("Failed to decode instruction, not 4 bytes in length [%d]", instruction.size());
+    throw new InstructionException("Failed to decode instruction, not 4 bytes in length [%d]\n", instruction.size());
   }
 
   try {
@@ -48,5 +48,5 @@ bytes UTypeInstruction::getImm(ushort low, ushort high) {
     return imm;
   }
 
-  throw new InstructionException("Failed to get imm, does not exist in this instruction type [low: %d, high: %d]", low, high);
+  throw new InstructionException("Failed to get imm, does not exist in this instruction type [low: %d, high: %d]\n", low, high);
 }

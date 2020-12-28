@@ -2,25 +2,17 @@
 #define __Memory__
 
 #include "../emustd.h"
+#include "../exceptions.h"
 #include "../bytemanip.h"
 
 #define WORD_SIZE 2
 #define DWORD_SIZE 4
 #define QWORD_SIZE 8
 
-class MemoryException: public exception {
-  private:
-  const char* message;
-  ulong size;
-
+class MemoryException: public EmulatorException {
   public:
-  MemoryException() {}
-  MemoryException(const char* message, ...) {
-    this->message = message;
-  }
-  const char* getMessage() {
-    return message;
-  }
+  MemoryException(): EmulatorException() {}
+  MemoryException(ostringstream message): EmulatorException(message.str()) {}
 };
 
 class Memory {

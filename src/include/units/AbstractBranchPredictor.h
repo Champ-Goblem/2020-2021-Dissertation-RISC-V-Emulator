@@ -2,6 +2,7 @@
 #define __AbstractBranchPredictor__
 
 #include "../emustd.h"
+#include "../exceptions.h"
 #include "../hw/Memory.h"
 #include "AbstractUnit.h"
 #include "../hw/RegisterFile.h"

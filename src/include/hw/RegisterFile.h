@@ -11,18 +11,10 @@
 typedef map<ushort, bytes> RegisterMap;
 typedef RegisterMap::iterator RegisterIterator;
 
-class RegisterFileException: public exception {
-  private:
-  const char* message;
-
+class RegisterFileException: public EmulatorException {
   public:
-  RegisterFileException() {}
-  RegisterFileException(const char* message, ...) {
-    this->message = message;
-  }
-  const char* getMessage() {
-    return message;
-  }
+  RegisterFileException(): EmulatorException() {}
+  RegisterFileException(const char* message, ...): EmulatorException(message){};
 };
 
 class RegisterFile {

@@ -11,35 +11,35 @@ JTypeInstruction::JTypeInstruction(byte opcode, byte rd, byte imm8, byte imm1, b
   this->imm = bytes(3);
 
   if (opcode > OPCODE_MAX) {
-    throw new InstructionException("Failed to set opcode, greater than 63 [%d]", opcode);
+    throw new InstructionException("Failed to set opcode, greater than 63 [%d]\n", opcode);
   }
   this->opcode = opcode;
 
   if (rd > R_MAX) {
-    throw new InstructionException("Failed to set rd, greater than 31 [%d]", rd);
+    throw new InstructionException("Failed to set rd, greater than 31 [%d]\n", rd);
   }
   this->rd = rd;
 
   if (imm8 > IMM8_MAX) {
-    throw new InstructionException("Failed to set imm8, greater than 255 [%d]", imm8);
+    throw new InstructionException("Failed to set imm8, greater than 255 [%d]\n", imm8);
   }
   this->imm[1] = imm8 << 4;
   this->imm[2] = imm8 >> 4;
 
   if (imm1 > IMM1_MAX) {
-    throw new InstructionException("Failed to set imm1, greater than 1 [%d]", imm1);
+    throw new InstructionException("Failed to set imm1, greater than 1 [%d]\n", imm1);
   }
   this->imm[1] |= imm1 << 3;
 
   if (imm10.size() != IMM10_SIZE || getBytesToULong(imm10) > IMM10_MAX) {
-    throw new InstructionException("Failed to set imm10, greater than 1023 [%d]", getBytesToULong(imm10));
+    throw new InstructionException("Failed to set imm10, greater than 1023 [%d]\n", getBytesToULong(imm10));
   }
   this->imm[0] = imm10[0] << 1;
   this->imm[1] |= (imm10[0] & 128) >> 7;
   this->imm[1] |= imm10[1] << 1;
 
   if (imm31 > IMM1_MAX) {
-    throw new InstructionException("Failed to set imm10, greater than 1 [%d]", imm31);
+    throw new InstructionException("Failed to set imm10, greater than 1 [%d]\n", imm31);
   }
   this->imm[2] |= imm31 << 4;
   
@@ -48,7 +48,7 @@ JTypeInstruction::JTypeInstruction(byte opcode, byte rd, byte imm8, byte imm1, b
 
 void JTypeInstruction::decode(bytes instruction) {
   if (instruction.size() != INSTRUCTION_SIZE) {
-    throw new InstructionException("Failed to decode instruction, not 4 bytes in length [%d]", instruction.size());
+    throw new InstructionException("Failed to decode instruction, not 4 bytes in length [%d]\n", instruction.size());
   }
 
   try {
@@ -83,5 +83,5 @@ bytes JTypeInstruction::getImm(ushort low, ushort high) {
     return imm;
   }
 
-  throw new InstructionException("Failed to get imm, does not exist in this instruction type [low: %d, high: %d]", low, high);
+  throw new InstructionException("Failed to get imm, does not exist in this instruction type [low: %d, high: %d]\n", low, high);
 }

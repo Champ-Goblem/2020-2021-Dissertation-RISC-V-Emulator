@@ -6,6 +6,9 @@
 #include <cmath>
 #include <math.h>
 #include <thread>
+#include <string>
+#include <sstream>
+#include <iostream>
 
 using namespace std;
 
@@ -15,15 +18,15 @@ typedef unsigned long ulong;
 typedef vector<byte> bytes;
 
 class EmulatorException: public exception {
-  private:
-  const char* message;
+  protected:
+  string message;
 
   public:
   EmulatorException() {}
-  EmulatorException(const char* message, ...) {
+  EmulatorException(string message) {
     this->message = message;
   }
-  const char* getMessage() {
+  string getMessage() {
     return message;
   }
 };
