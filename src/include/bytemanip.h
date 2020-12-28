@@ -7,6 +7,7 @@
 #include <sstream>
 #include <iomanip>
 #include <iostream>
+#include <cmath>
 
 static string getBytesForPrint(bytes data) {
   ushort size = data.size();
@@ -101,7 +102,7 @@ static bytes addByteToBytes(bytes val, byte operand) {
   while(remainder > 0 && currentByte < val.size()) {
     byte tmp = val[currentByte];
     ret[currentByte] = tmp + remainder;
-    remainder = ((ushort)tmp + remainder) / pow(2, 8 * (1 + currentByte));
+    remainder = ((ushort)tmp + remainder) / 255;
     currentByte++;
   }
 
@@ -121,7 +122,7 @@ static bytes addBytesToBytes(bytes val, bytes operand) {
   byte remainder = 0;
   for (uint i=0; i<operand.size(); i++) {
     ret[i] = val[i] + operand[i] + remainder;
-    remainder = ((ushort)val[i] + operand[i] + remainder) / pow(2, 8 * (1 + i));
+    remainder = ((ushort)val[i] + operand[i] + remainder) / 255;
   }
 
   if (remainder != 0) {
@@ -140,7 +141,12 @@ static bytes subBytesFromBytes(bytes val, bytes operand) {
   byte remainder = 0;
   for (uint i=0; i<operand.size(); i++) {
     ret[i] = val[i] - operand[i] - remainder;
-    remainder = ((ushort)val[i] - operand[i] - remainder) / pow(2, 8 * (1 + i));
+    short abs = (short)val[i] - operand[i] - remainder; 
+    if (abs < 0) {
+      remainder = ((ushort)std::abs(abs) / 255) + 1;
+    } else {
+      remainder = 0;
+    }
   }
 
   if (remainder != 0) {

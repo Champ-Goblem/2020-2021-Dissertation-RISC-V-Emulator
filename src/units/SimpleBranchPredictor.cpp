@@ -24,6 +24,7 @@ SimpleBranchPredictor::SimpleBranchPredictor(Memory* memory, ushort XLEN, Regist
 }
 
 bytes SimpleBranchPredictor::getNextPC() {
+  this->workloop.join();
   // Check that no exceptions have been thrown by the thread
   if (this->workloopExceptionPtr) {
     rethrow_exception(this->workloopExceptionPtr);
@@ -36,13 +37,10 @@ bytes SimpleBranchPredictor::getNextPC() {
 
   // Get the next PC from the queue
   bytes nextPC = this->PCQueue.front();
-  // Ensure that we dont pop a value off while the other thread is accessing the queue
-  unique_lock<mutex> queueLock(queueMutex);
   // Drop the front of the queue
   this->PCQueue.pop();
-  queueLock.unlock();
-  // Notify the thread if paused that a new PC has been taken
-  queueCV.notify_all();
+  // Start new thread to fetch new PC
+  this->workloop = thread (&SimpleBranchPredictor::predictionWorkloop, this);
   return nextPC;
 }
 
@@ -68,10 +66,7 @@ void SimpleBranchPredictor::predictionWorkloop() {
     exception = true;
   }
 
-  // Needed for conditional_variable
-  mutex mutexForCV;
-  unique_lock<mutex> mutexLock(mutexForCV);
-  while (!exception && !this->isProcessorExceptionGenerated) {
+  while (!exception && !this->isProcessorExceptionGenerated && this->PCQueue.size() < this->queueSize) {
     bytes nextPC;
     try {
       // TODO: Handle address-misaligned exceptions
@@ -118,6 +113,8 @@ void SimpleBranchPredictor::predictionWorkloop() {
         } else {
           nextPC = subBytesFromBytes(lastPC, imm);
         }
+      } else {
+        nextPC = addByteToBytes(lastPC, 4);
       }
 
       // TODO: This needs changing to something that supports more than 8 bytes
@@ -139,15 +136,16 @@ void SimpleBranchPredictor::predictionWorkloop() {
     // No failed prediction
     if (!exception && !this->isProcessorExceptionGenerated && !this->failedPrediction) {
       // Ensure we dont push a value to the queue while the other thread is removing a value
-      unique_lock<mutex> queueLock(queueMutex);
       this->PCQueue.push(nextPC);
-      queueLock.unlock();
     }
-
-    // Wait for signal if queue size is equal to X or we failed a prediction so longs as no public exception generated
-    if ((this->PCQueue.size() == this->queueSize || this->failedPrediction) && !this->isProcessorExceptionGenerated) printf("Prediction workloop waiting for signal...");
-    this->queueCV.wait(mutexLock, [this]{return (this->PCQueue.size() == this->queueSize || this->failedPrediction) && !this->isProcessorExceptionGenerated;});
-    printf("Prediction workloop resuming...");
   }
-  mutexLock.unlock();
+}
+
+SimpleBranchPredictor::~SimpleBranchPredictor() {
+  if (this->workloopExceptionPtr) {
+    rethrow_exception(this->workloopExceptionPtr);
+  }
+
+  this->isProcessorExceptionGenerated = true;
+  this->workloop.join();
 }

@@ -18,6 +18,7 @@
     "cmath": "cpp",
     "iosfwd": "cpp",
     "system_error": "cpp",
-    "thread": "cpp"
+    "thread": "cpp",
+    "iostream": "cpp"
   }
 }
