@@ -1,2 +1,6 @@
-RType_Tests: instructions/AbstractInstruction.cpp
-A_Tests: a b c
+BType_Test: src/instructions/AbstractInstruction.cpp
+IType_Tests: src/instructions/AbstractInstruction.cpp
+JType_Tests: src/instructions/AbstractInstruction.cpp
+RType_Tests: src/instructions/AbstractInstruction.cpp
+SType_Tests: src/instructions/AbstractInstruction.cpp
+UType_Tests: src/instructions/AbstractInstruction.cpp

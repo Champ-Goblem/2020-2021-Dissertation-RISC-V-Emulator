@@ -16,7 +16,7 @@ class AddressMisalignedException: public EmulatorException {
 
   public:
   AddressMisalignedException(): EmulatorException() {};
-  AddressMisalignedException(bytes prevPC, bytes nextPC, bytes instruction, const char* message, ...): EmulatorException(message) {
+  AddressMisalignedException(bytes prevPC, bytes nextPC, bytes instruction, string message): EmulatorException(message) {
     this->prevPC = prevPC;
     this->nextPC = nextPC;
     this->instruction = instruction;
@@ -36,12 +36,13 @@ class AddressMisalignedException: public EmulatorException {
 class AddressOutOfMemoryException: public EmulatorException {
   public:
   AddressOutOfMemoryException(): EmulatorException() {};
-  AddressOutOfMemoryException(ulong addr, ulong off, ulong size, bool isRead): EmulatorException() {
+  AddressOutOfMemoryException(ulong addr, ulong off, ulong size, bool isRead, string message=""): EmulatorException() {
     ostringstream str;
     str << (isRead ? "Read" : "Write") << "to address out of range of memory region\n";
+    str << "Message: " << message << "\n";
     str << "\tAddress: " << addr << "\n";
-    str << "\tOffset: " << off << "\n";
-    str << "\tMemory Size: " << size << "\n";
+    str << "\tOffset: " << off << " Bytes\n";
+    str << "\tMemory Size: " << size << " Bytes\n";
     this->message = str.str();
   }
 };

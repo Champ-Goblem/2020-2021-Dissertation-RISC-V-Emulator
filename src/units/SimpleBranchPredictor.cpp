@@ -7,11 +7,11 @@ SimpleBranchPredictor::SimpleBranchPredictor(Memory* memory, ushort XLEN, Regist
 
   ulong pcVal = getBytesToULong(initialPC);
   if (pcVal >= memory->getSize()) {
-    throw new BranchPredictorException("Initial PC invalid, points to out of memory [PC: %d, max: %d]", pcVal, memory->getSize());
+    throw new AddressOutOfMemoryException(pcVal, 4, memory->getSize(), true, "Initial PC invalid, points to out of memory");
   }
 
   if (initialPC[0] % 4 != 0) {
-    throw new BranchPredictorException("Initial PC invalid, not 4 byte aligned [%s]", getBytesForPrint(initialPC).c_str());
+    throw new AddressMisalignedException(initialPC, bytes{0}, bytes{0}, "Initial PC invalid, not 4 byte aligned");
   }
 
   this->memory = memory;
@@ -88,7 +88,7 @@ void SimpleBranchPredictor::predictionWorkloop() {
           nextPC = addByteToBytes(lastPC, 4);
         }
 
-      } else if (opcode == 103) {
+      } else if (opcode == 115) {
         // Opcode = JALR
         // Uses I-Type
         ITypeInstruction i = ITypeInstruction();
@@ -101,7 +101,7 @@ void SimpleBranchPredictor::predictionWorkloop() {
         } else {
           nextPC = subBytesFromBytes(rs1Val, imm);
         }
-      } else if (opcode == 111) {
+      } else if (opcode == 123) {
         // opcode - JAL
         // Uses J-Type
         JTypeInstruction j = JTypeInstruction();
@@ -120,7 +120,7 @@ void SimpleBranchPredictor::predictionWorkloop() {
       // TODO: This needs changing to something that supports more than 8 bytes
       ulong pcVal = getBytesToULong(nextPC);
       if (pcVal >= memory->getSize()) {
-        throw new BranchPredictorException("Generated PC invalid, points to out of memory [PC: %d, max: %d]", pcVal, memory->getSize());
+        throw new AddressOutOfMemoryException(pcVal, 4, memory->getSize(), true);
       }
       if (nextPC[0] % 4 != 0) {
         throw new BranchPredictorException("Generated PC not 4 bytes aligned [%s]", getBytesForPrint(nextPC).c_str());

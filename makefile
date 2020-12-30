@@ -12,7 +12,7 @@ TEST_TARGET=$(TDIR)/RISC-Emu.test
 TEST=./tests
 TESTROOT=$(TEST)/framework/cxxtest-4.4
 TESTBIN=$(TESTROOT)/bin/cxxtestgen
-TESTBUILDFLAGS=-I$(TESTROOT) -I$(IDIR) -g
+TESTBUILDFLAGS=-I$(TESTROOT) -I$(IDIR) -g -pthread
 
 vpath %.c $(SDIR)
 vpath %.o $(ODIR)
@@ -70,11 +70,7 @@ $(1)/%_Tests: $(1)/%_Tests.h $(subst $(TDIR), $(ODIR), $(1))/%.o
 	@echo Making test $$@
 	$(TESTBIN) --error-printer -o $$@.cpp $$<
 	$(CXX) -c -o $$@.o $$@.cpp $(TESTBUILDFLAGS)
-	$(eval NAME := $$@_Tests)
-	@echo $(NAME)
-	$(eval DEPS := $$(shell cat $(1)/$(MAKEDEPSFILE) | grep "$*_Tests" | cut -d':' -f2))
-	@echo $(DEPS)
-	$(CXX) -o $$@.test $$@.cpp $(subst $(TDIR), $(ODIR), $(1))/$$*.o $(TESTBUILDFLAGS)
+	./testBuilder.sh $(1) $$*_Tests "$(subst $(TDIR), $(ODIR), $(1))/$$*.o" "$(TESTBUILDFLAGS)"
 	$$@.test
 endef
 
