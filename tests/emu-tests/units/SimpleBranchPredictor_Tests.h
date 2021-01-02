@@ -59,7 +59,7 @@ class SimpleBranchPredictorTests : public CxxTest::TestSuite {
     // 1100 1110 0000 0000 0000 0001 0000 0000
     // RS1: 0 -> 0
     Memory m(100);
-    m.writeDWord(0, bytes{115, 0, 128, 0});
+    m.writeDWord(0, bytes{103, 0, 128, 0});
     RegisterFile rf(4, false);
     SimpleBranchPredictor s(&m, 4, &rf, bytes{0,0,0,0});
     s.getNextPC();
@@ -74,7 +74,7 @@ class SimpleBranchPredictorTests : public CxxTest::TestSuite {
     // 1100 1110 0000 0001 0000 0001 0000 0001
     // RS1 1 -> 8
     Memory m(100);
-    m.writeDWord(0, bytes{115, 128, 128, 128});
+    m.writeDWord(0, bytes{103, 128, 128, 128});
     RegisterFile rf(4, false);
     rf.write(1, bytes{8,0,0,0});
     SimpleBranchPredictor s(&m, 4, &rf, bytes{0,0,0,0});
@@ -89,7 +89,7 @@ class SimpleBranchPredictorTests : public CxxTest::TestSuite {
     // 1101111 00000 00000000 0 0010000000 0
     // 1101 1110 0000 0000 0000 0001 0000 0000
     Memory m(100);
-    m.writeDWord(0, bytes{123, 0, 128, 0});
+    m.writeDWord(0, bytes{111, 0, 128, 0});
     RegisterFile rf(4, false);
     SimpleBranchPredictor s(&m, 4, &rf, bytes{0,0,0,0});
     s.getNextPC();
@@ -103,7 +103,7 @@ class SimpleBranchPredictorTests : public CxxTest::TestSuite {
     // 1101111 00000 00000000 0 0010000000 1
     // 1101 1110 0000 0000 0000 0001 0000 0001
     Memory m(100);
-    m.writeDWord(16, bytes{123, 0, 128, 128});
+    m.writeDWord(16, bytes{111, 0, 128, 128});
     RegisterFile rf(4, false);
     SimpleBranchPredictor s(&m, 4, &rf, bytes{16,0,0,0});
     s.getNextPC();
@@ -128,4 +128,30 @@ class SimpleBranchPredictorTests : public CxxTest::TestSuite {
     RegisterFile rf(4, false);
     TS_ASSERT_THROWS(SimpleBranchPredictor s(&m, 4, &rf, bytes{1,0,0,0}), AddressMisalignedException*);
   }
+
+  // Doesnt seem to be catching the errors below properly
+  // void testGetWithJALRToOutOfMemory(void) {
+  //   // Uses I-Type
+  //   // imm: 001010000000
+  //   // 1100111 00000 000 00000 001010000000
+  //   // 1100 1110 0000 0000 0000 0010 1000 0000
+  //   Memory m(20);
+  //   m.writeDWord(0, bytes{115, 0, 64, 1});
+  //   RegisterFile rf(4, false);
+  //   SimpleBranchPredictor s(&m, 4, &rf, bytes{0,0,0,0});
+  //   TS_ASSERT_THROWS(s.getNextPC(), AddressOutOfMemoryException*);
+  // }
+
+  // void testGetWithJALToOutOfMemory(void) {
+  //   // Uses J-Type
+  //   // imm: 00101000000000000000
+  //   // 1101111 00000 00000000 0 0101000000 0
+  //   // 1101 1110 0000 0000 0000 0010 1000 0000
+  //   Memory m(20);
+  //   m.writeDWord(0, bytes{123, 0, 64, 1});
+  //   RegisterFile rf(4, false);
+  //   SimpleBranchPredictor s(&m, 4, &rf, bytes{0,0,0,0});
+  //   TS_ASSERT_THROWS(s.getNextPC(), AddressOutOfMemoryException*);
+  // }
+
 };

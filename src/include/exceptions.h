@@ -38,7 +38,7 @@ class AddressOutOfMemoryException: public EmulatorException {
   AddressOutOfMemoryException(): EmulatorException() {};
   AddressOutOfMemoryException(ulong addr, ulong off, ulong size, bool isRead, string message=""): EmulatorException() {
     ostringstream str;
-    str << (isRead ? "Read" : "Write") << "to address out of range of memory region\n";
+    str << (isRead ? "Read" : "Write") << " to address out of range of memory region\n";
     str << "Message: " << message << "\n";
     str << "\tAddress: " << addr << "\n";
     str << "\tOffset: " << off << " Bytes\n";

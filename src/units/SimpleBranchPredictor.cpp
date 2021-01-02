@@ -88,7 +88,7 @@ void SimpleBranchPredictor::predictionWorkloop() {
           nextPC = addByteToBytes(lastPC, 4);
         }
 
-      } else if (opcode == 115) {
+      } else if (opcode == 103) {
         // Opcode = JALR
         // Uses I-Type
         ITypeInstruction i = ITypeInstruction();
@@ -101,7 +101,7 @@ void SimpleBranchPredictor::predictionWorkloop() {
         } else {
           nextPC = subBytesFromBytes(rs1Val, imm);
         }
-      } else if (opcode == 123) {
+      } else if (opcode == 111) {
         // opcode - JAL
         // Uses J-Type
         JTypeInstruction j = JTypeInstruction();
