@@ -43,6 +43,10 @@ STypeInstruction::STypeInstruction(byte opcode, byte imm5, byte func3, byte rs1,
   }
   this->imm[0] |= imm7 << 5;
   this->imm[1] |= imm7 >> 3;
+  this->isSigned = (bool)imm7 & 54;
+  if (this->isSigned) {
+    this->imm[1] |= ~getByteMaskForPosition(4);
+  }
 
   this->type = InstructionType::S;
 }
@@ -61,6 +65,10 @@ void STypeInstruction::decode(bytes instruction) {
     byte imm7 = getContrainedBits(instruction, 25, 31)[0];
     this->imm[0] |= imm7 << 5;
     this->imm[1] = imm7 >> 3;
+    this->isSigned = (bool)(imm7 & 54);
+    if (this->isSigned) {
+      this->imm[1] |= ~getByteMaskForPosition(4);
+    }
   } catch (exception e) {
     throw (e);
   }
@@ -76,9 +84,13 @@ bytes STypeInstruction::getImm(ushort low, ushort high) {
   } else if (low == 25 && high == 31) {
     bytes imm = bytes(1);
     imm[0] = this->imm[0] >> 5;
-    imm[0] |= this->imm[1] << 3;
+    imm[0] |= (this->imm[1] & 15) << 3;
     return imm;
   }
   
   throw new InstructionException("Failed to get imm, does not exist in this instruction type [low: %d, high: %d]\n", low, high);
+}
+
+string STypeInstruction::debug() {
+  return string("");
 }

@@ -10,6 +10,7 @@ class RTypeInstruction: public AbstractInstruction {
   RTypeInstruction(byte opcode, byte rd, byte func3, byte rs1, byte rs2, byte funct7);
 
   void decode(bytes instruction);
+  string debug();
 };
 
 #endif

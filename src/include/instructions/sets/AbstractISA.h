@@ -4,6 +4,12 @@
 #include "../../emustd.h"
 #include "../../exceptions.h"
 #include "../AbstractInstruction.h"
+#include "../BType.h"
+#include "../IType.h"
+#include "../JType.h"
+#include "../RType.h"
+#include "../SType.h"
+#include "../UType.h"
 
 struct OpcodeSpace {
   ushort opcode;

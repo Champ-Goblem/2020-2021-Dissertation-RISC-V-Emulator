@@ -62,3 +62,7 @@ void RTypeInstruction::decode(bytes instruction) {
 
   this->type = InstructionType::R;
 }
+
+string RTypeInstruction::debug() {
+  return string("");
+}

@@ -53,6 +53,13 @@ BTypeInstruction::BTypeInstruction(byte opcode, byte imm1, byte imm4, byte func3
   }
   this->imm[1] |= imm31 << 4;
 
+  // Sign extend
+  if (imm31) {
+    this->imm[1] |= ~getByteMaskForPosition(5);
+  }
+
+  this->isSigned = (bool)imm31;
+
   this->type = InstructionType::B;
 }
 
@@ -72,10 +79,16 @@ void BTypeInstruction::decode(bytes instruction) {
     this->rs2 = getContrainedBits(instruction, 20, 24)[0];
     byte imm510 = getContrainedBits(instruction, 25, 30)[0];
     byte imm12 = instruction[3] & 128;
+    this->isSigned = (bool)imm12;
     this->imm[0] |= imm510 << 5;
     this->imm[1] = imm510 >> 3; 
     this->imm[1] |= imm11 >> 4;
     this->imm[1] |= imm12 >> 3;
+    
+    // Sign extend to high
+    if (imm12) {
+      this->imm[1] |= ~getByteMaskForPosition(5);
+    }
   } catch (exception e) {
     throw (e);
   }
@@ -98,9 +111,13 @@ bytes BTypeInstruction::getImm(ushort low, ushort high) {
     return imm;
   } else if (low == 31 && high == 31) {
     bytes imm = bytes(1);
-    imm[0] = this->imm[1] >> 4;
+    imm[0] = (this->imm[1] >> 4) & 1;
     return imm;
   }
 
   throw new InstructionException("Failed to get imm, does not exist in this instruction type [low: %d, high: %d]\n", low, high);
+}
+
+string BTypeInstruction::debug() {
+  return string("");
 }

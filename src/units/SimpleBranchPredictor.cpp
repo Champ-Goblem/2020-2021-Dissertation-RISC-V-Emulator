@@ -2,16 +2,16 @@
 
 SimpleBranchPredictor::SimpleBranchPredictor(Memory* memory, ushort XLEN, RegisterFile* registerFile, bytes initialPC) {
   if (initialPC.size() != XLEN) {
-    throw new BranchPredictorException("Initial PC invalid, not size of XLEN [%s]", getBytesForPrint(initialPC).c_str());
+    throw BranchPredictorException("Initial PC invalid, not size of XLEN [%s]", getBytesForPrint(initialPC).c_str());
   }
 
   ulong pcVal = getBytesToULong(initialPC);
   if (pcVal >= memory->getSize()) {
-    throw new AddressOutOfMemoryException(pcVal, 4, memory->getSize(), true, "Initial PC invalid, points to out of memory");
+    throw AddressOutOfMemoryException(pcVal, 4, memory->getSize(), true, "Initial PC invalid, points to out of memory");
   }
 
   if (initialPC[0] % 4 != 0) {
-    throw new AddressMisalignedException(initialPC, bytes{0}, bytes{0}, "Initial PC invalid, not 4 byte aligned");
+    throw AddressMisalignedException(initialPC, bytes{0}, bytes{0}, "Initial PC invalid, not 4 byte aligned");
   }
 
   this->memory = memory;
@@ -54,11 +54,11 @@ void SimpleBranchPredictor::predictionWorkloop() {
     // Check that the initial size of the queue isnt zero
     // The queue should have at least one value in it
     if (this->PCQueue.size() == 0) {
-      throw new BranchPredictorException("Failed to start prediction, queue length 0");
+      throw BranchPredictorException("Failed to start prediction, queue length 0");
     }
 
     if (this->PCQueue.back()[0] % 4 != 0) {
-      throw new BranchPredictorException("Failed to start prediction, inital PC not 4-bytes aligned [%s]", getBytesForPrint(this->PCQueue.back()).c_str());
+      throw BranchPredictorException("Failed to start prediction, inital PC not 4-bytes aligned [%s]", getBytesForPrint(this->PCQueue.back()).c_str());
     }
   } catch (...) {
     // Pass the current exception to the exception ptr;
@@ -82,8 +82,7 @@ void SimpleBranchPredictor::predictionWorkloop() {
           BTypeInstruction b = BTypeInstruction();
           b.decode(instruction);
           bytes imm = b.AbstractInstruction::getImm();
-          imm[1] &= 15;
-          nextPC = subBytesFromBytes(lastPC, imm);
+          nextPC = bytesAddition(lastPC, imm);
         } else {
           nextPC = addByteToBytes(lastPC, 4);
         }
@@ -94,25 +93,15 @@ void SimpleBranchPredictor::predictionWorkloop() {
         ITypeInstruction i = ITypeInstruction();
         i.decode(instruction);
         bytes imm = i.AbstractInstruction::getImm();
-        imm[1] &= 3;
         bytes rs1Val = this->registerFile->get((ushort)i.getRS1());
-        if (instruction[3] >> 7 == 0) {
-          nextPC = addBytesToBytes(rs1Val, imm);
-        } else {
-          nextPC = subBytesFromBytes(rs1Val, imm);
-        }
+        nextPC = bytesAddition(rs1Val, imm);
       } else if (opcode == 111) {
         // opcode - JAL
         // Uses J-Type
         JTypeInstruction j = JTypeInstruction();
         j.decode(instruction);
         bytes imm = j.AbstractInstruction::getImm();
-        imm[2] &= 15;
-        if (instruction[3] >> 7 == 0) {
-          nextPC = addBytesToBytes(lastPC, imm);
-        } else {
-          nextPC = subBytesFromBytes(lastPC, imm);
-        }
+        nextPC = bytesAddition(lastPC, imm);
       } else {
         nextPC = addByteToBytes(lastPC, 4);
       }
@@ -120,10 +109,10 @@ void SimpleBranchPredictor::predictionWorkloop() {
       // TODO: This needs changing to something that supports more than 8 bytes
       ulong pcVal = getBytesToULong(nextPC);
       if (pcVal >= memory->getSize()) {
-        throw new AddressOutOfMemoryException(pcVal, 4, memory->getSize(), true);
+        throw AddressOutOfMemoryException(pcVal, 4, memory->getSize(), true);
       }
       if (nextPC[0] % 4 != 0) {
-        throw new BranchPredictorException("Generated PC not 4 bytes aligned [%s]", getBytesForPrint(nextPC).c_str());
+        throw BranchPredictorException("Generated PC not 4 bytes aligned [%s]", getBytesForPrint(nextPC).c_str());
       }
     } catch (...) {
       this->workloopExceptionPtr = current_exception();

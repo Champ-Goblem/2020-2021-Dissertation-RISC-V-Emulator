@@ -43,7 +43,12 @@ class AbstractInstruction {
   byte func7;
   bytes imm;
   InstructionType type;
-  
+  bytes rs1Val;
+  bytes rs2Val;
+  bytes result;
+  bytes pc;
+  bool isSigned;
+
   public:
   byte getOpcode();
   byte getRS1();
@@ -54,6 +59,19 @@ class AbstractInstruction {
   bytes getImm();
   bytes getImm(ushort low, ushort high);
   InstructionType getType();
+  bytes getRs1Val();
+  void setRs1Val(bytes val);
+  bytes getRs2Val();
+  void setRs2Val(bytes val);
+  bytes getResult();
+  void setResult(bytes val);
+  bytes getPC();
+  void setPC(bytes val);
+  bool isSignedImmediate();
+  virtual string debug() {};
+  void (*execute)(AbstractInstruction* instruction);
+  void (*registerWriteback)(AbstractInstruction* instruction);
+  void (*memoryAccess)(AbstractInstruction* instruction);
 };
 
 #endif

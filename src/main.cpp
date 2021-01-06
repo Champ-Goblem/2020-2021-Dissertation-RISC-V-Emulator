@@ -3,18 +3,12 @@
 #include "include/units/SimpleBranchPredictor.h"
 #include "include/hw/RegisterFile.h"
 #include "include/hw/Memory.h"
+#include "include/instructions/SType.h"
 #include <thread>
 
 int main(int argc, char** argv) {
-    Memory m(20);
-    m.writeDWord(0, bytes{115, 0, 64, 1});
-    RegisterFile rf(4, false);
-    SimpleBranchPredictor s(&m, 4, &rf, bytes{0,0,0,0});
-    try {
-      s.getNextPC();
-    } catch (EmulatorException* e) {
-      cerr << e->getMessage();
-    }
-    this_thread::sleep_for(chrono::seconds(100));
+  STypeInstruction s = STypeInstruction();
+  s.decode(bytes{119, 115, 242, 234});
+  s.getImm(25, 31);
   return 0;
 }

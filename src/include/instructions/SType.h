@@ -14,6 +14,7 @@ class STypeInstruction: public AbstractInstruction {
 
   void decode(bytes instruction);
   bytes getImm(ushort low, ushort high);
+  string debug();
 };
 
 #endif

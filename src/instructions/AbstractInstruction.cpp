@@ -29,9 +29,45 @@ bytes AbstractInstruction::getImm() {
 };
 
 bytes AbstractInstruction::getImm(ushort low, ushort high) {
-  throw new InstructionException("Failed to get imm, does not exist on this instruction type\n");
+  throw InstructionException("Failed to get imm, does not exist on this instruction type\n");
 };
 
 InstructionType AbstractInstruction::getType() {
   return type;
+}
+
+bytes AbstractInstruction::getRs1Val() {
+  return rs1Val;
+}
+
+void AbstractInstruction::setRs1Val(bytes val) {
+  this->rs1Val = val;
+}
+
+bytes AbstractInstruction::getRs2Val() {
+  return rs2Val;
+}
+
+void AbstractInstruction::setRs2Val(bytes val) {
+  this->rs1Val = val;
+}
+
+bytes AbstractInstruction::getResult() {
+  return result;
+}
+
+void AbstractInstruction::setResult(bytes val) {
+  this->rs1Val = val;
+}
+
+bytes AbstractInstruction::getPC() {
+  return pc;
+}
+
+void AbstractInstruction::setPC(bytes val) {
+  this->rs1Val = val;
+}
+
+bool AbstractInstruction::isSignedImmediate() {
+  return this->isSigned;
 }

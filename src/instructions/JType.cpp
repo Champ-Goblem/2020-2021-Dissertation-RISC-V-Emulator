@@ -42,6 +42,10 @@ JTypeInstruction::JTypeInstruction(byte opcode, byte rd, byte imm8, byte imm1, b
     throw new InstructionException("Failed to set imm10, greater than 1 [%d]\n", imm31);
   }
   this->imm[2] |= imm31 << 4;
+  this->isSigned = (bool)imm31;
+  if (imm31) {
+    this->imm[2] |= ~getByteMaskForPosition(5);
+  }
   
   this->type = InstructionType::J;
 }
@@ -61,6 +65,10 @@ void JTypeInstruction::decode(bytes instruction) {
     this->imm[1] |= fullImm[0] << 4;
     this->imm[2] = fullImm[0] >> 4;
     this->imm[2] |= (fullImm[2] & 8) << 1;
+    this->isSigned = (bool)(instruction[3] & 128);
+    if (this->isSigned) {
+      this->imm[2] |= ~getByteMaskForPosition(5);
+    }
   } catch (exception e) {
     throw (e);
   }
@@ -79,9 +87,13 @@ bytes JTypeInstruction::getImm(ushort low, ushort high) {
     return getContrainedBits(this->imm, 1, 10);
   } else if (low == 31 && high == 31) {
     bytes imm = bytes(1);
-    imm[0] = this->imm[2] >> 4;
+    imm[0] = (this->imm[2] >> 4) & 1;
     return imm;
   }
 
   throw new InstructionException("Failed to get imm, does not exist in this instruction type [low: %d, high: %d]\n", low, high);
+}
+
+string JTypeInstruction::debug() {
+  return string("");
 }

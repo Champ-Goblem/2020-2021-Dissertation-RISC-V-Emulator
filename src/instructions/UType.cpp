@@ -22,9 +22,13 @@ UTypeInstruction::UTypeInstruction(byte opcode, byte rd, bytes imm) {
   if (imm.size() != IMM_SIZE || size > IMM_MAX) {
     throw new InstructionException("Failed to set rd, greater than 1048575 [%d]\n", size);
   }
-  this->imm = imm;
+  this->imm = bytesLogicalLeftShift(imm, 12);
+  this->isSigned = (bool)(imm[2] & 8);
+  if (this->isSigned) {
+    this->imm[1] |= ~getByteMaskForPosition(4);
+  }
 
-  this->type = InstructionType::U;
+  this->type = InstructionType::U;  
 }
 
 void UTypeInstruction::decode(bytes instruction) {
@@ -35,7 +39,8 @@ void UTypeInstruction::decode(bytes instruction) {
   try {
     this->opcode = getContrainedBits(instruction, 0, 6)[0];
     this->rd = getContrainedBits(instruction, 7, 11)[0];
-    this->imm = getContrainedBits(instruction, 12, 31);
+    this->imm = bytesLogicalLeftShift(getContrainedBits(instruction, 12, 31), 12);
+    this->isSigned = (bool)(imm[2] & 8);
   } catch (exception e) {
     throw (e);
   }
@@ -45,8 +50,12 @@ void UTypeInstruction::decode(bytes instruction) {
 
 bytes UTypeInstruction::getImm(ushort low, ushort high) {
   if (low == 12 && high == 31) {
-    return imm;
+    return getContrainedBits(this->imm, 12, 31);
   }
 
   throw new InstructionException("Failed to get imm, does not exist in this instruction type [low: %d, high: %d]\n", low, high);
+}
+
+string UTypeInstruction::debug() {
+  return string("");
 }

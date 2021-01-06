@@ -16,7 +16,7 @@ class ITypeInstructionTests : public CxxTest::TestSuite
     TS_ASSERT(i.getRD() == 31);
     TS_ASSERT(i.getFunc3() == 7);
     TS_ASSERT(i.getRS1() == 31);
-    bytes imm = bytes{255, 15};
+    bytes imm = bytes{255, 255};
     TS_ASSERT(i.AbstractInstruction::getImm() == imm);
   }
 
@@ -30,7 +30,7 @@ class ITypeInstructionTests : public CxxTest::TestSuite
     TS_ASSERT(i.getRD() == 29);
     TS_ASSERT(i.getFunc3() == 0);
     TS_ASSERT(i.getRS1() == 24);
-    bytes imm = bytes{13, 15};
+    bytes imm = bytes{13, 255};
     TS_ASSERT(i.AbstractInstruction::getImm() == imm);
   }
 

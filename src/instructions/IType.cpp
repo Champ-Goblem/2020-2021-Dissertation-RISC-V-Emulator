@@ -38,7 +38,15 @@ ITypeInstruction::ITypeInstruction(byte opcode, byte rd, byte func3, byte rs1, b
     throw new InstructionException("Failed to set rs1, greater than 31 [%d]\n", rs1);
   }
   this->rs1 = rs1;
+
+  if (getBytesToULong(imm) > MAX_IMM_SIZE) {
+    throw new InstructionException("Failed to set imm, greater than 4095 [%d]\n", rs1);
+  }
   this->imm = imm;
+  this->isSigned = (bool)(imm[1] & 8);
+  if (this->isSigned) {
+    this->imm[1] |= ~getByteMaskForPosition(4);
+  }
 
   this->type = InstructionType::I;
 }
@@ -54,6 +62,10 @@ void ITypeInstruction::decode(bytes instruction) {
     this->func3 = getContrainedBits(instruction, 12, 14)[0];
     this->rs1 = getContrainedBits(instruction, 15, 19)[0];
     this->imm = getContrainedBits(instruction, 20, 31);
+    this->isSigned = (bool)(instruction[3] & 128);
+    if (this->isSigned) {
+      this->imm[1] |= ~getByteMaskForPosition(4);
+    }
   } catch (exception e) {
     throw e;
   }
@@ -66,4 +78,8 @@ bytes ITypeInstruction::getImm(ushort low, ushort high) {
     return this->imm; 
   }
   throw new InstructionException("Failed to get imm, wrong position [low: %d, high: %d]\n", low, high);
+}
+
+string ITypeInstruction::debug() {
+  return string("");
 }

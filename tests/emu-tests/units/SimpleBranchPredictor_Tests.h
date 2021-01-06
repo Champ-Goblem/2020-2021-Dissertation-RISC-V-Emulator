@@ -40,11 +40,11 @@ class SimpleBranchPredictorTests : public CxxTest::TestSuite {
 
   void testGetPCWithNegBranch(void) {
     // Uses B-Type encoding
-    // imm: 0011000000001
-    // 1100011 0 0110 000 00000 00000 000000 1
-    // 1100 0110 0110 0000 0000 0000 0000 0001
+    // imm: 0010111111111
+    // 1100011 1 0101 000 00000 00000 111111 1
+    // 1100 0111 0101 0000 0000 0000 0111 1111
     Memory m(100);
-    m.writeDWord(16, bytes{99, 6, 0, 128});
+    m.writeDWord(16, bytes{227, 10, 0, 254});
     RegisterFile rf(4, false);
     SimpleBranchPredictor s(&m, 4, &rf, bytes{16,0,0,0});
     bytes nextPC = bytes{4,0,0,0};
@@ -69,12 +69,12 @@ class SimpleBranchPredictorTests : public CxxTest::TestSuite {
 
   void testGetPCWithNegJALR(void) {
     // Uses I-Type
-    // imm: 000100000001
-    // 1100111 00000 000 10000 000100000001
-    // 1100 1110 0000 0001 0000 0001 0000 0001
+    // imm: 000111111111
+    // 1100111 00000 000 10000 000111111111
+    // 1100 1110 0000 0001 0000 0001 1111 1111
     // RS1 1 -> 8
     Memory m(100);
-    m.writeDWord(0, bytes{103, 128, 128, 128});
+    m.writeDWord(0, bytes{103, 128, 128, 255});
     RegisterFile rf(4, false);
     rf.write(1, bytes{8,0,0,0});
     SimpleBranchPredictor s(&m, 4, &rf, bytes{0,0,0,0});
@@ -99,11 +99,11 @@ class SimpleBranchPredictorTests : public CxxTest::TestSuite {
 
   void testGetPCWithNegJAL(void) {
     // Uses J-Type
-    // imm: 000100000000000000001
-    // 1101111 00000 00000000 0 0010000000 1
-    // 1101 1110 0000 0000 0000 0001 0000 0001
+    // imm: 000111111111111111111
+    // 1111011 00000 11111111 1 0011111111 1
+    // 1111 0110 0000 1111 1111 1001 1111 1111
     Memory m(100);
-    m.writeDWord(16, bytes{111, 0, 128, 128});
+    m.writeDWord(16, bytes{111, 240, 159, 255});
     RegisterFile rf(4, false);
     SimpleBranchPredictor s(&m, 4, &rf, bytes{16,0,0,0});
     s.getNextPC();
@@ -114,19 +114,19 @@ class SimpleBranchPredictorTests : public CxxTest::TestSuite {
   void testCreateWithOutOfMemoryInstruction(void) {
     Memory m(16);
     RegisterFile rf(4, false);
-    TS_ASSERT_THROWS(SimpleBranchPredictor s(&m, 4, &rf, bytes{16,0,0,0}), AddressOutOfMemoryException*);
+    TS_ASSERT_THROWS(SimpleBranchPredictor s(&m, 4, &rf, bytes{16,0,0,0}), AddressOutOfMemoryException);
   }
 
   void testCreateWithWrongSizeInstruction(void) {
     Memory m(16);
     RegisterFile rf(4, false);
-    TS_ASSERT_THROWS(SimpleBranchPredictor s(&m, 4, &rf, bytes{0,0,0}), BranchPredictorException*);
+    TS_ASSERT_THROWS(SimpleBranchPredictor s(&m, 4, &rf, bytes{0,0,0}), BranchPredictorException);
   }
 
   void testCreateWithMisalignedInstruction(void) {
     Memory m(16);
     RegisterFile rf(4, false);
-    TS_ASSERT_THROWS(SimpleBranchPredictor s(&m, 4, &rf, bytes{1,0,0,0}), AddressMisalignedException*);
+    TS_ASSERT_THROWS(SimpleBranchPredictor s(&m, 4, &rf, bytes{1,0,0,0}), AddressMisalignedException);
   }
 
   // Doesnt seem to be catching the errors below properly

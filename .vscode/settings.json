@@ -19,6 +19,7 @@
     "iosfwd": "cpp",
     "system_error": "cpp",
     "thread": "cpp",
-    "iostream": "cpp"
+    "iostream": "cpp",
+    "*.gypi": "cpp"
   }
 }

@@ -81,17 +81,31 @@ class RV32I: public AbstractISA {
   static AbstractInstruction decodeERoutines(bytes instruction);
 
   // Execute routines:
-  static void executeBranch(AbstractInstruction instruction);
-  static void executeLUI(AbstractInstruction instruction);
-  static void executeAUIPC(AbstractInstruction instruction);
-  static void executeJAL(AbstractInstruction instruction);
-  static void executeJALR(AbstractInstruction instruction);
-  static void executeLoad(AbstractInstruction instruction);
+  static void executeBranch(AbstractInstruction* instruction);
+  static void executeLUI(AbstractInstruction* instruction);
+  static void executeAUIPC(AbstractInstruction* instruction);
+  static void executeJAL(AbstractInstruction* instruction);
+  static void executeJALR(AbstractInstruction* instruction);
+  static void executeLoad(AbstractInstruction* instruction);
   static void executeStore(AbstractInstruction instruction);
-  static void executeBitopsImmediate(AbstractInstruction instruction);
-  static void executeBitops(AbstractInstruction instruction);
-  static void executeFence(AbstractInstruction instruction);
-  static void executeERoutines(AbstractInstruction instruction);
+  static void executeBitopsImmediate(AbstractInstruction* instruction);
+  static void executeBitops(AbstractInstruction* instruction);
+  static void executeFence(AbstractInstruction* instruction);
+  static void executeERoutines(AbstractInstruction* instruction);
+
+  // Register writeback routines
+  static void writebackBranch(AbstractInstruction* instruction);
+  static void writebackLUI(AbstractInstruction* instruction);
+  static void writebackAUIPC(AbstractInstruction* instruction);
+  static void writebackJAL(AbstractInstruction* instruction);
+  static void writebackJALR(AbstractInstruction* instruction);
+  static void writebackLoad(AbstractInstruction* instruction);
+  static void writebackBitopsImmediate(AbstractInstruction* instruction);
+  static void writebackBitops(AbstractInstruction* instruction);
+
+  // Memory access routines
+  static void memLoad(AbstractInstruction* instruction);
+  static void memStore(AbstractInstruction* instruction);
 };
 
 #endif

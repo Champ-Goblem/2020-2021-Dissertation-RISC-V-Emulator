@@ -3,6 +3,7 @@
 
 #include "bytemanip.h"
 #include "emustd.h"
+#include "instructions/AbstractInstruction.h"
 #include <string>
 #include <sstream>
 #include <iomanip>
@@ -57,4 +58,15 @@ class WrongSizeInstructionException: public EmulatorException {
   }
 };
 
+class UndefinedInstructionException: public EmulatorException {
+  public:
+  UndefinedInstructionException(): EmulatorException() {};
+  UndefinedInstructionException(AbstractInstruction* instruction, string message=""): EmulatorException() {
+    ostringstream str;
+    str << "Undefined instruction" << "\n";
+    str << "Message: " << message << "\n";
+    str << instruction->debug() << "\n";
+    this->message = str.str();
+  };
+};
 #endif
