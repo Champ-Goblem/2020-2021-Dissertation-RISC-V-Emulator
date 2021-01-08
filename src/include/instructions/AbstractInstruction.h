@@ -3,6 +3,8 @@
 
 #include "../emustd.h"
 #include "../bytemanip.h"
+#include "../hw/RegisterFile.h"
+#include "../hw/Memory.h"
 
 #define OPCODE_MAX 127
 #define R_MAX 31
@@ -70,8 +72,8 @@ class AbstractInstruction {
   bool isSignedImmediate();
   virtual string debug() {};
   void (*execute)(AbstractInstruction* instruction);
-  void (*registerWriteback)(AbstractInstruction* instruction);
-  void (*memoryAccess)(AbstractInstruction* instruction);
+  void (*registerWriteback)(AbstractInstruction* instruction, RegisterFile* registerFile);
+  void (*memoryAccess)(AbstractInstruction* instruction, Memory* memory);
 };
 
 #endif

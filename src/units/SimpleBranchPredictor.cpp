@@ -82,7 +82,7 @@ void SimpleBranchPredictor::predictionWorkloop() {
           BTypeInstruction b = BTypeInstruction();
           b.decode(instruction);
           bytes imm = b.AbstractInstruction::getImm();
-          nextPC = bytesAddition(lastPC, imm);
+          nextPC = bytesAdditionSigned(lastPC, imm);
         } else {
           nextPC = addByteToBytes(lastPC, 4);
         }
@@ -94,14 +94,14 @@ void SimpleBranchPredictor::predictionWorkloop() {
         i.decode(instruction);
         bytes imm = i.AbstractInstruction::getImm();
         bytes rs1Val = this->registerFile->get((ushort)i.getRS1());
-        nextPC = bytesAddition(rs1Val, imm);
+        nextPC = bytesAdditionSigned(rs1Val, imm);
       } else if (opcode == 111) {
         // opcode - JAL
         // Uses J-Type
         JTypeInstruction j = JTypeInstruction();
         j.decode(instruction);
         bytes imm = j.AbstractInstruction::getImm();
-        nextPC = bytesAddition(lastPC, imm);
+        nextPC = bytesAdditionSigned(lastPC, imm);
       } else {
         nextPC = addByteToBytes(lastPC, 4);
       }

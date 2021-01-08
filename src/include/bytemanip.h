@@ -135,50 +135,69 @@ static bytes addByteToBytes(bytes val, byte operand) {
   return ret;
 }
 
-// static bytes addBytesToBytes(bytes val, bytes operand) {
-//   if (val.size() == 0 || operand.size() == 0) {
-//     throw new EmulatorException("Failed to add bytes to bytes, size of operand is zero\n");
-//   }
+static bool bytesGreaterEqualToUint(bytes val1, uint val2) {
+  // Check out the number of bytes of val1 is not zero
+  if (val1.size() == 0) {
+    throw EmulatorException("Failed to compare bytes to uint, size of bytes is zero\n");
+  }
 
-//   bytes ret = bytes(val);
-//   byte remainder = 0;
-//   for (uint i=0; i<operand.size(); i++) {
-//     ret[i] = val[i] + operand[i] + remainder;
-//     remainder = ((ushort)val[i] + operand[i] + remainder) / 255;
-//   }
+  // Get the highest non-zero position in the byte that we need to access
+  uint highPosition = val2 / 255;
+  // Get the value in range 0-255 of the highestPosition + 1
+  // i.e 255 * highestPosition + remainder = val(val1)
+  byte remainder = val2 - (255 * highPosition);
+  if (val1.size() > highPosition && val1[highPosition] >= remainder) {
+    return true;
+  } else if (val1.size() > highPosition && val1[highPosition] < remainder) {
+    return false;
+  }
+  return false;
+}
 
-//   if (remainder != 0) {
-//     throw new EmulatorException("Overflow when adding bytes to bytes\n");
-//   }
+static bytes bytesAdditionUnsigned(bytes val, bytes operand, bool throwForFlows=false) {
+  if (val.size() == 0 || operand.size() == 0) {
+    throw new EmulatorException("Failed to add bytes to bytes, size of operand is zero\n");
+  }
 
-//   return ret;
-// }
+  bytes ret = bytes(val);
+  byte remainder = 0;
+  for (uint i=0; i<operand.size(); i++) {
+    ret[i] = val[i] + operand[i] + remainder;
+    remainder = ((ushort)val[i] + operand[i] + remainder) / 255;
+  }
 
-// static bytes subBytesFromBytes(bytes val, bytes operand) {
-//   if (val.size() == 0 || operand.size() == 0) {
-//     throw new EmulatorException("Failed to subtract bytes from bytes, size of operand is zero\n");
-//   }
+  if (remainder != 0 && throwForFlows) {
+    throw new EmulatorException("Overflow when adding bytes to bytes\n");
+  }
 
-//   bytes ret = bytes(val);
-//   byte remainder = 0;
-//   for (uint i=0; i<operand.size(); i++) {
-//     ret[i] = val[i] - operand[i] - remainder;
-//     short abs = (short)val[i] - operand[i] - remainder; 
-//     if (abs < 0) {
-//       remainder = ((ushort)std::abs(abs) / 255) + 1;
-//     } else {
-//       remainder = 0;
-//     }
-//   }
+  return ret;
+}
 
-//   if (remainder != 0) {
-//     throw new EmulatorException("Underflow when subtracting bytes from bytes\n");
-//   }
+static bytes bytesSubtractionUnsigned(bytes val, bytes operand, bool throwForFlows=false) {
+  if (val.size() == 0 || operand.size() == 0) {
+    throw new EmulatorException("Failed to subtract bytes from bytes, size of operand is zero\n");
+  }
 
-//   return ret;
-// }
+  bytes ret = bytes(val);
+  byte remainder = 0;
+  for (uint i=0; i<operand.size(); i++) {
+    ret[i] = val[i] - operand[i] - remainder;
+    short abs = (short)val[i] - operand[i] - remainder; 
+    if (abs < 0) {
+      remainder = ((ushort)std::abs(abs) / 255) + 1;
+    } else {
+      remainder = 0;
+    }
+  }
 
-static bytes bytesAddition(bytes val1, bytes val2, bool throwForFlows=false) {
+  if (remainder != 0 && throwForFlows) {
+    throw new EmulatorException("Underflow when subtracting bytes from bytes\n");
+  }
+
+  return ret;
+}
+
+static bytes bytesAdditionSigned(bytes val1, bytes val2, bool throwForFlows=false) {
   uint size1 = val1.size();
   uint size2 = val2.size();
   if (size1 == 0 || size2 == 0) {
@@ -213,7 +232,7 @@ static bytes bytesAddition(bytes val1, bytes val2, bool throwForFlows=false) {
 static bool bytesLessThanBytesSigned(bytes val1, bytes val2) {
   uint size1 = val1.size();
   uint size2 = val2.size();
-  if (size1 == 0 || size2 == 2) {
+  if (size1 == 0 || size2 == 0) {
     throw EmulatorException("Failed to check less than signed, size of operand is zero\n");
   }
 
@@ -238,7 +257,7 @@ static bool bytesLessThanBytesSigned(bytes val1, bytes val2) {
 static bool bytesLessThanBytesUnsigned(bytes val1, bytes val2) {
   uint size1 = val1.size();
   uint size2 = val2.size();
-  if (size1 == 0 || size2 == 2) {
+  if (size1 == 0 || size2 == 0) {
     throw EmulatorException("Failed to check less than unsigned, size of operand is zero\n");
   }
 
@@ -263,7 +282,7 @@ static bool bytesLessThanBytesUnsigned(bytes val1, bytes val2) {
 static bool bytesGreaterOrequalToSigned(bytes val1, bytes val2) {
   uint size1 = val1.size();
   uint size2 = val2.size();
-  if (size1 == 0 || size2 == 2) {
+  if (size1 == 0 || size2 == 0) {
     throw EmulatorException("Failed to check ge signed, size of operand is zero\n");
   }
 
@@ -288,7 +307,7 @@ static bool bytesGreaterOrequalToSigned(bytes val1, bytes val2) {
 static bool bytesGreaterOrequalToUnsigned(bytes val1, bytes val2) {
   uint size1 = val1.size();
   uint size2 = val2.size();
-  if (size1 == 0 || size2 == 2) {
+  if (size1 == 0 || size2 == 0) {
     throw EmulatorException("Failed to check ge unsigned, size of operand is zero\n");
   }
 
@@ -321,16 +340,254 @@ static bytes bytesLogicalLeftShift(bytes val, uint shift) {
   uint fullShift = shift / 8;
   // Calculate offset to shift each byte by, will be zero if the shift is a multiple of 8 (i.e shifting by a full byte)
   uint offset = shift - (fullShift * 8);
-  // Create new array with enough space for the current byte + full shift, any overflow is ignored
-  bytes result = bytes(size1 + fullShift);
+  // Create new array from size of original
+  bytes result = bytes(size1);
   byte carry = 0;
-  for (uint i=0; i<size1; i++) {
+  uint i = 0;
+  while (i + fullShift < size1) {
     // By starting from i+fullShift these "full shifts" will all be zero in the result
     result[i+fullShift] = val[i] << offset;
     // Copy any remaining carries from last operation
     result[i+fullShift] |= carry;
     // Calculate new carry
     carry = val[i] >> (8-offset);
+    i++;
+  }
+
+  return result;
+}
+
+static bytes bytesLogicalLeftShift(bytes val, bytes shift) {
+  // Check that the values we are working on are not 0 bytes long
+  uint sizev = val.size();
+  uint sizes = shift.size();
+  if (sizev == 0 || sizes == 0) {
+    throw EmulatorException("Failed to check ge unsigned, size of operand is zero\n");
+  }
+
+  ushort maxPosition = sizev * 8;
+  if (bytesGreaterEqualToUint(shift, maxPosition)) {
+    return bytes(sizev);
+  }
+
+  uint fullShift = 0;
+  uint offset = 0;
+  for (uint i=0; i < sizes; i++) {
+    fullShift += shift[i] / 8;
+    offset = (shift[i] + offset) % 8;
+  }
+
+  bytes result = bytes(sizev);
+  uint i = 0;
+  byte carry = 0;
+  while (i + fullShift < sizev) {
+    result[i + fullShift] = val[i] << offset;
+    result[i + fullShift] |= carry;
+    carry = val[i] >> (8-offset);
+    i++;
+  }
+
+  return result;
+}
+
+static bytes bytesLogicalRightShift(bytes val, uint shift) {
+  // Check that the value we are working on is not 0 bytes long
+  uint size1 = val.size();
+  if (size1 == 0) {
+    throw EmulatorException("Failed to left shift, size of operand is zero\n");
+  }
+
+  // Calculate the number of full shifts that will be done (i.e byte = 0 after << 8)
+  uint fullShift = shift / 8;
+  // Calculate offset to shift each byte by, will be zero if the shift is a multiple of 8 (i.e shifting by a full byte)
+  uint offset = shift - (fullShift * 8);
+  // Create new array from size of original
+  bytes result = bytes(size1);
+  byte carry = 0;
+  uint i = size1 - 1;
+  while (i - fullShift >= 0) {
+    // By starting from i-fullShift these "full shifts" will all be zero in the result
+    result[i-fullShift] = val[i] >> offset;
+    // Copy any remaining carries from last operation
+    result[i-fullShift] |= carry;
+    // Calculate new carry
+    carry = val[i] << (8-offset);
+    i--;
+  }
+
+  return result;
+}
+
+static bytes bytesLogicalRightShift(bytes val, bytes shift) {
+  // Check that the values we are working on are not 0 bytes long
+  uint sizev = val.size();
+  uint sizes = shift.size();
+  if (sizev == 0 || sizes == 0) {
+    throw EmulatorException("Failed to check ge unsigned, size of operand is zero\n");
+  }
+
+  ushort maxPosition = sizev * 8;
+  if (bytesGreaterEqualToUint(shift, maxPosition)) {
+    return bytes(sizev);
+  }
+
+  uint fullShift = 0;
+  uint offset = 0;
+  for (uint i=0; i < sizes; i++) {
+    fullShift += shift[i] / 8;
+    offset = (shift[i] + offset) % 8;
+  }
+
+  bytes result = bytes(sizev);
+  uint i = sizev - 1;
+  byte carry = 0;
+  while (i - fullShift >= 0) {
+    result[i - fullShift] = val[i] >> offset;
+    result[i - fullShift] |= carry;
+    carry = val[i] << (8-offset);
+    i--;
+  }
+
+  return result;
+}
+
+static bytes bytesArithmeticRightShift(bytes val, uint shift) {
+  // Check that the value we are working on is not 0 bytes long
+  uint size1 = val.size();
+  if (size1 == 0) {
+    throw EmulatorException("Failed to left shift, size of operand is zero\n");
+  }
+
+  bool isSigned = (bool)(val[size1 - 1] & 128);
+
+  // Calculate the number of full shifts that will be done (i.e byte = 0 after << 8)
+  uint fullShift = shift / 8;
+  // Calculate offset to shift each byte by, will be zero if the shift is a multiple of 8 (i.e shifting by a full byte)
+  uint offset = shift - (fullShift * 8);
+  // Create new array from size of original
+  bytes result = bytes(size1, isSigned ? 255 : 0);
+  // Calculate carry initial value as top MSB bits 1 if signed
+  byte carry = isSigned ? 255 << (8-offset) : 0;
+  uint i = size1 - 1;
+  while (i - fullShift >= 0) {
+    // By starting from i-fullShift these "full shifts" will be filled with 1 if signed 0 otherwise
+    result[i-fullShift] = val[i] >> offset;
+    // Copy any remaining carries from last operation
+    result[i-fullShift] |= carry;
+    // Calculate new carry
+    carry = val[i] << (8-offset);
+    i--;
+  }
+
+  return result;
+}
+
+static bytes bytesArithmeticRightShift(bytes val, bytes shift) {
+  // Check that the values we are working on are not 0 bytes long
+  uint sizev = val.size();
+  uint sizes = shift.size();
+  if (sizev == 0 || sizes == 0) {
+    throw EmulatorException("Failed to check ge unsigned, size of operand is zero\n");
+  }
+
+  // Define a new vector with all 1s if the sign bit is negative
+  // 0 otherwise
+  bool isSigned = (bool)(val[sizev - 1] & 128);
+  bytes result = bytes(sizev, isSigned ? 255 : 0);
+
+  ushort maxPosition = sizev * 8;
+  if (bytesGreaterEqualToUint(shift, maxPosition)) {
+    return result;
+  }
+
+  uint fullShift = 0;
+  uint offset = 0;
+  for (uint i=0; i < sizes; i++) {
+    fullShift += shift[i] / 8;
+    offset = (shift[i] + offset) % 8;
+  }
+
+  uint i = sizev - 1;
+  // Define the initial carry as 0 for unsigned values
+  // or 1s for the top X bits for first shift in order to maintain complement
+  byte carry = isSigned ? 255 << (8-offset) : 0;
+  while (i - fullShift >= 0) {
+    result[i - fullShift] = val[i] >> offset;
+    result[i - fullShift] |= carry;
+    carry = val[i] << (8-offset);
+    i--;
+  }
+
+  return result;
+}
+
+static bytes bytesXOR(bytes val1, bytes val2) {
+  uint size1 = val1.size();
+  uint size2 = val2.size();
+  if (size1 == 0 || size2 == 0) {
+    throw EmulatorException("Failed to check ge unsigned, size of operand is zero\n");
+  }
+
+  // Make sure both values are the same length and thus have also been sign extended
+  bytes workingVal1 = val1;
+  bytes workingVal2 = val2;
+  if (size1 < size2) {
+    workingVal1 = copyWithSignExtend(val1, size2);
+  } else if (size2 < size1) {
+    workingVal2 = copyWithSignExtend(val2, size1);
+  }
+
+  bytes result(size1 > size2 ? size1 : size2);
+  for (uint i=0; i > size1 > size2 ? size1 : size2; i++) {
+    result[i] = workingVal1[i] ^ workingVal2[i];
+  }
+
+  return result;
+}
+
+static bytes bytesOR(bytes val1, bytes val2) {
+  uint size1 = val1.size();
+  uint size2 = val2.size();
+  if (size1 == 0 || size2 == 0) {
+    throw EmulatorException("Failed to check ge unsigned, size of operand is zero\n");
+  }
+
+  // Make sure both values are the same length and thus have also been sign extended
+  bytes workingVal1 = val1;
+  bytes workingVal2 = val2;
+  if (size1 < size2) {
+    workingVal1 = copyWithSignExtend(val1, size2);
+  } else if (size2 < size1) {
+    workingVal2 = copyWithSignExtend(val2, size1);
+  }
+
+  bytes result(size1 > size2 ? size1 : size2);
+  for (uint i=0; i > size1 > size2 ? size1 : size2; i++) {
+    result[i] = workingVal1[i] | workingVal2[i];
+  }
+
+  return result;
+}
+
+static bytes bytesAND(bytes val1, bytes val2) {
+  uint size1 = val1.size();
+  uint size2 = val2.size();
+  if (size1 == 0 || size2 == 0) {
+    throw EmulatorException("Failed to check ge unsigned, size of operand is zero\n");
+  }
+
+  // Make sure both values are the same length and thus have also been sign extended
+  bytes workingVal1 = val1;
+  bytes workingVal2 = val2;
+  if (size1 < size2) {
+    workingVal1 = copyWithSignExtend(val1, size2);
+  } else if (size2 < size1) {
+    workingVal2 = copyWithSignExtend(val2, size1);
+  }
+
+  bytes result(size1 > size2 ? size1 : size2);
+  for (uint i=0; i > size1 > size2 ? size1 : size2; i++) {
+    result[i] = workingVal1[i] & workingVal2[i];
   }
 
   return result;
