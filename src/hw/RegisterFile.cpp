@@ -59,6 +59,11 @@ bytes RegisterFile::getPC() {
   return pc;
 }
 
+void RegisterFile::incPC() {
+  // TODO: 4 needs changing to allow for C ext
+  this->pc = addByteToBytes(this->pc, 4);
+}
+
 void RegisterFile::debug() {
   // Print the current register values
   RegisterIterator itr = registerMap.begin();

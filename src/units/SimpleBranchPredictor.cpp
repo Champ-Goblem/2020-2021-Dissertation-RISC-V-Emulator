@@ -71,7 +71,7 @@ void SimpleBranchPredictor::predictionWorkloop() {
     try {
       // TODO: Handle address-misaligned exceptions
       bytes lastPC = PCQueue.back();
-      bytes instruction = memory->readDWord(getBytesToULong(lastPC));
+      bytes instruction = memory->readWord(getBytesToULong(lastPC));
       byte opcode = getContrainedBits(instruction, 0, 6)[0];
       if (opcode == 99) {
         // If opcode = beq | bne | blt | bge | bltu | bgeu

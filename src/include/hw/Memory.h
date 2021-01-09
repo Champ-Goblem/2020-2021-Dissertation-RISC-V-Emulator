@@ -5,9 +5,10 @@
 #include "../exceptions.h"
 #include "../bytemanip.h"
 
-#define WORD_SIZE 2
-#define DWORD_SIZE 4
-#define QWORD_SIZE 8
+#define HWORD_SIZE 2
+#define WORD_SIZE 4
+#define DWORD_SIZE 8
+#define QWORD_SIZE 16
 
 class MemoryException: public EmulatorException {
   public:
@@ -24,6 +25,8 @@ class Memory {
   Memory(ulong size);
   void writeByte(ulong addr, byte val);
   byte readByte(ulong addr);
+  void writeHWord(ulong addr, bytes val);
+  bytes readHWord(ulong addr);
   void writeWord(ulong addr, bytes val);
   bytes readWord(ulong addr);
   void writeDWord(ulong addr, bytes val);

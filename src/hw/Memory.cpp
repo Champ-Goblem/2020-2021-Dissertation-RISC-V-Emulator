@@ -19,6 +19,24 @@ byte Memory::readByte(ulong addr) {
   return memory[addr];
 }
 
+void Memory::writeHWord(ulong addr, bytes val) {
+  if (addr + HWORD_SIZE >= size) {
+    throw new AddressOutOfMemoryException(addr, HWORD_SIZE, size, false);
+  }
+  if (val.size() != HWORD_SIZE) {
+    throw new WrongSizeInstructionException(val.size(), HWORD_SIZE);
+  }
+  memory[addr] = val[0];
+  memory[addr+1] = val[1];
+}
+
+bytes Memory::readHWord(ulong addr) {
+  if (addr + HWORD_SIZE >= size) {
+    throw new AddressOutOfMemoryException(addr, HWORD_SIZE, size, true);
+  }
+  return bytes {memory[addr], memory[addr+1]};
+}
+
 void Memory::writeWord(ulong addr, bytes val) {
   if (addr + WORD_SIZE >= size) {
     throw new AddressOutOfMemoryException(addr, WORD_SIZE, size, false);
@@ -28,13 +46,15 @@ void Memory::writeWord(ulong addr, bytes val) {
   }
   memory[addr] = val[0];
   memory[addr+1] = val[1];
+  memory[addr+2] = val[2];
+  memory[addr+3] = val[3];
 }
 
 bytes Memory::readWord(ulong addr) {
   if (addr + WORD_SIZE >= size) {
     throw new AddressOutOfMemoryException(addr, WORD_SIZE, size, true);
   }
-  return bytes {memory[addr], memory[addr+1]};
+  return bytes {memory[addr], memory[addr+1], memory[addr+2], memory[addr+3]};
 }
 
 void Memory::writeDWord(ulong addr, bytes val) {
@@ -48,13 +68,17 @@ void Memory::writeDWord(ulong addr, bytes val) {
   memory[addr+1] = val[1];
   memory[addr+2] = val[2];
   memory[addr+3] = val[3];
+  memory[addr+4] = val[4];
+  memory[addr+5] = val[5];
+  memory[addr+6] = val[6];
+  memory[addr+7] = val[7];
 }
 
 bytes Memory::readDWord(ulong addr) {
   if (addr + DWORD_SIZE >= size) {
     throw new AddressOutOfMemoryException(addr, DWORD_SIZE, size, true);
   }
-  return bytes {memory[addr], memory[addr+1], memory[addr+2], memory[addr+3]};
+  return bytes {memory[addr], memory[addr+1], memory[addr+2], memory[addr+3], memory[addr+4], memory[addr+5], memory[addr+6], memory[addr+7]};
 }
 
 void Memory::writeQWord(ulong addr, bytes val) {

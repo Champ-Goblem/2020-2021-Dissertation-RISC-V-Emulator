@@ -71,3 +71,7 @@ void AbstractInstruction::setPC(bytes val) {
 bool AbstractInstruction::isSignedImmediate() {
   return this->isSigned;
 }
+
+ushort AbstractInstruction::getXLEN() {
+  return this->XLEN;
+}

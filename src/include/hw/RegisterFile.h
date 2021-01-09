@@ -6,6 +6,7 @@
 #define REG16 16
 
 #include "../emustd.h"
+#include "../bytemanip.h"
 #include <map>
 
 typedef map<ushort, bytes> RegisterMap;
@@ -30,6 +31,7 @@ class RegisterFile {
   void write(ushort reg, bytes val);
   void writePC(bytes addr);
   bytes getPC();
+  void incPC();
   void debug();
 };
 

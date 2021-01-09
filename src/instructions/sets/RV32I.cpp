@@ -46,7 +46,7 @@ AbstractInstruction RV32I::decodeBranch(bytes instruction) {
   ins.decode(instruction);
   ins.execute = &executeBranch;
   ins.memoryAccess = nullptr;
-  ins.registerWriteback = &writebackBranch;
+  ins.registerWriteback = nullptr;
   return ins;
 }
 
@@ -112,54 +112,80 @@ AbstractInstruction RV32I::decodeERoutines(bytes instruction) {
   return ins;
 }
 
-void RV32I::executeBranch(AbstractInstruction* instruction) {
+void RV32I::executeBranch(AbstractInstruction* instruction, AbstractBranchPredictor* branchPredictor, ulong memorySize) {
   if (instruction->getType() != InstructionType::B) {
     throw UndefinedInstructionException(instruction, "Instruction not B-Type as expected");
   }
 
-  bytes result;
-  if (instruction->isSignedImmediate()) {
-    bytes imm = bytes(instruction->getImm());
-    result = bytesAdditionSigned(instruction->getPC(), imm);
-  }
+  bytes imm = bytes(instruction->getImm());
+  bytes branchTaken = bytesAdditionSigned(instruction->getPC(), imm);
+  bytes incPC = addByteToBytes(instruction->getPC(), 4);
+  
   switch (instruction->getFunc3()) {
     case 0:
       if (instruction->getRs1Val() == instruction->getRs2Val()) {
-        instruction->setResult(result);
+        instruction->setResult(branchTaken);
+      } else {
+        instruction->setResult(incPC);
       }
       break;
     case 1:
       if (instruction->getRs1Val() != instruction->getRs2Val()) {
-        instruction->setResult(result);
+        instruction->setResult(branchTaken);
+      } else {
+        instruction->setResult(incPC);
       }
       break;
     case 3:
       if (bytesLessThanBytesSigned(instruction->getRs1Val(), instruction->getRs2Val())) {
-        instruction->setResult(result);
+        instruction->setResult(branchTaken);
+      } else {
+        instruction->setResult(incPC);
       }
       break;
     case 4:
       if (bytesGreaterOrequalToSigned(instruction->getRs1Val(), instruction->getRs2Val())) {
-        instruction->setResult(result);
+        instruction->setResult(branchTaken);
+      } else {
+        instruction->setResult(incPC);
       }
       break;
     case 5:
       if (bytesLessThanBytesUnsigned(instruction->getRs1Val(), instruction->getRs2Val())) {
-        instruction->setResult(result);
+        instruction->setResult(branchTaken);
+      } else {
+        instruction->setResult(incPC);
       }
       break;
     case 6:
       if (bytesGreaterOrequalToUnsigned(instruction->getRs1Val(), instruction->getRs2Val())) {
-        instruction->setResult(result);
+        instruction->setResult(branchTaken);
+      } else {
+        instruction->setResult(incPC);
       }
       break;
 
     default:
       throw UndefinedInstructionException(instruction);
   }
+
+  bytes nextPC = instruction->getResult();
+
+  if (nextPC[0] % 4 != 0) {
+    throw AddressMisalignedException(instruction, "Exception generated on branch instruction");
+  }
+
+  ulong pcVal = getBytesToULong(nextPC);
+  if (pcVal >= memorySize) {
+    throw AddressOutOfMemoryException(pcVal, 4, memorySize, true);
+  }
+
+  if (!branchPredictor->checkPrediction(instruction->getPC(), nextPC)) {
+    throw FailedBranchPredictionException(instruction, "Prediction wrong for branch instruction");
+  }
 }
 
-void RV32I::executeAUIPC(AbstractInstruction* instruction) {
+void RV32I::executeAUIPC(AbstractInstruction* instruction, AbstractBranchPredictor* branchPredictor, ulong memorySize) {
   if (instruction->getType() != InstructionType::U) {
     throw UndefinedInstructionException(instruction, "Instruction not U-Type as expected");
   }
@@ -167,39 +193,81 @@ void RV32I::executeAUIPC(AbstractInstruction* instruction) {
   instruction->setResult(bytesAdditionSigned(instruction->getPC(), instruction->getImm()));
 }
 
-void RV32I::executeJAL(AbstractInstruction* instruction) {
+void RV32I::executeJAL(AbstractInstruction* instruction, AbstractBranchPredictor* branchPredictor, ulong memorySize) {
   if (instruction->getType() != InstructionType::J) {
     throw UndefinedInstructionException(instruction, "Instruction not J-Type as expected");
   }
 
-  instruction->setResult(bytesAdditionSigned(instruction->getPC(), instruction->getImm()));
+  bytes nextPC = bytesAdditionSigned(instruction->getPC(), instruction->getImm());
+  instruction->setResult(nextPC);
+
+  if (nextPC[0] % 4 != 0) {
+    throw AddressMisalignedException(instruction, "Exception generated on JAL instruction");
+  }
+
+  ulong pcVal = getBytesToULong(nextPC);
+  if (pcVal >= memorySize) {
+    throw AddressOutOfMemoryException(pcVal, 4, memorySize, true);
+  }
+
+  // Raise exception for handling thread to deal with
+  if (!branchPredictor->checkPrediction(instruction->getPC(), nextPC)) {
+    throw FailedBranchPredictionException(instruction, "JAL");
+  }
 }
 
-void RV32I::executeJALR(AbstractInstruction* instruction) {
+void RV32I::executeJALR(AbstractInstruction* instruction, AbstractBranchPredictor* branchPredictor, ulong memorySize) {
   if (instruction->getType() != InstructionType::I) {
     throw UndefinedInstructionException(instruction, "Instruction not I-Type as expected");
   }
 
-  instruction->setResult(bytesAdditionSigned(instruction->getRs1Val(), instruction->getImm()));
+  bytes nextPC = bytesAdditionSigned(instruction->getRs1Val(), instruction->getImm());
+  instruction->setResult(nextPC);
+
+  if (nextPC[0] % 4 != 0) {
+    throw AddressMisalignedException(instruction, "Exception generated on JALR instruction");
+  }
+
+  ulong pcVal = getBytesToULong(nextPC);
+  if (pcVal >= memorySize) {
+    throw AddressOutOfMemoryException(pcVal, 4, memorySize, true);
+  }
+
+  // Raise exception for handling thread to deal with
+  if (!branchPredictor->checkPrediction(instruction->getPC(), nextPC)) {
+    throw FailedBranchPredictionException(instruction, "JALR");
+  }
 }
 
-void RV32I::executeLoad(AbstractInstruction* instruction) {
+void RV32I::executeLoad(AbstractInstruction* instruction, AbstractBranchPredictor* branchPredictor, ulong memorySize) {
   if (instruction->getType() != InstructionType::I) {
     throw UndefinedInstructionException(instruction, "Instruction not I-Type as expected");
   }
 
-  instruction->setResult(bytesAdditionSigned(instruction->getRs1Val(), instruction->getImm()));
+  bytes pointer = bytesAdditionSigned(instruction->getRs1Val(), instruction->getImm());
+  instruction->setResult(pointer);
+
+  ulong pcVal = getBytesToULong(pointer);
+  if (pcVal >= memorySize) {
+    throw AddressOutOfMemoryException(pcVal, 4, memorySize, true);
+  }
 }
 
-void RV32I::executeStore(AbstractInstruction* instruction) {
+void RV32I::executeStore(AbstractInstruction* instruction, AbstractBranchPredictor* branchPredictor, ulong memorySize) {
   if (instruction->getType() != InstructionType::S) {
     throw UndefinedInstructionException(instruction, "Instruction not S-Type as expected");
   }
 
-  instruction->setResult(bytesAdditionSigned(instruction->getRs1Val(), instruction->getImm()));
+  bytes pointer = bytesAdditionSigned(instruction->getRs1Val(), instruction->getImm());
+  instruction->setResult(pointer);
+
+  ulong pcVal = getBytesToULong(pointer);
+  if (pcVal >= memorySize) {
+    throw AddressOutOfMemoryException(pcVal, 4, memorySize, true);
+  }
 }
 
-void RV32I::executeBitopsImmediate(AbstractInstruction* instruction) {
+void RV32I::executeBitopsImmediate(AbstractInstruction* instruction, AbstractBranchPredictor* branchPredictor, ulong memorySize) {
   if (instruction->getType() != InstructionType::I) {
     throw UndefinedInstructionException(instruction, "Instruction not R-Type as expected");
   }
@@ -257,7 +325,7 @@ void RV32I::executeBitopsImmediate(AbstractInstruction* instruction) {
   }
 }
 
-void RV32I::executeBitops(AbstractInstruction* instruction) {
+void RV32I::executeBitops(AbstractInstruction* instruction, AbstractBranchPredictor* branchPredictor, ulong memorySize) {
   if (instruction->getType() != InstructionType::R) {
     throw UndefinedInstructionException(instruction, "Instruction not I-Type as expected");
   }
@@ -326,9 +394,107 @@ void RV32I::executeBitops(AbstractInstruction* instruction) {
   }
 }
 
-void RV32I::executeFence(AbstractInstruction* instruction) {}
-void RV32I::executeERoutines(AbstractInstruction* instruction) {}
+void RV32I::executeFence(AbstractInstruction* instruction, AbstractBranchPredictor* branchPredictor, ulong memorySize) {}
+void RV32I::executeERoutines(AbstractInstruction* instruction, AbstractBranchPredictor* branchPredictor, ulong memorySize) {}
 
 void RV32I::writebackLUI(AbstractInstruction* instruction, RegisterFile* registerFile) {
+  registerFile->write(instruction->getRD(), nextPC);
+}
+
+void RV32I::writebackAUIPC(AbstractInstruction* instruction, RegisterFile* registerFile) {
+  registerFile->write(instruction->getRD(), nextPC);
+}
+
+void RV32I::writebackJAL(AbstractInstruction* instruction, RegisterFile* registerFile) {
+  registerFile->write(instruction->getRD(), addByteToBytes(instruction->getPC(), 4));
   
+  // Setup PC for when the pipeline is reset
+  // TODO: Do we need to write PC
+  registerFile->writePC(nextPC);
+}
+
+void RV32I::writebackJALR(AbstractInstruction* instruction, RegisterFile* registerFile) {
+  registerFile->write(instruction->getRD(), addByteToBytes(instruction->getPC(), 4));
+  
+  // Setup PC for when the pipeline is reset
+  // TODO: Do we need to write pc
+  registerFile->writePC(nextPC);
+}
+
+void RV32I::writebackLoad(AbstractInstruction* instruction, RegisterFile* registerFile) {
+  // Writeback to RD and check and sign extend if necessary
+  if (instruction->getFunc3() == 4 || instruction->getFunc3() == 5) {
+    // LBU | LHU
+    bytes extendedInstruction = nextPC;
+    if (instruction->getXLEN() != extendedInstruction.size()) {
+      extendedInstruction.resize(instruction->getXLEN());
+    }
+    registerFile->write(instruction->getRD(), extendedInstruction);
+  } else {
+    registerFile->write(instruction->getRD(), copyWithSignExtend(nextPC, instruction->getXLEN()));
+  }
+}
+
+void RV32I::writebackBitopsImmediate(AbstractInstruction* instruction, RegisterFile* registerFile) {
+  registerFile->write(instruction->getRD(), nextPC);
+}
+
+void RV32I::writebackBitops(AbstractInstruction* instruction, RegisterFile* registerFile) {
+  registerFile->write(instruction->getRD(), nextPC);
+}
+
+void RV32I::memLoad(AbstractInstruction* instruction, Memory* memory) {
+  bytes result;
+  switch (instruction->getFunc3()) {
+    case 0:
+      {
+        result = bytes{memory->readByte(getBytesToULong(nextPC))};
+        break;
+      }
+    case 1:
+    {
+      result = memory->readHWord(getBytesToULong(nextPC));
+      break;
+    }
+    case 2:
+    {
+      result = memory->readWord(getBytesToULong(nextPC));
+      break;
+    }
+    case 4:
+    {
+      result = bytes{memory->readByte(getBytesToULong(nextPC))};
+      break;
+    }
+    case 5:
+    {
+      result = memory->readHWord(getBytesToULong(nextPC));
+      break;
+    }
+
+    default:
+    throw UndefinedInstructionException(instruction, "Func3 undefined during memory access");
+  }
+
+  instruction->setResult(result);
+}
+
+void RV32I::memStore(AbstractInstruction* instruction, Memory* memory) {
+  switch(instruction->getFunc3()) {
+    case 0:
+    {
+      memory->writeByte(getBytesToULong(nextPC), instruction->getRs2Val()[0]);
+      break;
+    }
+    case 1:
+    {
+      memory->writeHWord(getBytesToULong(nextPC), instruction->getRs2Val());
+      break;
+    }
+    case 2:
+    {
+      memory->writeWord(getBytesToULong(nextPC), instruction->getRs2Val());
+      break;
+    }
+  }
 }

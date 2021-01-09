@@ -5,6 +5,7 @@
 #include "../bytemanip.h"
 #include "../hw/RegisterFile.h"
 #include "../hw/Memory.h"
+#include "../units/AbstractBranchPredictor.h"
 
 #define OPCODE_MAX 127
 #define R_MAX 31
@@ -50,6 +51,9 @@ class AbstractInstruction {
   bytes result;
   bytes pc;
   bool isSigned;
+  // TODO: This needs to be set up with a value
+  // TODO: Remember the thing that we could use XLEN to check for
+  ushort XLEN;
 
   public:
   byte getOpcode();
@@ -70,8 +74,9 @@ class AbstractInstruction {
   bytes getPC();
   void setPC(bytes val);
   bool isSignedImmediate();
+  ushort getXLEN();
   virtual string debug() {};
-  void (*execute)(AbstractInstruction* instruction);
+  void (*execute)(AbstractInstruction* instruction, AbstractBranchPredictor* branchPredictor, ulong memorySize);
   void (*registerWriteback)(AbstractInstruction* instruction, RegisterFile* registerFile);
   void (*memoryAccess)(AbstractInstruction* instruction, Memory* memory);
 };

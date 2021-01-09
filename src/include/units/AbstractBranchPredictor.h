@@ -12,6 +12,7 @@ class BranchPredictorException: public EmulatorException {
   BranchPredictorException(const char* message, ...): EmulatorException(message){};
 };
 
+
 class AbstractBranchPredictor: public AbstractUnit {
   protected:
   Memory* memory;

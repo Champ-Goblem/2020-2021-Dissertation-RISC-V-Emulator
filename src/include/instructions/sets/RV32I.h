@@ -3,6 +3,7 @@
 
 #include "AbstractISA.h"
 #include "../../hw/RegisterFile.h"
+#include "../../units/AbstractBranchPredictor.h"
 
 class RV32I: public AbstractISA {
   protected:
@@ -82,17 +83,17 @@ class RV32I: public AbstractISA {
   static AbstractInstruction decodeERoutines(bytes instruction);
 
   // Execute routines:
-  static void executeBranch(AbstractInstruction* instruction);
-  // static void executeLUI(AbstractInstruction* instruction);
-  static void executeAUIPC(AbstractInstruction* instruction);
-  static void executeJAL(AbstractInstruction* instruction);
-  static void executeJALR(AbstractInstruction* instruction);
-  static void executeLoad(AbstractInstruction* instruction);
-  static void executeStore(AbstractInstruction* instruction);
-  static void executeBitopsImmediate(AbstractInstruction* instruction);
-  static void executeBitops(AbstractInstruction* instruction);
-  static void executeFence(AbstractInstruction* instruction);
-  static void executeERoutines(AbstractInstruction* instruction);
+  static void executeBranch(AbstractInstruction* instruction, AbstractBranchPredictor* branchPredictor, ulong memorySize);
+  static void executeLUI(AbstractInstruction* instruction, AbstractBranchPredictor* branchPredictor, ulong memorySize);
+  static void executeAUIPC(AbstractInstruction* instruction, AbstractBranchPredictor* branchPredictor, ulong memorySize);
+  static void executeJAL(AbstractInstruction* instruction, AbstractBranchPredictor* branchPredictor, ulong memorySize);
+  static void executeJALR(AbstractInstruction* instruction, AbstractBranchPredictor* branchPredictor, ulong memorySize);
+  static void executeLoad(AbstractInstruction* instruction, AbstractBranchPredictor* branchPredictor, ulong memorySize);
+  static void executeStore(AbstractInstruction* instruction, AbstractBranchPredictor* branchPredictor, ulong memorySize);
+  static void executeBitopsImmediate(AbstractInstruction* instruction, AbstractBranchPredictor* branchPredictor, ulong memorySize);
+  static void executeBitops(AbstractInstruction* instruction, AbstractBranchPredictor* branchPredictor, ulong memorySize);
+  static void executeFence(AbstractInstruction* instruction, AbstractBranchPredictor* branchPredictor, ulong memorySize);
+  static void executeERoutines(AbstractInstruction* instruction, AbstractBranchPredictor* branchPredictor, ulong memorySize);
 
   // Register writeback routines
   static void writebackLUI(AbstractInstruction* instruction, RegisterFile* registerFile);
