@@ -17,6 +17,7 @@ class SimpleBranchPredictor: public AbstractBranchPredictor {
   bool failedPrediction = false;
   exception_ptr workloopExceptionPtr;
   const ushort queueSize = 4;
+  queue<bytes> executingQueue;
 
   public:
   SimpleBranchPredictor(Memory* memory, ushort XLEN, RegisterFile* registerFile, bytes initialPC);

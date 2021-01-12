@@ -22,6 +22,7 @@ UTypeInstruction::UTypeInstruction(byte opcode, byte rd, bytes imm) {
   if (imm.size() != IMM_SIZE || size > IMM_MAX) {
     throw new InstructionException("Failed to set rd, greater than 1048575 [%d]\n", size);
   }
+  imm.resize(4);
   this->imm = bytesLogicalLeftShift(imm, 12);
   this->isSigned = (bool)(imm[2] & 8);
   if (this->isSigned) {
@@ -39,7 +40,9 @@ void UTypeInstruction::decode(bytes instruction) {
   try {
     this->opcode = getContrainedBits(instruction, 0, 6)[0];
     this->rd = getContrainedBits(instruction, 7, 11)[0];
-    this->imm = bytesLogicalLeftShift(getContrainedBits(instruction, 12, 31), 12);
+    bytes imm = getContrainedBits(instruction, 12, 31);
+    imm.resize(4);
+    this->imm = bytesLogicalLeftShift(imm, 12);
     this->isSigned = (bool)(imm[2] & 8);
   } catch (exception e) {
     throw (e);

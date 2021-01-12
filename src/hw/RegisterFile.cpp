@@ -7,7 +7,7 @@ RegisterFile::RegisterFile(ushort XLEN, bool isRV32E) {
   for (int i=0; i<registerCount; i++) {
     registerMap.insert(make_pair((ushort)i, bytes(XLEN)));
   }
-  pc = bytes(XLEN);
+  // pc = bytes(XLEN);
 }
 
 bytes RegisterFile::get(ushort reg) {
@@ -48,21 +48,21 @@ void RegisterFile::write(ushort reg, bytes val) {
   itr->second = val;
 }
 
-void RegisterFile::writePC(bytes addr) {
-  if (addr.size() != XLEN) {
-    throw new RegisterFileException("Failed to write to PC, size of value to write bigger than XLEN [s: %d, XLEN: %d]\n", addr.size(), XLEN);
-  }
-  pc = addr;
-}
+// void RegisterFile::writePC(bytes addr) {
+//   if (addr.size() != XLEN) {
+//     throw new RegisterFileException("Failed to write to PC, size of value to write bigger than XLEN [s: %d, XLEN: %d]\n", addr.size(), XLEN);
+//   }
+//   pc = addr;
+// }
 
-bytes RegisterFile::getPC() {
-  return pc;
-}
+// bytes RegisterFile::getPC() {
+//   return pc;
+// }
 
-void RegisterFile::incPC() {
-  // TODO: 4 needs changing to allow for C ext
-  this->pc = addByteToBytes(this->pc, 4);
-}
+// void RegisterFile::incPC() {
+//   // TODO: 4 needs changing to allow for C ext
+//   this->pc = addByteToBytes(this->pc, 4);
+// }
 
 void RegisterFile::debug() {
   // Print the current register values
@@ -76,10 +76,10 @@ void RegisterFile::debug() {
     printf("\n");
     itr++;
   }
-  printf("\n");
-  printf("PC: ");
-  for (int i=0; i<XLEN; i++) {
-    printf("%02X ", pc[XLEN - 1 - i]);
-  }
+  // printf("\n");
+  // printf("PC: ");
+  // for (int i=0; i<XLEN; i++) {
+  //   printf("%02X ", pc[XLEN - 1 - i]);
+  // }
   printf("\n");
 }

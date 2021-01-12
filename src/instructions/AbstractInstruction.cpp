@@ -49,23 +49,23 @@ bytes AbstractInstruction::getRs2Val() {
 }
 
 void AbstractInstruction::setRs2Val(bytes val) {
-  this->rs1Val = val;
+  this->rs2Val = val;
 }
 
 bytes AbstractInstruction::getResult() {
   return result;
 }
 
-void AbstractInstruction::setResult(bytes val) {
-  this->rs1Val = val;
+void AbstractInstruction::setResult(bytes result) {
+  this->result = result;
 }
 
 bytes AbstractInstruction::getPC() {
   return pc;
 }
 
-void AbstractInstruction::setPC(bytes val) {
-  this->rs1Val = val;
+void AbstractInstruction::setPC(bytes pc) {
+  this->pc = pc;
 }
 
 bool AbstractInstruction::isSignedImmediate() {

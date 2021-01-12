@@ -1,4 +1,5 @@
 #include "../include/units/SimpleBranchPredictor.h"
+#include "../include/exceptions.h"
 
 SimpleBranchPredictor::SimpleBranchPredictor(Memory* memory, ushort XLEN, RegisterFile* registerFile, bytes initialPC) {
   if (initialPC.size() != XLEN) {
@@ -31,7 +32,7 @@ bytes SimpleBranchPredictor::getNextPC() {
   }
 
   // Check that the queue size isnt zero
-  if (this->PCQueue.size() == 0) {
+  if (this->PCQueue.size() < 2) {
     // TODO: decide what to do here
   }
 
@@ -39,13 +40,44 @@ bytes SimpleBranchPredictor::getNextPC() {
   bytes nextPC = this->PCQueue.front();
   // Drop the front of the queue
   this->PCQueue.pop();
+  // Add this to the queue of waiting for execution
+  this->executingQueue.push(PCQueue.front());
   // Start new thread to fetch new PC
   this->workloop = thread (&SimpleBranchPredictor::predictionWorkloop, this);
   return nextPC;
 }
 
 bool SimpleBranchPredictor::checkPrediction(bytes pc, bytes address) {
-  return true;
+  if (address.size() == 0) {
+    throw BranchPredictorException("Provided address to check prediction is zero bytes in length");
+  }
+
+  if (this->executingQueue.size() == 0) {
+    throw BranchPredictorException("Failed to fetch prediction for next PC, executing queue empty");
+  }
+
+  // Get the first most value in the queue, this should be next instruction
+  // to execute as predicted by the bp
+  bytes nextPredicted = this->executingQueue.front();
+  // Pop this value off now we are dealing with it
+  this->executingQueue.pop();
+  // Verify if we predicted correctly
+  if (nextPredicted == address) {
+    return true;
+  }
+
+  // Fix the mistake here
+  // Cancel any more prediction
+  this->failedPrediction = true;
+  this->workloop.join();
+  while (!this->PCQueue.empty()) {
+    this->PCQueue.pop();
+  }
+  this->PCQueue.push(address);
+  // Start fetching again
+  this->failedPrediction = false;
+  this->workloop = thread (&SimpleBranchPredictor::predictionWorkloop, this);
+  return false;
 }
 
 void SimpleBranchPredictor::predictionWorkloop() {
@@ -54,11 +86,11 @@ void SimpleBranchPredictor::predictionWorkloop() {
     // Check that the initial size of the queue isnt zero
     // The queue should have at least one value in it
     if (this->PCQueue.size() == 0) {
-      throw BranchPredictorException("Failed to start prediction, queue length 0");
+      throw BranchPredictorException("Failed to start prediction, queue length 0\n");
     }
 
     if (this->PCQueue.back()[0] % 4 != 0) {
-      throw BranchPredictorException("Failed to start prediction, inital PC not 4-bytes aligned [%s]", getBytesForPrint(this->PCQueue.back()).c_str());
+      throw BranchPredictorException("Failed to start prediction, inital PC not 4-bytes aligned\n");
     }
   } catch (...) {
     // Pass the current exception to the exception ptr;
@@ -66,7 +98,7 @@ void SimpleBranchPredictor::predictionWorkloop() {
     exception = true;
   }
 
-  while (!exception && !this->isProcessorExceptionGenerated && this->PCQueue.size() < this->queueSize) {
+  while (!exception && !this->isProcessorExceptionGenerated && !this->failedPrediction && this->PCQueue.size() < this->queueSize) {
     bytes nextPC;
     try {
       // TODO: Handle address-misaligned exceptions
@@ -82,7 +114,7 @@ void SimpleBranchPredictor::predictionWorkloop() {
           BTypeInstruction b = BTypeInstruction();
           b.decode(instruction);
           bytes imm = b.AbstractInstruction::getImm();
-          nextPC = bytesAdditionSigned(lastPC, imm);
+          nextPC = bytesAddSignedToPC(lastPC, imm);
         } else {
           nextPC = addByteToBytes(lastPC, 4);
         }
@@ -94,14 +126,14 @@ void SimpleBranchPredictor::predictionWorkloop() {
         i.decode(instruction);
         bytes imm = i.AbstractInstruction::getImm();
         bytes rs1Val = this->registerFile->get((ushort)i.getRS1());
-        nextPC = bytesAdditionSigned(rs1Val, imm);
+        nextPC = bytesAddSignedToPC(rs1Val, imm);
       } else if (opcode == 111) {
         // opcode - JAL
         // Uses J-Type
         JTypeInstruction j = JTypeInstruction();
         j.decode(instruction);
         bytes imm = j.AbstractInstruction::getImm();
-        nextPC = bytesAdditionSigned(lastPC, imm);
+        nextPC = bytesAddSignedToPC(lastPC, imm);
       } else {
         nextPC = addByteToBytes(lastPC, 4);
       }
@@ -131,10 +163,8 @@ void SimpleBranchPredictor::predictionWorkloop() {
 }
 
 SimpleBranchPredictor::~SimpleBranchPredictor() {
-  if (this->workloopExceptionPtr) {
-    rethrow_exception(this->workloopExceptionPtr);
-  }
-
   this->isProcessorExceptionGenerated = true;
-  this->workloop.join();
+  if (workloop.joinable()) {
+    this->workloop.join();
+  }
 }

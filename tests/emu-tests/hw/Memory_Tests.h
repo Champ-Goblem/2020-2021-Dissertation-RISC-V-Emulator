@@ -1,5 +1,6 @@
 #include "../../framework/cxxtest-4.4/cxxtest/TestSuite.h"
 #include "../../../src/include/hw/Memory.h"
+#include "../../../src/include/exceptions.h"
 
 class MemoryTests : public CxxTest::TestSuite {
   public:
@@ -15,7 +16,7 @@ class MemoryTests : public CxxTest::TestSuite {
   void testMax(void) {
     ulong size = 128;
     Memory* m = new Memory(size);
-    TS_ASSERT_THROWS_ANYTHING(m->readByte(size));
+    TS_ASSERT_THROWS(m->readByte(size), AddressOutOfMemoryException);
     delete m;
   }
 
@@ -27,19 +28,28 @@ class MemoryTests : public CxxTest::TestSuite {
     delete m;
   }
 
-  void testWriteReadWord(void) {
+  void testWriteReadHWord(void) {
     ulong size = 128;
     Memory* m = new Memory(size);
     bytes b = bytes {255, 0};
+    m->writeHWord(2, b);
+    TS_ASSERT(m->readHWord(2) == b);
+    delete m;
+  }
+
+    void testWriteReadWord(void) {
+     ulong size = 128;
+    Memory* m = new Memory(size);
+    bytes b = bytes {255, 0, 255, 0};
     m->writeWord(2, b);
     TS_ASSERT(m->readWord(2) == b);
     delete m;
   }
 
-    void testWriteReadDWord(void) {
-     ulong size = 128;
+  void testWriteReadDWord(void) {
+    ulong size = 128;
     Memory* m = new Memory(size);
-    bytes b = bytes {255, 0, 255, 0};
+    bytes b = bytes {255, 0, 255, 0, 255, 0, 255, 0};
     m->writeDWord(2, b);
     TS_ASSERT(m->readDWord(2) == b);
     delete m;
@@ -48,17 +58,26 @@ class MemoryTests : public CxxTest::TestSuite {
   void testWriteReadQWord(void) {
     ulong size = 128;
     Memory* m = new Memory(size);
-    bytes b = bytes {255, 0, 255, 0, 255, 0, 255, 0};
+    bytes b = bytes {255, 0, 255, 0, 255, 0, 255, 0, 255, 0, 255, 0, 255, 0, 255, 0};
     m->writeQWord(2, b);
     TS_ASSERT(m->readQWord(2) == b);
     delete m;
   }
 
+  void testWrongSizeWriteHWord(void) {
+    ulong size = 128;
+    Memory* m = new Memory(size);
+    bytes b = bytes {255, 0, 255};
+    TS_ASSERT_THROWS(m->writeHWord(2, b), WrongSizeInstructionException);
+    delete m;
+  }
+
+
   void testWrongSizeWriteWord(void) {
     ulong size = 128;
     Memory* m = new Memory(size);
     bytes b = bytes {255, 0, 255};
-    TS_ASSERT_THROWS_ANYTHING(m->writeWord(2, b));
+    TS_ASSERT_THROWS(m->writeWord(2, b), WrongSizeInstructionException);
     delete m;
   }
 
@@ -66,7 +85,7 @@ class MemoryTests : public CxxTest::TestSuite {
     ulong size = 128;
     Memory* m = new Memory(size);
     bytes b = bytes {255, 0, 255, 0, 255};
-    TS_ASSERT_THROWS_ANYTHING(m->writeDWord(2, b));
+    TS_ASSERT_THROWS(m->writeDWord(2, b), WrongSizeInstructionException);
     delete m;
   }
 
@@ -74,31 +93,39 @@ class MemoryTests : public CxxTest::TestSuite {
     ulong size = 128;
     Memory* m = new Memory(size);
     bytes b = bytes {255, 0, 255, 0, 255, 0, 255, 0, 255};
-    TS_ASSERT_THROWS_ANYTHING(m->writeQWord(2, b));
+    TS_ASSERT_THROWS(m->writeQWord(2, b), WrongSizeInstructionException);
+    delete m;
+  }
+
+  void testWriteOutOfMemoryHWord(void) {
+    ulong size = 2;
+    Memory* m = new Memory(size);
+    bytes b = bytes {255, 0};
+    TS_ASSERT_THROWS(m->writeHWord(1, b), AddressOutOfMemoryException);
     delete m;
   }
 
   void testWriteOutOfMemoryWord(void) {
     ulong size = 2;
     Memory* m = new Memory(size);
-    bytes b = bytes {255, 0};
-    TS_ASSERT_THROWS_ANYTHING(m->writeWord(1, b));
+    bytes b = bytes {255, 0, 255, 0};
+    TS_ASSERT_THROWS(m->writeWord(1, b), AddressOutOfMemoryException);
     delete m;
   }
 
   void testWriteOutOfMemoryDWord(void) {
     ulong size = 4;
     Memory* m = new Memory(size);
-    bytes b = bytes {255, 0, 255, 0};
-    TS_ASSERT_THROWS_ANYTHING(m->writeDWord(1, b));
+    bytes b = bytes {255, 0, 255, 0, 255, 0, 255, 0};
+    TS_ASSERT_THROWS(m->writeDWord(1, b), AddressOutOfMemoryException);
     delete m;
   }
 
   void testWriteOutOfMemoryQWord(void) {
     ulong size = 8;
     Memory* m = new Memory(size);
-    bytes b = bytes {255, 0, 255, 0, 255, 0, 255, 0};
-    TS_ASSERT_THROWS_ANYTHING(m->writeQWord(1, b));
+    bytes b = bytes {255, 0, 255, 0, 255, 0, 255, 0, 255, 0, 255, 0, 255, 0, 255, 0};
+    TS_ASSERT_THROWS(m->writeQWord(1, b), AddressOutOfMemoryException);
     delete m;
   }
 };

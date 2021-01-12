@@ -1,5 +1,7 @@
 #include "../../include/instructions/sets/RV32I.h"
 
+// TODO: Decode needs to fetch register values
+
 AbstractInstruction RV32I::decodeLUI(bytes instruction) {
   // U-Type
   UTypeInstruction ins = UTypeInstruction();
@@ -118,7 +120,7 @@ void RV32I::executeBranch(AbstractInstruction* instruction, AbstractBranchPredic
   }
 
   bytes imm = bytes(instruction->getImm());
-  bytes branchTaken = bytesAdditionSigned(instruction->getPC(), imm);
+  bytes branchTaken = bytesAddSignedToPC(instruction->getPC(), imm);
   bytes incPC = addByteToBytes(instruction->getPC(), 4);
   
   switch (instruction->getFunc3()) {
@@ -190,7 +192,7 @@ void RV32I::executeAUIPC(AbstractInstruction* instruction, AbstractBranchPredict
     throw UndefinedInstructionException(instruction, "Instruction not U-Type as expected");
   }
 
-  instruction->setResult(bytesAdditionSigned(instruction->getPC(), instruction->getImm()));
+  instruction->setResult(bytesAddSignedToPC(instruction->getPC(), instruction->getImm()));
 }
 
 void RV32I::executeJAL(AbstractInstruction* instruction, AbstractBranchPredictor* branchPredictor, ulong memorySize) {
@@ -198,7 +200,7 @@ void RV32I::executeJAL(AbstractInstruction* instruction, AbstractBranchPredictor
     throw UndefinedInstructionException(instruction, "Instruction not J-Type as expected");
   }
 
-  bytes nextPC = bytesAdditionSigned(instruction->getPC(), instruction->getImm());
+  bytes nextPC = bytesAddSignedToPC(instruction->getPC(), instruction->getImm());
   instruction->setResult(nextPC);
 
   if (nextPC[0] % 4 != 0) {
@@ -398,49 +400,41 @@ void RV32I::executeFence(AbstractInstruction* instruction, AbstractBranchPredict
 void RV32I::executeERoutines(AbstractInstruction* instruction, AbstractBranchPredictor* branchPredictor, ulong memorySize) {}
 
 void RV32I::writebackLUI(AbstractInstruction* instruction, RegisterFile* registerFile) {
-  registerFile->write(instruction->getRD(), nextPC);
+  registerFile->write(instruction->getRD(), instruction->getImm());
 }
 
 void RV32I::writebackAUIPC(AbstractInstruction* instruction, RegisterFile* registerFile) {
-  registerFile->write(instruction->getRD(), nextPC);
+  registerFile->write(instruction->getRD(), instruction->getResult());
 }
 
 void RV32I::writebackJAL(AbstractInstruction* instruction, RegisterFile* registerFile) {
   registerFile->write(instruction->getRD(), addByteToBytes(instruction->getPC(), 4));
-  
-  // Setup PC for when the pipeline is reset
-  // TODO: Do we need to write PC
-  registerFile->writePC(nextPC);
 }
 
 void RV32I::writebackJALR(AbstractInstruction* instruction, RegisterFile* registerFile) {
   registerFile->write(instruction->getRD(), addByteToBytes(instruction->getPC(), 4));
-  
-  // Setup PC for when the pipeline is reset
-  // TODO: Do we need to write pc
-  registerFile->writePC(nextPC);
 }
 
 void RV32I::writebackLoad(AbstractInstruction* instruction, RegisterFile* registerFile) {
   // Writeback to RD and check and sign extend if necessary
   if (instruction->getFunc3() == 4 || instruction->getFunc3() == 5) {
     // LBU | LHU
-    bytes extendedInstruction = nextPC;
-    if (instruction->getXLEN() != extendedInstruction.size()) {
-      extendedInstruction.resize(instruction->getXLEN());
+    bytes extendedResult = instruction->getResult();
+    if (instruction->getXLEN() != extendedResult.size()) {
+      extendedResult.resize(instruction->getXLEN());
     }
-    registerFile->write(instruction->getRD(), extendedInstruction);
+    registerFile->write(instruction->getRD(), extendedResult);
   } else {
-    registerFile->write(instruction->getRD(), copyWithSignExtend(nextPC, instruction->getXLEN()));
+    registerFile->write(instruction->getRD(), copyWithSignExtend(instruction->getResult(), instruction->getXLEN()));
   }
 }
 
 void RV32I::writebackBitopsImmediate(AbstractInstruction* instruction, RegisterFile* registerFile) {
-  registerFile->write(instruction->getRD(), nextPC);
+  registerFile->write(instruction->getRD(), instruction->getResult());
 }
 
 void RV32I::writebackBitops(AbstractInstruction* instruction, RegisterFile* registerFile) {
-  registerFile->write(instruction->getRD(), nextPC);
+  registerFile->write(instruction->getRD(), instruction->getResult());
 }
 
 void RV32I::memLoad(AbstractInstruction* instruction, Memory* memory) {
@@ -448,27 +442,27 @@ void RV32I::memLoad(AbstractInstruction* instruction, Memory* memory) {
   switch (instruction->getFunc3()) {
     case 0:
       {
-        result = bytes{memory->readByte(getBytesToULong(nextPC))};
+        result = bytes{memory->readByte(getBytesToULong(instruction->getResult()))};
         break;
       }
     case 1:
     {
-      result = memory->readHWord(getBytesToULong(nextPC));
+      result = memory->readHWord(getBytesToULong(instruction->getResult()));
       break;
     }
     case 2:
     {
-      result = memory->readWord(getBytesToULong(nextPC));
+      result = memory->readWord(getBytesToULong(instruction->getResult()));
       break;
     }
     case 4:
     {
-      result = bytes{memory->readByte(getBytesToULong(nextPC))};
+      result = bytes{memory->readByte(getBytesToULong(instruction->getResult()))};
       break;
     }
     case 5:
     {
-      result = memory->readHWord(getBytesToULong(nextPC));
+      result = memory->readHWord(getBytesToULong(instruction->getResult()));
       break;
     }
 
@@ -483,17 +477,17 @@ void RV32I::memStore(AbstractInstruction* instruction, Memory* memory) {
   switch(instruction->getFunc3()) {
     case 0:
     {
-      memory->writeByte(getBytesToULong(nextPC), instruction->getRs2Val()[0]);
+      memory->writeByte(getBytesToULong(instruction->getResult()), instruction->getRs2Val()[0]);
       break;
     }
     case 1:
     {
-      memory->writeHWord(getBytesToULong(nextPC), instruction->getRs2Val());
+      memory->writeHWord(getBytesToULong(instruction->getResult()), instruction->getRs2Val());
       break;
     }
     case 2:
     {
-      memory->writeWord(getBytesToULong(nextPC), instruction->getRs2Val());
+      memory->writeWord(getBytesToULong(instruction->getResult()), instruction->getRs2Val());
       break;
     }
   }

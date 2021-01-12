@@ -24,7 +24,6 @@
       ],
       "preLaunchTask": "C/C++: make active file",
       "miDebuggerPath": "/usr/bin/gdb"
-      "miDebuggerArgs": ""
     }
   ]
 }

@@ -18,7 +18,7 @@ vpath %.c $(SDIR)
 vpath %.o $(ODIR)
 vpath %.h $(IDIR)
 
-DIRS=hw instructions units
+DIRS=hw instructions units instructions/sets
 SOURCEDIRS=$(SDIR) $(foreach dir, $(DIRS), $(addprefix $(SDIR)/, $(dir)))
 TARGETDIRS=$(ODIR) $(foreach dir, $(DIRS), $(addprefix $(ODIR)/, $(dir)))
 DEPSDIRS=$(IDIR) $(foreach dir, $(DIRS), $(addprefix $(IDIR)/, $(dir)))
@@ -66,11 +66,11 @@ endef
 $(foreach targetdir, $(TARGETDIRS), $(eval $(call generateRules, $(targetdir))))
 
 define compiletest
-$(1)/%_Tests: $(1)/%_Tests.h $(subst $(TDIR), $(ODIR), $(1))/%.o
+$(1)/%_Tests: $(1)/%_Tests.h $(subst $(TDIR), $(SDIR), $(1))/%.o
 	@echo Making test $$@
 	$(TESTBIN) --error-printer -o $$@.cpp $$<
-	$(CXX) -c -o $$@.o $$@.cpp $(TESTBUILDFLAGS)
-	./testBuilder.sh $(1) $$*_Tests "$(subst $(TDIR), $(ODIR), $(1))/$$*.o" "$(TESTBUILDFLAGS)"
+	# $(CXX) -c -o $$@.o $$@.cpp $(TESTBUILDFLAGS)
+	./testBuilder.sh $(1) $$*_Tests "$(subst $(TDIR), $(SDIR), $(1))/$$*.o" "$(TESTBUILDFLAGS)"
 	$$@.test
 endef
 

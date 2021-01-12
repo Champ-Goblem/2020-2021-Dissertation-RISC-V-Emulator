@@ -1,5 +1,5 @@
 obj/*
 *.o
 *.test
-tests/emu-tests/*/*.cpp
+tests/emu-tests/**/*.cpp
 tests/emu-tests/*.cpp

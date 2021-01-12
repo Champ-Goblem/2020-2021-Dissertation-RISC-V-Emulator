@@ -1,8 +1,6 @@
 #include "../../framework/cxxtest-4.4/cxxtest/TestSuite.h"
 #include "../../../src/include/instructions/BType.h"
 
-// TODO: Fix makefile not including the cpp file
-
 class BTypeInstructionTests : public CxxTest::TestSuite
 {
   public:

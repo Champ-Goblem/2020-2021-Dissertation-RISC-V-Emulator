@@ -593,4 +593,37 @@ static bytes bytesAND(bytes val1, bytes val2) {
   return result;
 }
 
+static bytes bytesAddSignedToPC(bytes PC, bytes operand, bool throwForFlows=false) {
+  uint pcSize = PC.size();
+  uint operandSize = operand.size();
+  if (pcSize == 0 || operandSize == 0) {
+    throw EmulatorException("Failed to add bytes signed, size of operand is zero\n");
+  }
+
+  // Make sure both values are the same length and the operand has been sign extended to PC
+  // if PC needs to be extended it is treated as an unsigned number
+  bytes workingPC = PC;
+  bytes workingOperand = operand;
+  if (pcSize < operandSize) {
+    workingPC.resize(operandSize);
+  } else if (operandSize < pcSize) {
+    workingOperand = copyWithSignExtend(operand, pcSize);
+  }
+
+  bytes result{workingPC};
+  byte remainder = 0;
+  uint i = 0;
+  while (i < pcSize) {
+    result[i] = workingPC[i] + workingOperand[i] + remainder;
+    remainder = ((ushort)workingPC[i] + workingOperand[i] + remainder) / 255;
+    i++;
+  }
+
+  if (throwForFlows && (remainder || i < operandSize)) {
+    throw EmulatorException("Overflow when adding two numbers");
+  }
+
+  return result;
+}
+
 #endif

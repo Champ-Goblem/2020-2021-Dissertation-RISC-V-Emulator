@@ -75,10 +75,10 @@ class AbstractInstruction {
   void setPC(bytes val);
   bool isSignedImmediate();
   ushort getXLEN();
-  virtual string debug() {};
-  void (*execute)(AbstractInstruction* instruction, AbstractBranchPredictor* branchPredictor, ulong memorySize);
-  void (*registerWriteback)(AbstractInstruction* instruction, RegisterFile* registerFile);
-  void (*memoryAccess)(AbstractInstruction* instruction, Memory* memory);
+  virtual string debug() { return string(""); };
+  void (*execute)(AbstractInstruction* instruction, AbstractBranchPredictor* branchPredictor, ulong memorySize) = nullptr;
+  void (*registerWriteback)(AbstractInstruction* instruction, RegisterFile* registerFile) = nullptr;
+  void (*memoryAccess)(AbstractInstruction* instruction, Memory* memory) = nullptr;
 };
 
 #endif

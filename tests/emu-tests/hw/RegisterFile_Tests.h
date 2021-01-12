@@ -66,18 +66,18 @@ class RegisterFileTests : public CxxTest::TestSuite
       delete rf;
     }
 
-    void testPC(void) {
-      RegisterFile* rf = new RegisterFile((ushort)4, true);
-      bytes b = bytes {1,2,3,4};
-      rf->writePC(b);
-      TS_ASSERT(rf->getPC() == b);
-      delete rf;
-    }
+    // void testPC(void) {
+    //   RegisterFile* rf = new RegisterFile((ushort)4, true);
+    //   bytes b = bytes {1,2,3,4};
+    //   rf->writePC(b);
+    //   TS_ASSERT(rf->getPC() == b);
+    //   delete rf;
+    // }
 
-    void testWrongSizePCWrite(void) {
-      RegisterFile* rf = new RegisterFile((ushort)2, true);
-      bytes b = bytes {1,2,3,4};
-      TS_ASSERT_THROWS_ANYTHING(rf->writePC(b));
-      delete rf;
-    }
+    // void testWrongSizePCWrite(void) {
+    //   RegisterFile* rf = new RegisterFile((ushort)2, true);
+    //   bytes b = bytes {1,2,3,4};
+    //   TS_ASSERT_THROWS_ANYTHING(rf->writePC(b));
+    //   delete rf;
+    // }
 };
