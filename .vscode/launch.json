@@ -24,6 +24,27 @@
       ],
       "preLaunchTask": "C/C++: make active file",
       "miDebuggerPath": "/usr/bin/gdb"
+    },
+    {
+      "name": "gcc - Build tests",
+      "type": "cppdbg",
+      "request": "launch",
+      "program": "${workspaceFolder}/tests/emu-tests/RISC-Emu.test",
+      "args": [],
+      "stopAtEntry": false,
+      "cwd": "${workspaceFolder}",
+      "environment": [],
+      "externalConsole": false,
+      "MIMode": "gdb",
+      "setupCommands": [
+        {
+          "description": "Enable pretty-printing for gdb",
+          "text": "-enable-pretty-printing",
+          "ignoreFailures": true
+        }
+      ],
+      "preLaunchTask": "make tests",
+      "miDebuggerPath": "/usr/bin/gdb"
     }
   ]
 }

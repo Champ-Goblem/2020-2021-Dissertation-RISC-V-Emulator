@@ -81,7 +81,7 @@ bool SimpleBranchPredictor::checkPrediction(bytes pc, bytes address) {
 }
 
 void SimpleBranchPredictor::predictionWorkloop() {
-  bool exception;
+  bool exception = false;
   try {
     // Check that the initial size of the queue isnt zero
     // The queue should have at least one value in it
