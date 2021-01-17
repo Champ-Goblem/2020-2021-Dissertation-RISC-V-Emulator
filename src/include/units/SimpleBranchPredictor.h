@@ -2,13 +2,8 @@
 #define __SIMPLEBRANCHPREDICTOR__
 
 #include <queue>
-#include <mutex>
-#include <condition_variable>
 
 #include "AbstractBranchPredictor.h"
-#include "../instructions/BType.h"
-#include "../instructions/IType.h"
-#include "../instructions/JType.h"
 
 class SimpleBranchPredictor: public AbstractBranchPredictor {
   private:

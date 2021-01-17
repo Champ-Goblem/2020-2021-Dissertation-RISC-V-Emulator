@@ -1,8 +1,10 @@
 #ifndef __PipelineHazardController__
 #define __PipelineHazardController__
 
+#include "../emustd.h"
 #include "AbstractUnit.h"
-#include "../instructions/AbstractInstruction.h"
+// #include "../instructions/AbstractInstruction.h"
+// #include "../hw/RegisterFile.h"
 
 // reverse order as we push values on to the back and remove from the front
 #define STAGE_DECODE 3
@@ -11,6 +13,9 @@
 #define STAGE_WB 0
 
 #define NUM_STAGES 4
+
+class RegisterFile;
+class AbstractInstruction;
 
 class PipelineHazardException: public EmulatorException {
   public:

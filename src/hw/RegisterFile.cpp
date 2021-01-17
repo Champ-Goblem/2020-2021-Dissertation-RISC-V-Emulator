@@ -1,4 +1,5 @@
 #include "../include/hw/RegisterFile.h"
+#include "../include/bytemanip.h"
 
 RegisterFile::RegisterFile(ushort XLEN, bool isRV32E) {
   int registerCount = isRV32E ? REG16 : REG32;

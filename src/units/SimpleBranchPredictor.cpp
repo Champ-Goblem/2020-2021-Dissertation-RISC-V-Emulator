@@ -1,5 +1,10 @@
 #include "../include/units/SimpleBranchPredictor.h"
 #include "../include/exceptions.h"
+#include "../include/hw/Memory.h"
+#include "../include/hw/RegisterFile.h"
+#include "../include/instructions/BType.h"
+#include "../include/instructions/IType.h"
+#include "../include/instructions/JType.h"
 
 SimpleBranchPredictor::SimpleBranchPredictor(Memory* memory, ushort XLEN, RegisterFile* registerFile, bytes initialPC) {
   if (initialPC.size() != XLEN) {

@@ -1,6 +1,8 @@
 #include "../../framework/cxxtest-4.4/cxxtest/TestSuite.h"
 #include "../../../src/include/units/SimpleBranchPredictor.h"
 #include "../../../src/include/exceptions.h"
+#include "../../../src/include/hw/Memory.h"
+#include "../../../src/include/hw/RegisterFile.h"
 
 class SimpleBranchPredictorTests : public CxxTest::TestSuite {
   // Test with initial PC point to out of mem

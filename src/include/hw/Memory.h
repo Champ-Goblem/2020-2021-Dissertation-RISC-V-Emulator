@@ -2,7 +2,6 @@
 #define __Memory__
 
 #include "../emustd.h"
-#include "../bytemanip.h"
 
 #define HWORD_SIZE 2
 #define WORD_SIZE 4

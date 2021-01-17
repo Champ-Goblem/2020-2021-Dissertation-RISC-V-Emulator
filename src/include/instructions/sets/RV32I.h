@@ -70,30 +70,30 @@ class RV32I: public AbstractISA {
 
   private:
   // Decode routines:
-  static AbstractInstruction decodeBranch(bytes instruction);
-  static AbstractInstruction decodeLUI(bytes instruction);
-  static AbstractInstruction decodeAUIPC(bytes instruction);
-  static AbstractInstruction decodeJAL(bytes instruction);
-  static AbstractInstruction decodeJALR(bytes instruction);
-  static AbstractInstruction decodeLoad(bytes instruction);
-  static AbstractInstruction decodeStore(bytes instruction);
-  static AbstractInstruction decodeBitopsImmediate(bytes instruction);
-  static AbstractInstruction decodeBitops(bytes instruction);
-  static AbstractInstruction decodeFence(bytes instruction);
-  static AbstractInstruction decodeERoutines(bytes instruction);
+  static AbstractInstruction decodeBranch(bytes instruction, PipelineHazardController* pipelineController);
+  static AbstractInstruction decodeLUI(bytes instruction, PipelineHazardController* pipelineController);
+  static AbstractInstruction decodeAUIPC(bytes instruction, PipelineHazardController* pipelineController);
+  static AbstractInstruction decodeJAL(bytes instruction, PipelineHazardController* pipelineController);
+  static AbstractInstruction decodeJALR(bytes instruction, PipelineHazardController* pipelineController);
+  static AbstractInstruction decodeLoad(bytes instruction, PipelineHazardController* pipelineController);
+  static AbstractInstruction decodeStore(bytes instruction, PipelineHazardController* pipelineController);
+  static AbstractInstruction decodeBitopsImmediate(bytes instruction, PipelineHazardController* pipelineController);
+  static AbstractInstruction decodeBitops(bytes instruction, PipelineHazardController* pipelineController);
+  static AbstractInstruction decodeFence(bytes instruction, PipelineHazardController* pipelineController);
+  static AbstractInstruction decodeERoutines(bytes instruction, PipelineHazardController* pipelineController);
 
   // Execute routines:
-  static void executeBranch(AbstractInstruction* instruction, AbstractBranchPredictor* branchPredictor, ulong memorySize);
-  static void executeLUI(AbstractInstruction* instruction, AbstractBranchPredictor* branchPredictor, ulong memorySize);
-  static void executeAUIPC(AbstractInstruction* instruction, AbstractBranchPredictor* branchPredictor, ulong memorySize);
-  static void executeJAL(AbstractInstruction* instruction, AbstractBranchPredictor* branchPredictor, ulong memorySize);
-  static void executeJALR(AbstractInstruction* instruction, AbstractBranchPredictor* branchPredictor, ulong memorySize);
-  static void executeLoad(AbstractInstruction* instruction, AbstractBranchPredictor* branchPredictor, ulong memorySize);
-  static void executeStore(AbstractInstruction* instruction, AbstractBranchPredictor* branchPredictor, ulong memorySize);
-  static void executeBitopsImmediate(AbstractInstruction* instruction, AbstractBranchPredictor* branchPredictor, ulong memorySize);
-  static void executeBitops(AbstractInstruction* instruction, AbstractBranchPredictor* branchPredictor, ulong memorySize);
-  static void executeFence(AbstractInstruction* instruction, AbstractBranchPredictor* branchPredictor, ulong memorySize);
-  static void executeERoutines(AbstractInstruction* instruction, AbstractBranchPredictor* branchPredictor, ulong memorySize);
+  static void executeBranch(AbstractInstruction* instruction, AbstractBranchPredictor* branchPredictor, ulong memorySize, PipelineHazardController* pipelineController);
+  static void executeLUI(AbstractInstruction* instruction, AbstractBranchPredictor* branchPredictor, ulong memorySize, PipelineHazardController* pipelineController);
+  static void executeAUIPC(AbstractInstruction* instruction, AbstractBranchPredictor* branchPredictor, ulong memorySize, PipelineHazardController* pipelineController);
+  static void executeJAL(AbstractInstruction* instruction, AbstractBranchPredictor* branchPredictor, ulong memorySize, PipelineHazardController* pipelineController);
+  static void executeJALR(AbstractInstruction* instruction, AbstractBranchPredictor* branchPredictor, ulong memorySize, PipelineHazardController* pipelineController);
+  static void executeLoad(AbstractInstruction* instruction, AbstractBranchPredictor* branchPredictor, ulong memorySize, PipelineHazardController* pipelineController);
+  static void executeStore(AbstractInstruction* instruction, AbstractBranchPredictor* branchPredictor, ulong memorySize, PipelineHazardController* pipelineController);
+  static void executeBitopsImmediate(AbstractInstruction* instruction, AbstractBranchPredictor* branchPredictor, ulong memorySize, PipelineHazardController* pipelineController);
+  static void executeBitops(AbstractInstruction* instruction, AbstractBranchPredictor* branchPredictor, ulong memorySize, PipelineHazardController* pipelineController);
+  static void executeFence(AbstractInstruction* instruction, AbstractBranchPredictor* branchPredictor, ulong memorySize, PipelineHazardController* pipelineController);
+  static void executeERoutines(AbstractInstruction* instruction, AbstractBranchPredictor* branchPredictor, ulong memorySize, PipelineHazardController* pipelineController);
 
   // Register writeback routines
   static void writebackLUI(AbstractInstruction* instruction, RegisterFile* registerFile);

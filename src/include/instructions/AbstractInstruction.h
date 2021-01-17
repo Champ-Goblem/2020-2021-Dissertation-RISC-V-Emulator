@@ -2,10 +2,12 @@
 #define __ABSTRACTINSTRUCTION__
 
 #include "../emustd.h"
-#include "../bytemanip.h"
-#include "../hw/RegisterFile.h"
-#include "../hw/Memory.h"
-#include "../units/AbstractBranchPredictor.h"
+#include "./sets/AbstractISA.h"
+// #include "../bytemanip.h"
+// #include "../hw/RegisterFile.h"
+// #include "../hw/Memory.h"
+// #include "../units/AbstractBranchPredictor.h"
+// #include "../units/PipelineHazardController.h"
 
 #define OPCODE_MAX 127
 #define R_MAX 31
@@ -76,9 +78,9 @@ class AbstractInstruction {
   bool isSignedImmediate();
   ushort getXLEN();
   virtual string debug() { return string(""); };
-  void (*execute)(AbstractInstruction* instruction, AbstractBranchPredictor* branchPredictor, ulong memorySize) = nullptr;
-  void (*registerWriteback)(AbstractInstruction* instruction, RegisterFile* registerFile) = nullptr;
-  void (*memoryAccess)(AbstractInstruction* instruction, Memory* memory) = nullptr;
+  ExecuteRoutine execute = nullptr;
+  WritebackRoutine registerWriteback = nullptr;
+  MemoryAccessRoutine memoryAccess = nullptr;
 };
 
 #endif

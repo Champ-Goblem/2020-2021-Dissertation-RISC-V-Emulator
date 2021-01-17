@@ -1,4 +1,5 @@
 #include "../include/instructions/UType.h"
+#include "../include/bytemanip.h"
 
 UTypeInstruction::UTypeInstruction() {
   this->opcode = 0;

@@ -1,4 +1,5 @@
 #include "../include/instructions/RType.h"
+#include "../include/bytemanip.h"
 
 RTypeInstruction::RTypeInstruction() {
   this->opcode = 0;

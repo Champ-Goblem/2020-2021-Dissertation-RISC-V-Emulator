@@ -1,4 +1,5 @@
 #include "../include/instructions/JType.h"
+#include "../include/bytemanip.h"
 
 JTypeInstruction::JTypeInstruction() {
   this->opcode = 0;

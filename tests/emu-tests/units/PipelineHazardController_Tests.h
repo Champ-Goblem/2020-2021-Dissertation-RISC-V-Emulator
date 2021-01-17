@@ -1,6 +1,7 @@
 #include "../../framework/cxxtest-4.4/cxxtest/TestSuite.h"
 #include "../../../src/include/units/PipelineHazardController.h"
 #include "../../../src/include/instructions/RType.h"
+#include "../../../src/include/hw/RegisterFile.h"
 
 class PipelineHazardControllerTests : public CxxTest::TestSuite {
   public:

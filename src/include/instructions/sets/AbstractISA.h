@@ -2,19 +2,20 @@
 #define __AbstractISA__
 
 #include "../../emustd.h"
-#include "../../exceptions.h"
-#include "../AbstractInstruction.h"
-#include "../BType.h"
-#include "../IType.h"
-#include "../JType.h"
-#include "../RType.h"
-#include "../SType.h"
-#include "../UType.h"
 
 #include <iterator>
 #include <algorithm>
 
-typedef AbstractInstruction (*DecodeRoutine)(bytes);
+class AbstractInstruction;
+class PipelineHazardController;
+class AbstractBranchPredictor;
+class RegisterFile;
+class Memory;
+
+typedef AbstractInstruction (*DecodeRoutine)(bytes, PipelineHazardController*);
+typedef void (*ExecuteRoutine)(AbstractInstruction*, AbstractBranchPredictor*, ulong, PipelineHazardController*);
+typedef void (*WritebackRoutine)(AbstractInstruction*, RegisterFile*);
+typedef void (*MemoryAccessRoutine)(AbstractInstruction* instruction, Memory* memory);
 
 struct OpcodeSpace {
   ushort opcode;

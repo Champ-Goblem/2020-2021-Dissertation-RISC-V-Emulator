@@ -1,4 +1,6 @@
 #include "../include/units/PipelineHazardController.h"
+#include "../include/instructions/AbstractInstruction.h"
+#include "../include/hw/RegisterFile.h"
 
 PipelineHazardController::PipelineHazardController(ushort XLEN, RegisterFile* registerFile, bool isRV32E) {
   this->XLEN = XLEN;

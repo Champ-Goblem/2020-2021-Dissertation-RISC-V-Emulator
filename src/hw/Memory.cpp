@@ -1,5 +1,6 @@
 #include "../include/hw/Memory.h"
 #include "../include/exceptions.h"
+#include "../include/bytemanip.h"
 
 Memory::Memory(ulong size) {
   memory = bytes(size);

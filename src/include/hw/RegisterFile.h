@@ -6,7 +6,6 @@
 #define REG16 16
 
 #include "../emustd.h"
-#include "../bytemanip.h"
 #include <map>
 
 typedef map<ushort, bytes> RegisterMap;
