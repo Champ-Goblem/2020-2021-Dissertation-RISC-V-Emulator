@@ -20,6 +20,7 @@
     "system_error": "cpp",
     "thread": "cpp",
     "iostream": "cpp",
-    "*.gypi": "cpp"
+    "*.gypi": "cpp",
+    "functional": "cpp"
   }
 }

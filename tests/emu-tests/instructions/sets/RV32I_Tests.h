@@ -4,6 +4,7 @@
 #include "../../../../src/include/instructions/AbstractInstruction.h"
 #include "../../../../src/include/units/PipelineHazardController.h"
 #include "../../../../src/include/hw/Memory.h"
+#include "../../../../src/include/exceptions.h"
 
 class RV32ITests : public CxxTest::TestSuite
 {
@@ -78,9 +79,6 @@ class RV32ITests : public CxxTest::TestSuite
     TS_ASSERT(inst.getType() == InstructionType::J);
     inst.execute(&inst, (AbstractBranchPredictor*)&sbp, m.getSize(), &phc);
     inst.registerWriteback(&inst, &rf);
-    // res: 0000 0100 1101 0000 0011 0000 0000 0000
-    bytes result{32, 11, 12, 0};
-    TS_ASSERT(inst.getResult() == result);
     bytes ret{4, 3, 0, 0};
     TS_ASSERT(rf.get(1) == ret);
   }
@@ -103,51 +101,293 @@ class RV32ITests : public CxxTest::TestSuite
     TS_ASSERT(inst.getType() == InstructionType::J);
     inst.execute(&inst, (AbstractBranchPredictor*)&sbp, m.getSize(), &phc);
     inst.registerWriteback(&inst, &rf);
-    // res: 0010 0001 1000 0000 0000 0000 0000 0000
-    bytes result{132, 1, 0, 0};
-    TS_ASSERT(inst.getResult() == result);
     bytes ret{104, 25, 0, 0};
     TS_ASSERT(rf.get(1) == ret);
   }
 
-  // void testPosJALR(void) {
-  //   // I-Type
-  //   // imm: 011110100010 1118
-  //   // 1110011 10000 000 11000 011110100010
-  //   // 1110 0111 0000 0001 1000 0111 1010 0010
-  //   bytes instruction{119, 128, 225, 69};
-  //   bytes initialPC{200, 0, 0, 0};
-  //   Memory m(3000);
-  //   m.writeWord(200, instruction);
-  //   RegisterFile rf(4, false);
-  //   rf.write(2, bytes{255, 255, 0, 0});
-  //   SimpleBranchPredictor sbp(&m, 4, &rf, initialPC);
-  //   DecodeRoutine decode = RV32I::findDecodeRoutineByOpcode(OpS, 103);
-  //   AbstractInstruction inst = decode(instruction);
-  //   inst.setPC(sbp.getNextPC());
-  //   TS_ASSERT(inst.getType() == InstructionType::I);
-  //   inst.execute(&inst, (AbstractBranchPredictor*)&sbp, m.getSize());
-  //   inst.registerWriteback(&inst, &rf);
-  //   // res: 0101 1010 1110 0000 0000 0000 0000 0000
-  //   bytes result{90, 7, 0, 0};
-  //   TS_ASSERT(inst.getResult() == result);
-  //   bytes ret{204, 0, 0, 0};
-  //   TS_ASSERT(rf.get(1) == ret);
-  // }
+  void testPosJALR(void) {
+    // I-Type
+    // imm: 011110100010
+    // 1110011 10000 000 01000 011110100010
+    // 1110 0111 0000 0000 1000 0111 1010 0010
+    bytes instruction{231, 0, 225, 69};
+    bytes initialPC{200, 0, 0, 0};
+    Memory m(3000);
+    m.writeWord(200, instruction);
+    RegisterFile rf(4, false);
+    rf.write(2, bytes{254, 0, 0, 0});
+    PipelineHazardController phc(4, &rf, false);
+    SimpleBranchPredictor sbp(&m, 4, &rf, initialPC);
+    DecodeRoutine decode = RV32I::findDecodeRoutineByOpcode(OpS, 103);
+    AbstractInstruction inst = decode(instruction, &phc);
+    inst.setPC(sbp.getNextPC());
+    TS_ASSERT(inst.getType() == InstructionType::I);
+    inst.execute(&inst, (AbstractBranchPredictor*)&sbp, m.getSize(), &phc);
+    inst.registerWriteback(&inst, &rf);
+    bytes ret{204, 0, 0, 0};
+    TS_ASSERT(rf.get(1) == ret);
+  }
 
-  // void testPosBEQCorrect(void) {
-  //   // B-Type
-  //   // imm: 000100000000
-  //   // 1100011 0 0001 000 00000 00000 000000 0
-  //   // 1100 0110 0001 0000 0000 0000 0000 0000
-  //   DecodeRoutine decode = RV32I::findDecodeRoutineByOpcode(OpS, 99);
-  //   AbstractInstruction inst = decode(bytes{99, 8, 0, 0});
-  //   inst.setPC(bytes{0,0,0,8});
-  //   TS_ASSERT(inst.getType() == InstructionType::B);
-  //   inst.execute(&inst, nullptr, 200);
-  //   RegisterFile rf(4, false);
-  //   inst.registerWriteback(&inst, &rf);
-  //   bytes result{0, 0, 0, 8};
-  //   TS_ASSERT(rf.get(1) == result);
-  // }
+  void testNegJALR(void) {
+    // I-Type
+    // imm: 011110101011 -674
+    // 1110011 10000 000 01000 011110101011
+    // 1110 0111 0000 0000 1000 0111 1010 1011
+    bytes instruction{231, 0, 225, 213};
+    bytes initialPC{200, 0, 0, 0};
+    Memory m(3000);
+    m.writeWord(200, instruction);
+    RegisterFile rf(4, false);
+    rf.write(2, bytes{162, 2, 0, 0});
+    PipelineHazardController phc(4, &rf, false);
+    SimpleBranchPredictor sbp(&m, 4, &rf, initialPC);
+    DecodeRoutine decode = RV32I::findDecodeRoutineByOpcode(OpS, 103);
+    AbstractInstruction inst = decode(instruction, &phc);
+    inst.setPC(sbp.getNextPC());
+    TS_ASSERT(inst.getType() == InstructionType::I);
+    inst.execute(&inst, (AbstractBranchPredictor*)&sbp, m.getSize(), &phc);
+    inst.registerWriteback(&inst, &rf);
+    bytes ret{204, 0, 0, 0};
+    TS_ASSERT(rf.get(1) == ret);
+  }
+
+  void testPosBEQCorrect(void) {
+    // B-Type
+    // imm: 000100000000
+    // 1100011 0 0001 000 00000 00000 000000 0
+    // 1100 0110 0001 0000 0000 0000 0000 0000
+    DecodeRoutine decode = RV32I::findDecodeRoutineByOpcode(OpS, 99);
+    bytes instruction{99, 8, 0, 0};
+    bytes initialPC{8,0,0,0};
+    Memory m(3000);
+    m.writeWord(8, instruction);
+    RegisterFile rf(4, false);
+    PipelineHazardController phc(4, &rf, false);
+    SimpleBranchPredictor sbp(&m, 4, &rf, initialPC);
+    AbstractInstruction inst = decode(instruction, &phc);
+    inst.setPC(sbp.getNextPC());
+    TS_ASSERT(inst.getType() == InstructionType::B);
+    TS_ASSERT_THROWS(inst.execute(&inst, &sbp, 200, &phc), FailedBranchPredictionException);
+    bytes result{24, 0, 0, 0};
+    TS_ASSERT(inst.getResult() == result);
+  }
+
+  void testNegBEQCorrect(void) {
+    // B-Type
+    // imm: 0001111111111
+    // 1100011 1 0001 000 00000 00000 111111 1
+    // 1100 0111 0001 0000 0000 0000 0111 1111
+    DecodeRoutine decode = RV32I::findDecodeRoutineByOpcode(OpS, 99);
+    bytes instruction{227, 8, 0, 254};
+    bytes initialPC{32,0,0,0};
+    Memory m(3000);
+    m.writeWord(32, instruction);
+    RegisterFile rf(4, false);
+    PipelineHazardController phc(4, &rf, false);
+    SimpleBranchPredictor sbp(&m, 4, &rf, initialPC);
+    AbstractInstruction inst = decode(instruction, &phc);
+    inst.setPC(sbp.getNextPC());
+    TS_ASSERT(inst.getType() == InstructionType::B);
+    inst.execute(&inst, &sbp, 200, &phc);
+    bytes result{16, 0, 0, 0};
+    TS_ASSERT(inst.getResult() == result);
+  }
+
+  void testPosBEQIncorrect(void) {
+    // B-Type
+    // imm: 0010000000000
+    // 1100011 0 0100 000 00000 10000 000000 0
+    // 1100 0110 0100 0000 0000 1000 0000 0000
+    DecodeRoutine decode = RV32I::findDecodeRoutineByOpcode(OpS, 99);
+    bytes instruction{99, 2, 16, 0};
+    bytes initialPC{32,0,0,0};
+    Memory m(3000);
+    m.writeWord(32, instruction);
+    RegisterFile rf(4, false);
+    rf.write(1, bytes{1, 0, 0, 0});
+    PipelineHazardController phc(4, &rf, false);
+    SimpleBranchPredictor sbp(&m, 4, &rf, initialPC);
+    AbstractInstruction inst = decode(instruction, &phc);
+    inst.setPC(sbp.getNextPC());
+    TS_ASSERT(inst.getType() == InstructionType::B);
+    inst.execute(&inst, &sbp, 200, &phc);
+    bytes result{36, 0, 0, 0};
+    TS_ASSERT(inst.getResult() == result);
+  }
+
+  void testNegBEQIncorrect(void) {
+    // B-Type
+    // imm: 0000111111111
+    // 1100011 1 0001 000 00000 10000 111111 1
+    // 1100 0111 0001 0000 0000 1000 0111 1111
+    DecodeRoutine decode = RV32I::findDecodeRoutineByOpcode(OpS, 99);
+    bytes instruction{227, 8, 16, 254};
+    bytes initialPC{32,0,0,0};
+    Memory m(3000);
+    m.writeWord(32, instruction);
+    RegisterFile rf(4, false);
+    rf.write(1, bytes{1, 0, 0, 0});
+    PipelineHazardController phc(4, &rf, false);
+    SimpleBranchPredictor sbp(&m, 4, &rf, initialPC);
+    AbstractInstruction inst = decode(instruction, &phc);
+    inst.setPC(sbp.getNextPC());
+    TS_ASSERT(inst.getType() == InstructionType::B);
+    TS_ASSERT_THROWS(inst.execute(&inst, &sbp, 200, &phc), FailedBranchPredictionException);
+    bytes result{36, 0, 0, 0};
+    TS_ASSERT(inst.getResult() == result);
+  }
+
+  void testPosBNECorrect(void) {
+    // B-Type
+    // imm: 0000100000000
+    // 1100011 0 0001 100 00000 10000 000000 0
+    // 1100 0110 0001 1000 0000 1000 0000 0000
+    DecodeRoutine decode = RV32I::findDecodeRoutineByOpcode(OpS, 99);
+    bytes instruction{99, 24, 16, 0};
+    bytes initialPC{32,0,0,0};
+    Memory m(3000);
+    m.writeWord(32, instruction);
+    RegisterFile rf(4, false);
+    rf.write(1, bytes{1, 0, 0, 0});
+    PipelineHazardController phc(4, &rf, false);
+    SimpleBranchPredictor sbp(&m, 4, &rf, initialPC);
+    AbstractInstruction inst = decode(instruction, &phc);
+    inst.setPC(sbp.getNextPC());
+    TS_ASSERT(inst.getType() == InstructionType::B);
+    TS_ASSERT_THROWS(inst.execute(&inst, &sbp, 200, &phc), FailedBranchPredictionException);
+    bytes result{48, 0, 0, 0};
+    TS_ASSERT(inst.getResult() == result);
+  }
+
+  void testNegBNECorrect(void) {
+    // B-Type
+    // imm: 0011111111111
+    // 1100011 1 0111 100 00000 10000 111111 1
+    // 1100 0111 0111 1000 0000 1000 0111 1111
+    DecodeRoutine decode = RV32I::findDecodeRoutineByOpcode(OpS, 99);
+    bytes instruction{227, 30, 16, 254};
+    bytes initialPC{32,0,0,0};
+    Memory m(3000);
+    m.writeWord(32, instruction);
+    RegisterFile rf(4, false);
+    rf.write(1, bytes{1, 0, 0, 0});
+    PipelineHazardController phc(4, &rf, false);
+    SimpleBranchPredictor sbp(&m, 4, &rf, initialPC);
+    AbstractInstruction inst = decode(instruction, &phc);
+    inst.setPC(sbp.getNextPC());
+    TS_ASSERT(inst.getType() == InstructionType::B);
+    inst.execute(&inst, &sbp, 200, &phc);
+    bytes result{28, 0, 0, 0};
+    TS_ASSERT(inst.getResult() == result);
+  }
+
+  void testPosBLTCorrect(void) {
+    // B-Type
+    // imm: 0000001000000
+    // 1100011 0 0000 001 00000 10000 010000 0
+    // 1100 0110 0000 0010 0000 1000 0010 0000
+    DecodeRoutine decode = RV32I::findDecodeRoutineByOpcode(OpS, 99);
+    bytes instruction{99, 64, 16, 4};
+    bytes initialPC{32,0,0,0};
+    Memory m(3000);
+    m.writeWord(32, instruction);
+    RegisterFile rf(4, false);
+    rf.write(1, bytes{1, 0, 0, 0});
+    PipelineHazardController phc(4, &rf, false);
+    SimpleBranchPredictor sbp(&m, 4, &rf, initialPC);
+    AbstractInstruction inst = decode(instruction, &phc);
+    inst.setPC(sbp.getNextPC());
+    TS_ASSERT(inst.getType() == InstructionType::B);
+    TS_ASSERT_THROWS(inst.execute(&inst, &sbp, 200, &phc), FailedBranchPredictionException);
+    bytes result{96, 0, 0, 0};
+    TS_ASSERT(inst.getResult() == result);
+  }
+
+  void testNegBLTCorrect(void) {
+    // B-Type
+    // imm: 000111111111
+    // 1100011 1 0011 001 10000 00000 111111 1
+    // 1100 0111 0011 0011 0000 0000 0111 1111
+    DecodeRoutine decode = RV32I::findDecodeRoutineByOpcode(OpS, 99);
+    bytes instruction{227, 204, 0, 254};
+    bytes initialPC{32,0,0,0};
+    Memory m(3000);
+    m.writeWord(32, instruction);
+    RegisterFile rf(4, false);
+    rf.write(1, bytes{255, 255, 255, 255});
+    PipelineHazardController phc(4, &rf, false);
+    SimpleBranchPredictor sbp(&m, 4, &rf, initialPC);
+    AbstractInstruction inst = decode(instruction, &phc);
+    inst.setPC(sbp.getNextPC());
+    TS_ASSERT(inst.getType() == InstructionType::B);
+    inst.execute(&inst, &sbp, 200, &phc);
+    bytes result{24, 0, 0, 0};
+    TS_ASSERT(inst.getResult() == result);
+  }
+
+  void testPosBGECorrect(void) {
+    // B-Type
+    // imm: 000100000000
+    // 1100011 0 0010 101 00000 10000 000000 0
+    // 1100 0110 0010 1010 0000 1000 0000 0000
+    DecodeRoutine decode = RV32I::findDecodeRoutineByOpcode(OpS, 99);
+    bytes instruction{99, 84, 16, 0};
+    bytes initialPC{32,0,0,0};
+    Memory m(3000);
+    m.writeWord(32, instruction);
+    RegisterFile rf(4, false);
+    rf.write(1, bytes{255, 255, 255, 255});
+    PipelineHazardController phc(4, &rf, false);
+    SimpleBranchPredictor sbp(&m, 4, &rf, initialPC);
+    AbstractInstruction inst = decode(instruction, &phc);
+    inst.setPC(sbp.getNextPC());
+    TS_ASSERT(inst.getType() == InstructionType::B);
+    TS_ASSERT_THROWS(inst.execute(&inst, &sbp, 200, &phc), FailedBranchPredictionException);
+    bytes result{40, 0, 0, 0};
+    TS_ASSERT(inst.getResult() == result);
+  }
+
+  void testNegBGECorrect(void) {
+    // B-Type
+    // imm: 000011111111
+    // 1100011 1 0001 101 00000 10000 111111 1
+    // 1100 0111 0001 1010 0000 1000 0111 1111
+    DecodeRoutine decode = RV32I::findDecodeRoutineByOpcode(OpS, 99);
+    bytes instruction{227, 88, 16, 254};
+    bytes initialPC{32,0,0,0};
+    Memory m(3000);
+    m.writeWord(32, instruction);
+    RegisterFile rf(4, false);
+    rf.write(1, bytes{0, 0, 0, 129});
+    PipelineHazardController phc(4, &rf, false);
+    SimpleBranchPredictor sbp(&m, 4, &rf, initialPC);
+    AbstractInstruction inst = decode(instruction, &phc);
+    inst.setPC(sbp.getNextPC());
+    TS_ASSERT(inst.getType() == InstructionType::B);
+    inst.execute(&inst, &sbp, 200, &phc);
+    bytes result{16, 0, 0, 0};
+    TS_ASSERT(inst.getResult() == result);
+  }
+
+  void testPosBLTUCorrect(void) {
+    // B-Type
+    // imm: 0010000000000
+    // 1100011 0 0100 011 00000 10000 000000 0
+    // 1100 0110 0100 0110 0000 1000 0000 0000
+    DecodeRoutine decode = RV32I::findDecodeRoutineByOpcode(OpS, 99);
+    bytes instruction{99, 98, 16, 0};
+    bytes initialPC{32,0,0,0};
+    Memory m(3000);
+    m.writeWord(32, instruction);
+    RegisterFile rf(4, false);
+    rf.write(1, bytes{255, 255, 255, 255});
+    PipelineHazardController phc(4, &rf, false);
+    SimpleBranchPredictor sbp(&m, 4, &rf, initialPC);
+    AbstractInstruction inst = decode(instruction, &phc);
+    inst.setPC(sbp.getNextPC());
+    TS_ASSERT(inst.getType() == InstructionType::B);
+    inst.execute(&inst, &sbp, 200, &phc);
+    bytes result{36, 0, 0, 0};
+    TS_ASSERT(inst.getResult() == result);
+  }
 };

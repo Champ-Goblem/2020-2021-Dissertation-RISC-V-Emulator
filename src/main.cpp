@@ -7,27 +7,21 @@
 #include "include/instructions/UType.h"
 #include "include/instructions/sets/RV32I.h"
 #include "include/units/PipelineHazardController.h"
-#include <thread>
 
 int main(int argc, char** argv) {
     RV32I base;
     vector<OpcodeSpace> OpS = base.registerOpcodeSpace();
-    Memory m(8000);
-    bytes instruction{239, 224, 31, 130};
-    bytes initialPC{100, 25, 0, 0}; // 6500
-    m.writeWord(6500, instruction);
+    DecodeRoutine decode = RV32I::findDecodeRoutineByOpcode(OpS, 99);
+    bytes instruction{99, 98, 16, 0};
+    bytes initialPC{32,0,0,0};
+    Memory m(3000);
+    m.writeWord(32, instruction);
     RegisterFile rf(4, false);
+    rf.write(1, bytes{255, 255, 255, 255});
+    PipelineHazardController phc(4, &rf, false);
     SimpleBranchPredictor sbp(&m, 4, &rf, initialPC);
-    DecodeRoutine decode = RV32I::findDecodeRoutineByOpcode(OpS, 111);
-    PipelineHazardController phc(4, &rf, true);
     AbstractInstruction inst = decode(instruction, &phc);
     inst.setPC(sbp.getNextPC());
-    (inst.getType() == InstructionType::J);
-    inst.execute(&inst, (AbstractBranchPredictor*)&sbp, m.getSize(), &phc);
-    inst.registerWriteback(&inst, &rf);
-    // res: 0010 0001 1000 0000 0000 0000 0000 0000
-    bytes result{132, 1, 0, 0};
-    (inst.getResult() == result);
-    bytes ret{104, 25, 0, 0};
-    (rf.get(1) == ret);
+    (inst.getType() == InstructionType::B);
+    (inst.execute(&inst, &sbp, 200, &phc));
 }

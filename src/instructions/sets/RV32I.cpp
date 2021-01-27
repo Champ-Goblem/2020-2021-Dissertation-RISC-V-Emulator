@@ -197,28 +197,28 @@ void RV32I::executeBranch(AbstractInstruction* instruction, AbstractBranchPredic
         instruction->setResult(incPC);
       }
       break;
-    case 3:
+    case 4:
       if (bytesLessThanBytesSigned(instruction->getRs1Val(), instruction->getRs2Val())) {
         instruction->setResult(branchTaken);
       } else {
         instruction->setResult(incPC);
       }
       break;
-    case 4:
+    case 5:
       if (bytesGreaterOrequalToSigned(instruction->getRs1Val(), instruction->getRs2Val())) {
         instruction->setResult(branchTaken);
       } else {
         instruction->setResult(incPC);
       }
       break;
-    case 5:
+    case 6:
       if (bytesLessThanBytesUnsigned(instruction->getRs1Val(), instruction->getRs2Val())) {
         instruction->setResult(branchTaken);
       } else {
         instruction->setResult(incPC);
       }
       break;
-    case 6:
+    case 7:
       if (bytesGreaterOrequalToUnsigned(instruction->getRs1Val(), instruction->getRs2Val())) {
         instruction->setResult(branchTaken);
       } else {
@@ -259,20 +259,21 @@ void RV32I::executeJAL(AbstractInstruction* instruction, AbstractBranchPredictor
     throw UndefinedInstructionException(instruction, "Instruction not J-Type as expected");
   }
 
-  bytes nextPC = bytesAddSignedToPC(instruction->getPC(), instruction->getImm());
+  bytes jumpPC = bytesAddSignedToPC(instruction->getPC(), instruction->getImm());
+  bytes nextPC = addByteToBytes(instruction->getPC(), 4);
   instruction->setResult(nextPC);
 
-  if (nextPC[0] % 4 != 0) {
+  if (jumpPC[0] % 4 != 0) {
     throw AddressMisalignedException(instruction, "Exception generated on JAL instruction");
   }
 
-  ulong pcVal = getBytesToULong(nextPC);
+  ulong pcVal = getBytesToULong(jumpPC);
   if (pcVal >= memorySize) {
     throw AddressOutOfMemoryException(pcVal, 4, memorySize, true);
   }
 
   // Raise exception for handling thread to deal with
-  if (!branchPredictor->checkPrediction(instruction->getPC(), nextPC)) {
+  if (!branchPredictor->checkPrediction(instruction->getPC(), jumpPC)) {
     throw FailedBranchPredictionException(instruction, "JAL");
   }
 }
@@ -282,20 +283,21 @@ void RV32I::executeJALR(AbstractInstruction* instruction, AbstractBranchPredicto
     throw UndefinedInstructionException(instruction, "Instruction not I-Type as expected");
   }
 
-  bytes nextPC = bytesAdditionSigned(instruction->getRs1Val(), instruction->getImm());
+  bytes jumpPC = bytesAdditionSigned(instruction->getRs1Val(), instruction->getImm());
+  bytes nextPC = addByteToBytes(instruction->getPC(), 4);
   instruction->setResult(nextPC);
 
-  if (nextPC[0] % 4 != 0) {
+  if (jumpPC[0] % 4 != 0) {
     throw AddressMisalignedException(instruction, "Exception generated on JALR instruction");
   }
 
-  ulong pcVal = getBytesToULong(nextPC);
+  ulong pcVal = getBytesToULong(jumpPC);
   if (pcVal >= memorySize) {
     throw AddressOutOfMemoryException(pcVal, 4, memorySize, true);
   }
 
   // Raise exception for handling thread to deal with
-  if (!branchPredictor->checkPrediction(instruction->getPC(), nextPC)) {
+  if (!branchPredictor->checkPrediction(instruction->getPC(), jumpPC)) {
     throw FailedBranchPredictionException(instruction, "JALR");
   }
 }
@@ -467,11 +469,11 @@ void RV32I::writebackAUIPC(AbstractInstruction* instruction, RegisterFile* regis
 }
 
 void RV32I::writebackJAL(AbstractInstruction* instruction, RegisterFile* registerFile) {
-  registerFile->write(instruction->getRD(), addByteToBytes(instruction->getPC(), 4));
+  registerFile->write(instruction->getRD(), instruction->getResult());
 }
 
 void RV32I::writebackJALR(AbstractInstruction* instruction, RegisterFile* registerFile) {
-  registerFile->write(instruction->getRD(), addByteToBytes(instruction->getPC(), 4));
+  registerFile->write(instruction->getRD(), instruction->getResult());
 }
 
 void RV32I::writebackLoad(AbstractInstruction* instruction, RegisterFile* registerFile) {

@@ -246,10 +246,10 @@ static bool bytesLessThanBytesSigned(bytes val1, bytes val2) {
     } else if (v1 > v2) {
       return false;
     }
+    
+    count1 = count1 - (count1 >= count2 ? 1 : 0);
+    count2 = count2 - (count2 >= count1 ? 1 : 0);
   }
-
-  count1 = count1 - (count1 >= count2 ? 1 : 0);
-  count2 = count2 - (count2 >= count1 ? 1 : 0);
 
   return false;
 }
@@ -264,17 +264,17 @@ static bool bytesLessThanBytesUnsigned(bytes val1, bytes val2) {
   uint count1 = val1.size() - 1;
   uint count2 = val2.size() - 1;
   while (count1 >= 0 && count2 >= 0) {
-    char v1 = count1 >= count2 ? val1[count1] : 0;
-    char v2 = count2 >= count1 ? val2[count2] : 0;
+    byte v1 = count1 >= count2 ? val1[count1] : 0;
+    byte v2 = count2 >= count1 ? val2[count2] : 0;
     if (v1 < v2) {
       return true;
     } else if (v1 > v2) {
       return false;
     }
-  }
 
-  count1 = count1 - (count1 >= count2 ? 1 : 0);
-  count2 = count2 - (count2 >= count1 ? 1 : 0);
+    count1 = count1 - (count1 >= count2 ? 1 : 0);
+    count2 = count2 - (count2 >= count1 ? 1 : 0);
+  }
 
   return false;
 }
@@ -296,10 +296,10 @@ static bool bytesGreaterOrequalToSigned(bytes val1, bytes val2) {
     } else if (v1 < v2) {
       return false;
     }
-  }
 
-  count1 = count1 - (count1 >= count2 ? 1 : 0);
-  count2 = count2 - (count2 >= count1 ? 1 : 0);
+    count1 = count1 - (count1 >= count2 ? 1 : 0);
+    count2 = count2 - (count2 >= count1 ? 1 : 0);
+  }
 
   return true;
 }
@@ -314,17 +314,17 @@ static bool bytesGreaterOrequalToUnsigned(bytes val1, bytes val2) {
   uint count1 = val1.size() - 1;
   uint count2 = val2.size() - 1;
   while (count1 >= 0 && count2 >= 0) {
-    char v1 = count1 >= count2 ? val1[count1] : 0;
-    char v2 = count2 >= count1 ? val2[count2] : 0;
+    byte v1 = count1 >= count2 ? val1[count1] : 0;
+    byte v2 = count2 >= count1 ? val2[count2] : 0;
     if (v1 > v2) {
       return true;
     } else if (v1 < v2) {
       return false;
     }
-  }
 
-  count1 = count1 - (count1 >= count2 ? 1 : 0);
-  count2 = count2 - (count2 >= count1 ? 1 : 0);
+    count1 = count1 - (count1 >= count2 ? 1 : 0);
+    count2 = count2 - (count2 >= count1 ? 1 : 0);
+  }
 
   return true;
 }
