@@ -482,4 +482,191 @@ class RV32ITests : public CxxTest::TestSuite
     inst.registerWriteback(&inst, &rf);
     TS_ASSERT(rf.get(1)[0] == memoryVal);
   }
+
+  void testLH(void) {
+    // I-Type
+    // imm: 111111111111
+    // 1100000 10000 100 11000 111111111111
+    // 1100 0001 0000 1001 1000 1111 1111 1111
+    DecodeRoutine decode = RV32I::findDecodeRoutineByOpcode(OpS, 3);
+    bytes instruction{131, 144, 241, 255};
+    bytes initialPC{4,0,0,0};
+    bytes memoryVal = {2, 183, 255, 255};
+    Memory m(3000);
+    m.writeWord(4, instruction);
+    m.writeHWord(23, bytes{memoryVal[0], memoryVal[1]});
+    RegisterFile rf(4, false);
+    rf.write(3, bytes{24, 0, 0, 0});
+    PipelineHazardController phc(4, &rf, false);
+    SimpleBranchPredictor sbp(&m, 4, &rf, initialPC);
+    AbstractInstruction inst = decode(instruction, &phc);
+    inst.setPC(sbp.getNextPC());
+    TS_ASSERT(inst.getType() == InstructionType::I);
+    inst.execute(&inst, &sbp, 3000, &phc);
+    bytes result{23, 0, 0, 0};
+    TS_ASSERT(inst.getResult() == result);
+    inst.memoryAccess(&inst, &m);
+    inst.registerWriteback(&inst, &rf);
+    TS_ASSERT(rf.get(1) == memoryVal);
+  }
+
+  void testLW(void) {
+    // I-Type
+    // imm: 000000100000
+    // 1100000 10000 010 11000 000000100000
+    // 1100 0001 0000 0101 1000 0000 0010 0000
+    DecodeRoutine decode = RV32I::findDecodeRoutineByOpcode(OpS, 3);
+    bytes instruction{131, 160, 1, 4};
+    bytes initialPC{4,0,0,0};
+    bytes memoryVal = {2, 183, 255, 13};
+    Memory m(3000);
+    m.writeWord(4, instruction);
+    m.writeWord(88, memoryVal);
+    RegisterFile rf(4, false);
+    rf.write(3, bytes{24, 0, 0, 0});
+    PipelineHazardController phc(4, &rf, false);
+    SimpleBranchPredictor sbp(&m, 4, &rf, initialPC);
+    AbstractInstruction inst = decode(instruction, &phc);
+    inst.setPC(sbp.getNextPC());
+    TS_ASSERT(inst.getType() == InstructionType::I);
+    inst.execute(&inst, &sbp, 3000, &phc);
+    bytes result{88, 0, 0, 0};
+    TS_ASSERT(inst.getResult() == result);
+    inst.memoryAccess(&inst, &m);
+    inst.registerWriteback(&inst, &rf);
+    TS_ASSERT(rf.get(1) == memoryVal);
+  }
+
+  void testLBU(void) {
+    // I-Type
+    // imm: 000001000100
+    // 1100000 10000 001 00000 000001000100
+    // 1100 0001 0000 0010 0000 0000 0100 0100
+    DecodeRoutine decode = RV32I::findDecodeRoutineByOpcode(OpS, 3);
+    bytes instruction{131, 64, 0, 34};
+    bytes initialPC{4,0,0,0};
+    byte memoryVal = 128;
+    Memory m(3000);
+    m.writeWord(4, instruction);
+    m.writeByte(544, memoryVal);
+    RegisterFile rf(4, false);
+    PipelineHazardController phc(4, &rf, false);
+    SimpleBranchPredictor sbp(&m, 4, &rf, initialPC);
+    AbstractInstruction inst = decode(instruction, &phc);
+    inst.setPC(sbp.getNextPC());
+    TS_ASSERT(inst.getType() == InstructionType::I);
+    inst.execute(&inst, &sbp, 3000, &phc);
+    bytes result{32, 2, 0, 0};
+    TS_ASSERT(inst.getResult() == result);
+    inst.memoryAccess(&inst, &m);
+    inst.registerWriteback(&inst, &rf);
+    bytes memVal{memoryVal, 0, 0, 0};
+    TS_ASSERT(rf.get(1) == memVal);
+  }
+
+  void testLHU(void) {
+    // I-Type
+    // imm: 111111111111
+    // 1100000 10000 101 11000 111111111111
+    // 1100 0001 0000 1011 1000 1111 1111 1111
+    DecodeRoutine decode = RV32I::findDecodeRoutineByOpcode(OpS, 3);
+    bytes instruction{131, 208, 241, 255};
+    bytes initialPC{4,0,0,0};
+    bytes memoryVal = {2, 183, 0, 0};
+    Memory m(3000);
+    m.writeWord(4, instruction);
+    m.writeHWord(23, bytes{memoryVal[0], memoryVal[1]});
+    RegisterFile rf(4, false);
+    rf.write(3, bytes{24, 0, 0, 0});
+    PipelineHazardController phc(4, &rf, false);
+    SimpleBranchPredictor sbp(&m, 4, &rf, initialPC);
+    AbstractInstruction inst = decode(instruction, &phc);
+    inst.setPC(sbp.getNextPC());
+    TS_ASSERT(inst.getType() == InstructionType::I);
+    inst.execute(&inst, &sbp, 3000, &phc);
+    bytes result{23, 0, 0, 0};
+    TS_ASSERT(inst.getResult() == result);
+    inst.memoryAccess(&inst, &m);
+    inst.registerWriteback(&inst, &rf);
+    TS_ASSERT(rf.get(1) == memoryVal);
+  }
+
+  void testSB(void) {
+    // S-Type
+    // imm: 000100000000
+    // 1100010 00010 000 10000 01000 0000000
+    // 1100 0100 0010 0001 0000 0100 0000 0000
+    DecodeRoutine decode = RV32I::findDecodeRoutineByOpcode(OpS, 35);
+    bytes instruction{35, 132, 32, 0};
+    bytes initialPC{4,0,0,0};
+    bytes memoryVal = {2, 183, 0, 0};
+    Memory m(3000);
+    m.writeWord(4, instruction);
+    RegisterFile rf(4, false);
+    rf.write(2, memoryVal);
+    PipelineHazardController phc(4, &rf, false);
+    SimpleBranchPredictor sbp(&m, 4, &rf, initialPC);
+    AbstractInstruction inst = decode(instruction, &phc);
+    inst.setPC(sbp.getNextPC());
+    TS_ASSERT(inst.getType() == InstructionType::S);
+    inst.execute(&inst, &sbp, 3000, &phc);
+    bytes result{8, 0, 0, 0};
+    TS_ASSERT(inst.getResult() == result);
+    inst.memoryAccess(&inst, &m);
+    bytes memVal{2, 0, 0, 0};
+    TS_ASSERT(m.readWord(8) == memVal);
+  }
+
+  void testSH(void) {
+    // S-Type
+    // imm: 100111111111
+    // 1100010 10011 100 10000 01000 1111111
+    // 1100 0101 0011 1001 0000 0100 0111 1111
+    DecodeRoutine decode = RV32I::findDecodeRoutineByOpcode(OpS, 35);
+    bytes instruction{163, 156, 32, 254};
+    bytes initialPC{4,0,0,0};
+    bytes memoryVal = {2, 183, 32, 0};
+    Memory m(3000);
+    m.writeWord(4, instruction);
+    RegisterFile rf(4, false);
+    rf.write(1, bytes{100, 0, 0, 0});
+    rf.write(2, memoryVal);
+    PipelineHazardController phc(4, &rf, false);
+    SimpleBranchPredictor sbp(&m, 4, &rf, initialPC);
+    AbstractInstruction inst = decode(instruction, &phc);
+    inst.setPC(sbp.getNextPC());
+    TS_ASSERT(inst.getType() == InstructionType::S);
+    inst.execute(&inst, &sbp, 3000, &phc);
+    bytes result{93, 0, 0, 0};
+    TS_ASSERT(inst.getResult() == result);
+    inst.memoryAccess(&inst, &m);
+    bytes memVal{2, 183, 0, 0};
+    TS_ASSERT(m.readWord(93) == memVal);
+  }
+
+  void testSW(void) {
+    // S-Type
+    // imm: 0000010000000
+    // 1100010 00000 010 10000 01000 1000000
+    // 1100 0100 0000 0101 0000 0100 0100 0000
+    DecodeRoutine decode = RV32I::findDecodeRoutineByOpcode(OpS, 35);
+    bytes instruction{35, 160, 32, 2};
+    bytes initialPC{4,0,0,0};
+    bytes memoryVal = {2, 183, 32, 255};
+    Memory m(3000);
+    m.writeWord(4, instruction);
+    RegisterFile rf(4, false);
+    rf.write(1, bytes{100, 0, 0, 0});
+    rf.write(2, memoryVal);
+    PipelineHazardController phc(4, &rf, false);
+    SimpleBranchPredictor sbp(&m, 4, &rf, initialPC);
+    AbstractInstruction inst = decode(instruction, &phc);
+    inst.setPC(sbp.getNextPC());
+    TS_ASSERT(inst.getType() == InstructionType::S);
+    inst.execute(&inst, &sbp, 3000, &phc);
+    bytes result{132, 0, 0, 0};
+    TS_ASSERT(inst.getResult() == result);
+    inst.memoryAccess(&inst, &m);
+    TS_ASSERT(m.readWord(132) == memoryVal);
+  }
 };

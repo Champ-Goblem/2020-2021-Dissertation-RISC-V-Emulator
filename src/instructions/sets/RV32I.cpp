@@ -98,6 +98,7 @@ AbstractInstruction RV32I::decodeStore(bytes instruction, PipelineHazardControll
   // S-Type
   STypeInstruction ins = STypeInstruction(pipelineController->getXLEN());
   ins.decode(instruction);
+  ins.execute = &executeStore;
   ins.memoryAccess = &memStore;
   ins.registerWriteback = nullptr;
   pipelineController->enqueue(&ins);
@@ -543,7 +544,8 @@ void RV32I::memStore(AbstractInstruction* instruction, Memory* memory) {
     }
     case 1:
     {
-      memory->writeHWord(getBytesToULong(instruction->getResult()), instruction->getRs2Val());
+      bytes value = instruction->getRs2Val();
+      memory->writeHWord(getBytesToULong(instruction->getResult()), bytes{value[0], value[1]});
       break;
     }
     case 2:
