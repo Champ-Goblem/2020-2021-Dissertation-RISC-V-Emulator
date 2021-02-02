@@ -1,7 +1,7 @@
 #include "../include/instructions/BType.h"
 #include "../include/bytemanip.h"
 
-BTypeInstruction::BTypeInstruction() {
+BTypeInstruction::BTypeInstruction(ushort XLEN): AbstractInstruction(XLEN) {
   this->opcode = 0;
   this->func3 = 0;
   this->rs1 = 0;
@@ -10,7 +10,7 @@ BTypeInstruction::BTypeInstruction() {
   this->type = InstructionType::B;
 }
 
-BTypeInstruction::BTypeInstruction(byte opcode, byte imm1, byte imm4, byte func3, byte rs1, byte rs2, byte imm6, byte imm31) {
+BTypeInstruction::BTypeInstruction(ushort XLEN, byte opcode, byte imm1, byte imm4, byte func3, byte rs1, byte rs2, byte imm6, byte imm31): AbstractInstruction(XLEN) {
   this->imm = bytes(2);
 
   if (opcode > OPCODE_MAX) {

@@ -14,7 +14,7 @@
 
 AbstractInstruction RV32I::decodeLUI(bytes instruction, PipelineHazardController* pipelineController) {
   // U-Type
-  UTypeInstruction ins = UTypeInstruction();
+  UTypeInstruction ins = UTypeInstruction(pipelineController->getXLEN());
   ins.decode(instruction);
   ins.execute = nullptr;
   ins.memoryAccess = nullptr;
@@ -25,7 +25,7 @@ AbstractInstruction RV32I::decodeLUI(bytes instruction, PipelineHazardController
 
 AbstractInstruction RV32I::decodeAUIPC(bytes instruction, PipelineHazardController* pipelineController) {
   // U-Type
-  UTypeInstruction ins = UTypeInstruction();
+  UTypeInstruction ins = UTypeInstruction(pipelineController->getXLEN());
   ins.decode(instruction);
   ins.execute = &executeAUIPC;
   ins.memoryAccess = nullptr;
@@ -36,7 +36,7 @@ AbstractInstruction RV32I::decodeAUIPC(bytes instruction, PipelineHazardControll
 
 AbstractInstruction RV32I::decodeJAL(bytes instruction, PipelineHazardController* pipelineController) {
   // J-Type
-  JTypeInstruction ins = JTypeInstruction();
+  JTypeInstruction ins = JTypeInstruction(pipelineController->getXLEN());
   ins.decode(instruction);
   ins.execute = &executeJAL;
   ins.memoryAccess = nullptr;
@@ -47,7 +47,7 @@ AbstractInstruction RV32I::decodeJAL(bytes instruction, PipelineHazardController
 
 AbstractInstruction RV32I::decodeJALR(bytes instruction, PipelineHazardController* pipelineController) {
   // I-Type
-  ITypeInstruction ins = ITypeInstruction();
+  ITypeInstruction ins = ITypeInstruction(pipelineController->getXLEN());
   ins.decode(instruction);
   ins.execute = &executeJALR;
   ins.memoryAccess = nullptr;
@@ -63,7 +63,7 @@ AbstractInstruction RV32I::decodeJALR(bytes instruction, PipelineHazardControlle
 
 AbstractInstruction RV32I::decodeBranch(bytes instruction, PipelineHazardController* pipelineController) {
   // B-Type
-  BTypeInstruction ins = BTypeInstruction();
+  BTypeInstruction ins = BTypeInstruction(pipelineController->getXLEN());
   ins.decode(instruction);
   ins.execute = &executeBranch;
   ins.memoryAccess = nullptr;
@@ -80,7 +80,7 @@ AbstractInstruction RV32I::decodeBranch(bytes instruction, PipelineHazardControl
 
 AbstractInstruction RV32I::decodeLoad(bytes instruction, PipelineHazardController* pipelineController) {
   // I-Type
-  ITypeInstruction ins = ITypeInstruction();
+  ITypeInstruction ins = ITypeInstruction(pipelineController->getXLEN());
   ins.decode(instruction);
   ins.execute = &executeLoad;
   ins.memoryAccess = &memLoad;
@@ -96,7 +96,7 @@ AbstractInstruction RV32I::decodeLoad(bytes instruction, PipelineHazardControlle
 
 AbstractInstruction RV32I::decodeStore(bytes instruction, PipelineHazardController* pipelineController) {
   // S-Type
-  STypeInstruction ins = STypeInstruction();
+  STypeInstruction ins = STypeInstruction(pipelineController->getXLEN());
   ins.decode(instruction);
   ins.memoryAccess = &memStore;
   ins.registerWriteback = nullptr;
@@ -112,7 +112,7 @@ AbstractInstruction RV32I::decodeStore(bytes instruction, PipelineHazardControll
 
 AbstractInstruction RV32I::decodeBitopsImmediate(bytes instruction, PipelineHazardController* pipelineController) {
   // I-Type
-  ITypeInstruction ins = ITypeInstruction();
+  ITypeInstruction ins = ITypeInstruction(pipelineController->getXLEN());
   ins.decode(instruction);
   ins.execute = &executeBitopsImmediate;
   ins.memoryAccess = nullptr;
@@ -131,7 +131,7 @@ AbstractInstruction RV32I::decodeBitopsImmediate(bytes instruction, PipelineHaza
 
 AbstractInstruction RV32I::decodeBitops(bytes instruction, PipelineHazardController* pipelineController) {
   // R-Type
-  RTypeInstruction ins = RTypeInstruction();
+  RTypeInstruction ins = RTypeInstruction(pipelineController->getXLEN());
   ins.decode(instruction);
   ins.execute = &executeBitops;
   ins.memoryAccess = nullptr;
@@ -148,7 +148,7 @@ AbstractInstruction RV32I::decodeBitops(bytes instruction, PipelineHazardControl
 
 AbstractInstruction RV32I::decodeFence(bytes instruction, PipelineHazardController* pipelineController) {
   // I-Type
-  ITypeInstruction ins = ITypeInstruction();
+  ITypeInstruction ins = ITypeInstruction(pipelineController->getXLEN());
   ins.decode(instruction);
   ins.execute = &executeFence;
   ins.memoryAccess = nullptr;
@@ -164,7 +164,7 @@ AbstractInstruction RV32I::decodeFence(bytes instruction, PipelineHazardControll
 
 AbstractInstruction RV32I::decodeERoutines(bytes instruction, PipelineHazardController* pipelineController) {
   // I-Type
-  ITypeInstruction ins = ITypeInstruction();
+  ITypeInstruction ins = ITypeInstruction(pipelineController->getXLEN());
   ins.decode(instruction);
   ins.execute = &executeERoutines;
   ins.memoryAccess = nullptr;

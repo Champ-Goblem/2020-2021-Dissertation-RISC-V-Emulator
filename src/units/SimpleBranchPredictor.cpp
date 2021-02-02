@@ -116,7 +116,7 @@ void SimpleBranchPredictor::predictionWorkloop() {
         // if so take PC - imm else PC + 4
         // Uses B-Type
         if (instruction[3] >> 7 == 1) {
-          BTypeInstruction b = BTypeInstruction();
+          BTypeInstruction b = BTypeInstruction(XLEN);
           b.decode(instruction);
           bytes imm = b.AbstractInstruction::getImm();
           nextPC = bytesAddSignedToPC(lastPC, imm);
@@ -127,7 +127,7 @@ void SimpleBranchPredictor::predictionWorkloop() {
       } else if (opcode == 103) {
         // Opcode = JALR
         // Uses I-Type
-        ITypeInstruction i = ITypeInstruction();
+        ITypeInstruction i = ITypeInstruction(XLEN);
         i.decode(instruction);
         bytes imm = i.AbstractInstruction::getImm();
         bytes rs1Val = this->registerFile->get((ushort)i.getRS1());
@@ -135,7 +135,7 @@ void SimpleBranchPredictor::predictionWorkloop() {
       } else if (opcode == 111) {
         // opcode - JAL
         // Uses J-Type
-        JTypeInstruction j = JTypeInstruction();
+        JTypeInstruction j = JTypeInstruction(XLEN);
         j.decode(instruction);
         bytes imm = j.AbstractInstruction::getImm();
         nextPC = bytesAddSignedToPC(lastPC, imm);

@@ -1,7 +1,7 @@
 #include "../include/instructions/IType.h"
 #include "../include/bytemanip.h"
 
-ITypeInstruction::ITypeInstruction() {
+ITypeInstruction::ITypeInstruction(ushort XLEN): AbstractInstruction(XLEN) {
   this->opcode = 0;
   this->rd = 0;
   this->func3 = 0;
@@ -10,7 +10,7 @@ ITypeInstruction::ITypeInstruction() {
   this->type = InstructionType::I;
 }
 
-ITypeInstruction::ITypeInstruction(byte opcode, byte rd, byte func3, byte rs1, bytes imm) {
+ITypeInstruction::ITypeInstruction(ushort XLEN, byte opcode, byte rd, byte func3, byte rs1, bytes imm): AbstractInstruction(XLEN) {
   if (imm.size() != 2) {
     throw new InstructionException("Failed to set imm, length not 2 bytes [%d]\n", imm.size());
   }

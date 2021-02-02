@@ -9,8 +9,8 @@
 class UTypeInstruction: public AbstractInstruction {
   
   public:
-  UTypeInstruction();
-  UTypeInstruction(byte opcode, byte rd, bytes imm);
+  UTypeInstruction(ushort XLEN);
+  UTypeInstruction(ushort XLEN, byte opcode, byte rd, bytes imm);
 
   void decode(bytes instruction);
   bytes getImm(ushort low, ushort high);

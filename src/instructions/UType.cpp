@@ -1,14 +1,14 @@
 #include "../include/instructions/UType.h"
 #include "../include/bytemanip.h"
 
-UTypeInstruction::UTypeInstruction() {
+UTypeInstruction::UTypeInstruction(ushort XLEN): AbstractInstruction(XLEN) {
   this->opcode = 0;
   this->rd = 0;
   this->imm = bytes(3);
   this->type = InstructionType::U;
 }
 
-UTypeInstruction::UTypeInstruction(byte opcode, byte rd, bytes imm) {
+UTypeInstruction::UTypeInstruction(ushort XLEN, byte opcode, byte rd, bytes imm): AbstractInstruction(XLEN) {
   if (opcode > OPCODE_MAX) {
     throw new InstructionException("Failed to set opcode, greater than 63 [%d]\n", opcode);
   }

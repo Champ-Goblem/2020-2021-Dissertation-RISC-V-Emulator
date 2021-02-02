@@ -10,8 +10,8 @@
 class BTypeInstruction: public AbstractInstruction {
   
   public:
-  BTypeInstruction();
-  BTypeInstruction(byte opcode, byte imm1, byte imm4, byte func3, byte rs1, byte rs2, byte imm6, byte imm31);
+  BTypeInstruction(ushort XLEN);
+  BTypeInstruction(ushort XLEN, byte opcode, byte imm1, byte imm4, byte func3, byte rs1, byte rs2, byte imm6, byte imm31);
 
   void decode(bytes instruction);
   bytes getImm(ushort low, ushort high);

@@ -9,8 +9,8 @@
 class STypeInstruction: public AbstractInstruction {
   
   public:
-  STypeInstruction();
-  STypeInstruction(byte opcode, byte imm5, byte func3, byte rs1, byte rs2, byte imm7);
+  STypeInstruction(ushort XLEN);
+  STypeInstruction(ushort XLEN, byte opcode, byte imm5, byte func3, byte rs1, byte rs2, byte imm7);
 
   void decode(bytes instruction);
   bytes getImm(ushort low, ushort high);

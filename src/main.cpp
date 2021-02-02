@@ -11,17 +11,23 @@
 int main(int argc, char** argv) {
     RV32I base;
     vector<OpcodeSpace> OpS = base.registerOpcodeSpace();
-    DecodeRoutine decode = RV32I::findDecodeRoutineByOpcode(OpS, 99);
-    bytes instruction{99, 98, 16, 0};
-    bytes initialPC{32,0,0,0};
+    DecodeRoutine decode = RV32I::findDecodeRoutineByOpcode(OpS, 3);
+    bytes instruction{131, 0, 0, 34};
+    bytes initialPC{4,0,0,0};
+    byte memoryVal = 60;
     Memory m(3000);
-    m.writeWord(32, instruction);
+    m.writeWord(4, instruction);
+    m.writeByte(544, memoryVal);
     RegisterFile rf(4, false);
-    rf.write(1, bytes{255, 255, 255, 255});
     PipelineHazardController phc(4, &rf, false);
     SimpleBranchPredictor sbp(&m, 4, &rf, initialPC);
     AbstractInstruction inst = decode(instruction, &phc);
     inst.setPC(sbp.getNextPC());
-    (inst.getType() == InstructionType::B);
-    (inst.execute(&inst, &sbp, 200, &phc));
+    (inst.getType() == InstructionType::I);
+    inst.execute(&inst, &sbp, 3000, &phc);
+    bytes result{32, 2, 0, 0};
+    (inst.getResult() == result);
+    inst.memoryAccess(&inst, &m);
+    inst.registerWriteback(&inst, &rf);
+    (rf.get(1)[0] == memoryVal);
 }

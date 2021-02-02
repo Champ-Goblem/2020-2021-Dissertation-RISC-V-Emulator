@@ -8,8 +8,8 @@
 class ITypeInstruction: public AbstractInstruction {
   
   public:
-  ITypeInstruction();
-  ITypeInstruction(byte opcode, byte rd, byte func3, byte rs1, bytes imm);
+  ITypeInstruction(ushort XLEN);
+  ITypeInstruction(ushort XLEN, byte opcode, byte rd, byte func3, byte rs1, bytes imm);
 
   void decode(bytes instruction);
   bytes getImm(ushort low, ushort high);

@@ -1,7 +1,7 @@
 #include "../include/instructions/SType.h"
 #include "../include/bytemanip.h"
 
-STypeInstruction::STypeInstruction() {
+STypeInstruction::STypeInstruction(ushort XLEN): AbstractInstruction(XLEN) {
   this->opcode = 0;
   this->rd = 0;
   this->func3 = 0;
@@ -11,7 +11,7 @@ STypeInstruction::STypeInstruction() {
   this->type = InstructionType::S;
 }
 
-STypeInstruction::STypeInstruction(byte opcode, byte imm5, byte func3, byte rs1, byte rs2, byte imm7) {
+STypeInstruction::STypeInstruction(ushort XLEN, byte opcode, byte imm5, byte func3, byte rs1, byte rs2, byte imm7): AbstractInstruction(XLEN) {
   this->imm = bytes(2);
   
   if (opcode > OPCODE_MAX) {

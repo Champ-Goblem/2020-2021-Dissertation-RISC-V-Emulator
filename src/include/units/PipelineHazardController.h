@@ -44,6 +44,7 @@ class PipelineHazardController: public AbstractUnit {
   bool checkForStaleRegister(ushort reg);
   bytes fetchRegisterValue(ushort reg);
   void storeResultAfterExecution(bytes result);
+  ushort getXLEN() { return XLEN; };
 };
 
 #endif

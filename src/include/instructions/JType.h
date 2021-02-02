@@ -11,8 +11,8 @@
 class JTypeInstruction: public AbstractInstruction {
   
   public:
-  JTypeInstruction();
-  JTypeInstruction(byte opcode, byte rd, byte imm8, byte imm1, bytes imm10, byte imm31);
+  JTypeInstruction(ushort XLEN);
+  JTypeInstruction(ushort XLEN, byte opcode, byte rd, byte imm8, byte imm1, bytes imm10, byte imm31);
 
   void decode(bytes instruction);
   bytes getImm(ushort low, ushort high);

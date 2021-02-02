@@ -14,14 +14,14 @@ class PipelineHazardControllerTests : public CxxTest::TestSuite {
   void testEnqueue(void) {
     RegisterFile rf(4, false);
     PipelineHazardController phc(4, &rf, false);
-    RTypeInstruction r = RTypeInstruction();
+    RTypeInstruction r = RTypeInstruction(4);
     TS_ASSERT_THROWS_NOTHING(phc.enqueue((AbstractInstruction*)&r));
   }
 
   void testCheckStaleWithSize1(void) {
     RegisterFile rf(4, false);
     PipelineHazardController phc(4, &rf, false);
-    RTypeInstruction r = RTypeInstruction(0, 1, 0, 0, 0, 0);
+    RTypeInstruction r = RTypeInstruction(4, 0, 1, 0, 0, 0, 0);
     phc.enqueue((AbstractInstruction*)&r);
     TS_ASSERT(phc.checkForStaleRegister(1) == false);
   }
@@ -29,9 +29,9 @@ class PipelineHazardControllerTests : public CxxTest::TestSuite {
   void testCheckStaleWithDep(void) {
     RegisterFile rf(4, false);
     PipelineHazardController phc(4, &rf, false);
-    RTypeInstruction r = RTypeInstruction(0, 1, 0, 0, 0, 0);
+    RTypeInstruction r = RTypeInstruction(4, 0, 1, 0, 0, 0, 0);
     phc.enqueue((AbstractInstruction*)&r);
-    RTypeInstruction r1 = RTypeInstruction(0, 0, 0, 0, 0, 0);
+    RTypeInstruction r1 = RTypeInstruction(4, 0, 0, 0, 0, 0, 0);
     phc.enqueue((AbstractInstruction*)&r1);
     TS_ASSERT(phc.checkForStaleRegister(1) == true);
   }
@@ -39,9 +39,9 @@ class PipelineHazardControllerTests : public CxxTest::TestSuite {
   void testCheckStaleWithNoDep(void) {
     RegisterFile rf(4, false);
     PipelineHazardController phc(4, &rf, false);
-    RTypeInstruction r = RTypeInstruction(0, 1, 0, 0, 0, 0);
+    RTypeInstruction r = RTypeInstruction(4, 0, 1, 0, 0, 0, 0);
     phc.enqueue((AbstractInstruction*)&r);
-    RTypeInstruction r1 = RTypeInstruction(0, 0, 0, 0, 0, 0);
+    RTypeInstruction r1 = RTypeInstruction(4, 0, 0, 0, 0, 0, 0);
     phc.enqueue((AbstractInstruction*)&r1);
     TS_ASSERT(phc.checkForStaleRegister(2) == false);
   }
@@ -49,9 +49,9 @@ class PipelineHazardControllerTests : public CxxTest::TestSuite {
   void testCheckStaleWithDepOnX0(void) {
     RegisterFile rf(4, false);
     PipelineHazardController phc(4, &rf, false);
-    RTypeInstruction r = RTypeInstruction(0, 1, 0, 0, 0, 0);
+    RTypeInstruction r = RTypeInstruction(4, 0, 1, 0, 0, 0, 0);
     phc.enqueue((AbstractInstruction*)&r);
-    RTypeInstruction r1 = RTypeInstruction(0, 0, 0, 0, 0, 0);
+    RTypeInstruction r1 = RTypeInstruction(4, 0, 0, 0, 0, 0, 0);
     phc.enqueue((AbstractInstruction*)&r1);
     TS_ASSERT(phc.checkForStaleRegister(0) == false);
   }
@@ -61,7 +61,7 @@ class PipelineHazardControllerTests : public CxxTest::TestSuite {
     bytes val{255, 0, 0, 0};
     rf.write(4, val);
     PipelineHazardController phc(4, &rf, false);
-    RTypeInstruction r = RTypeInstruction(0, 1, 0, 0, 0, 0);
+    RTypeInstruction r = RTypeInstruction(4, 0, 1, 0, 0, 0, 0);
     phc.enqueue((AbstractInstruction*)&r);
     TS_ASSERT(phc.fetchRegisterValue(4) == val);
   }
@@ -71,9 +71,9 @@ class PipelineHazardControllerTests : public CxxTest::TestSuite {
     bytes val{255, 0, 0, 0};
     rf.write(4, val);
     PipelineHazardController phc(4, &rf, false);
-    RTypeInstruction r = RTypeInstruction(0, 1, 0, 0, 0, 0);
+    RTypeInstruction r = RTypeInstruction(4, 0, 1, 0, 0, 0, 0);
     phc.enqueue((AbstractInstruction*)&r);
-    RTypeInstruction r1 = RTypeInstruction(0, 2, 0, 0, 0, 0);
+    RTypeInstruction r1 = RTypeInstruction(4, 0, 2, 0, 0, 0, 0);
     phc.enqueue((AbstractInstruction*)&r1);
     TS_ASSERT_THROWS(phc.fetchRegisterValue(1), PipelineHazardException);
   }
@@ -83,9 +83,9 @@ class PipelineHazardControllerTests : public CxxTest::TestSuite {
     bytes val{255, 0, 0, 0};
     rf.write(4, val);
     PipelineHazardController phc(4, &rf, false);
-    RTypeInstruction r = RTypeInstruction(0, 1, 0, 0, 0, 0);
+    RTypeInstruction r = RTypeInstruction(4, 0, 1, 0, 0, 0, 0);
     phc.enqueue((AbstractInstruction*)&r);
-    RTypeInstruction r1 = RTypeInstruction(0, 2, 0, 0, 0, 0);
+    RTypeInstruction r1 = RTypeInstruction(4, 0, 2, 0, 0, 0, 0);
     phc.enqueue((AbstractInstruction*)&r1);
     TS_ASSERT(phc.fetchRegisterValue(4) == val);
   }
@@ -94,12 +94,12 @@ class PipelineHazardControllerTests : public CxxTest::TestSuite {
     RegisterFile rf(4, false);
     bytes val{255, 255, 0, 0};
     PipelineHazardController phc(4, &rf, false);
-    RTypeInstruction r = RTypeInstruction(0, 1, 0, 0, 0, 0);
+    RTypeInstruction r = RTypeInstruction(4, 0, 1, 0, 0, 0, 0);
     phc.enqueue((AbstractInstruction*)&r);
-    RTypeInstruction r1 = RTypeInstruction(0, 2, 0, 0, 0, 0);
+    RTypeInstruction r1 = RTypeInstruction(4, 0, 2, 0, 0, 0, 0);
     phc.enqueue((AbstractInstruction*)&r1);
     phc.storeResultAfterExecution(val);
-    RTypeInstruction r2 = RTypeInstruction(0, 3, 0, 0, 0, 0);
+    RTypeInstruction r2 = RTypeInstruction(4, 0, 3, 0, 0, 0, 0);
     phc.enqueue((AbstractInstruction*)&r2);
     TS_ASSERT(phc.fetchRegisterValue(1) == val);
   }
@@ -109,11 +109,11 @@ class PipelineHazardControllerTests : public CxxTest::TestSuite {
     bytes val{255, 0, 0, 0};
     rf.write(4, val);
     PipelineHazardController phc(4, &rf, false);
-    RTypeInstruction r = RTypeInstruction(0, 1, 0, 0, 0, 0);
+    RTypeInstruction r = RTypeInstruction(4, 0, 1, 0, 0, 0, 0);
     phc.enqueue((AbstractInstruction*)&r);
-    RTypeInstruction r1 = RTypeInstruction(0, 2, 0, 0, 0, 0);
+    RTypeInstruction r1 = RTypeInstruction(4, 0, 2, 0, 0, 0, 0);
     phc.enqueue((AbstractInstruction*)&r1);
-    RTypeInstruction r2 = RTypeInstruction(0, 3, 0, 0, 0, 0);
+    RTypeInstruction r2 = RTypeInstruction(4, 0, 3, 0, 0, 0, 0);
     phc.enqueue((AbstractInstruction*)&r2);
     phc.storeResultAfterExecution(bytes{255, 255, 0, 0});
     TS_ASSERT(phc.fetchRegisterValue(4) == val);
@@ -123,14 +123,14 @@ class PipelineHazardControllerTests : public CxxTest::TestSuite {
     RegisterFile rf(4, false);
     bytes val{255, 255, 0, 0};
     PipelineHazardController phc(4, &rf, false);
-    RTypeInstruction r = RTypeInstruction(0, 1, 0, 0, 0, 0);
+    RTypeInstruction r = RTypeInstruction(4, 0, 1, 0, 0, 0, 0);
     phc.enqueue((AbstractInstruction*)&r);
-    RTypeInstruction r1 = RTypeInstruction(0, 2, 0, 0, 0, 0);
+    RTypeInstruction r1 = RTypeInstruction(4, 0, 2, 0, 0, 0, 0);
     phc.enqueue((AbstractInstruction*)&r1);
     phc.storeResultAfterExecution(val);
-    RTypeInstruction r2 = RTypeInstruction(0, 3, 0, 0, 0, 0);
+    RTypeInstruction r2 = RTypeInstruction(4, 0, 3, 0, 0, 0, 0);
     phc.enqueue((AbstractInstruction*)&r2);
-    RTypeInstruction r3 = RTypeInstruction(0, 4, 0, 0, 0, 0);
+    RTypeInstruction r3 = RTypeInstruction(4, 0, 4, 0, 0, 0, 0);
     phc.enqueue((AbstractInstruction*)&r3);
     TS_ASSERT(phc.fetchRegisterValue(1) == val);
   }
@@ -140,13 +140,13 @@ class PipelineHazardControllerTests : public CxxTest::TestSuite {
     bytes val{255, 0, 0, 0};
     rf.write(5, val);
     PipelineHazardController phc(4, &rf, false);
-    RTypeInstruction r = RTypeInstruction(0, 1, 0, 0, 0, 0);
+    RTypeInstruction r = RTypeInstruction(4, 0, 1, 0, 0, 0, 0);
     phc.enqueue((AbstractInstruction*)&r);
-    RTypeInstruction r1 = RTypeInstruction(0, 2, 0, 0, 0, 0);
+    RTypeInstruction r1 = RTypeInstruction(4, 0, 2, 0, 0, 0, 0);
     phc.enqueue((AbstractInstruction*)&r1);
-    RTypeInstruction r2 = RTypeInstruction(0, 3, 0, 0, 0, 0);
+    RTypeInstruction r2 = RTypeInstruction(4, 0, 3, 0, 0, 0, 0);
     phc.enqueue((AbstractInstruction*)&r2);
-    RTypeInstruction r3 = RTypeInstruction(0, 4, 0, 0, 0, 0);
+    RTypeInstruction r3 = RTypeInstruction(4, 0, 4, 0, 0, 0, 0);
     phc.enqueue((AbstractInstruction*)&r3);
     phc.storeResultAfterExecution(bytes{255, 255, 0, 0});
     TS_ASSERT(phc.fetchRegisterValue(5) == val);
@@ -156,9 +156,9 @@ class PipelineHazardControllerTests : public CxxTest::TestSuite {
     RegisterFile rf(4, false);
     bytes val{255, 0, 0, 0};
     PipelineHazardController phc(4, &rf, false);
-    RTypeInstruction r = RTypeInstruction(0, 1, 0, 0, 0, 0);
+    RTypeInstruction r = RTypeInstruction(4, 0, 1, 0, 0, 0, 0);
     phc.enqueue((AbstractInstruction*)&r);
-    RTypeInstruction r1 = RTypeInstruction(0, 2, 0, 0, 0, 0);
+    RTypeInstruction r1 = RTypeInstruction(4, 0, 2, 0, 0, 0, 0);
     phc.enqueue((AbstractInstruction*)&r1);
     phc.storeResultAfterExecution(val);
   }

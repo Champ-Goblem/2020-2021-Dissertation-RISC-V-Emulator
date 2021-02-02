@@ -1,7 +1,7 @@
 #include "../include/instructions/RType.h"
 #include "../include/bytemanip.h"
 
-RTypeInstruction::RTypeInstruction() {
+RTypeInstruction::RTypeInstruction(ushort XLEN): AbstractInstruction(XLEN) {
   this->opcode = 0;
   this->rs1 = 0;
   this->rs2 = 0;
@@ -12,7 +12,7 @@ RTypeInstruction::RTypeInstruction() {
   this->type = InstructionType::R;
 }
 
-RTypeInstruction::RTypeInstruction(byte opcode, byte rd, byte func3, byte rs1, byte rs2, byte func7) {
+RTypeInstruction::RTypeInstruction(ushort XLEN, byte opcode, byte rd, byte func3, byte rs1, byte rs2, byte func7): AbstractInstruction(XLEN) {
   if (opcode > OPCODE_MAX) {
     throw new InstructionException("Failed to set opcode, greater than 63 [%d]\n", opcode);
   }

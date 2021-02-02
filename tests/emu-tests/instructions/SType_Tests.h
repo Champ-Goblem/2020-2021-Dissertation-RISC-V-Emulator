@@ -6,11 +6,11 @@ class STypeInstructionTests : public CxxTest::TestSuite
 {
   public:
   void testCreateFromNothing(void) {
-    TS_ASSERT_THROWS_NOTHING(STypeInstruction s = STypeInstruction());
+    TS_ASSERT_THROWS_NOTHING(STypeInstruction s = STypeInstruction(4));
   }
 
   void testCreateFromArgs(void) {
-    STypeInstruction s = STypeInstruction(127, 31, 7, 31, 31, 127);
+    STypeInstruction s = STypeInstruction(4, 127, 31, 7, 31, 31, 127);
     TS_ASSERT(s.getOpcode() == 127);
     TS_ASSERT(s.getImm(7, 11)[0] == 31);
     TS_ASSERT(s.getFunc3() == 7);
@@ -23,7 +23,7 @@ class STypeInstructionTests : public CxxTest::TestSuite
     // 0     6 7   1 2 4 5   9 0   4 5     1
     // 1110111 01100 111 00100 11110 1010111
     // 1110 1110 1100 1110 0100 1111 0101 0111
-    STypeInstruction s = STypeInstruction();
+    STypeInstruction s = STypeInstruction(4);
     s.decode(bytes{119, 115, 242, 234});
     TS_ASSERT(s.getOpcode() == 119);
     TS_ASSERT(s.getImm(7, 11)[0] == 6);
@@ -34,36 +34,36 @@ class STypeInstructionTests : public CxxTest::TestSuite
   }
 
   void testCreateWithLargeOpcode(void) {
-    TS_ASSERT_THROWS(STypeInstruction s = STypeInstruction(128, 0, 0, 0, 0, 0), InstructionException*);
+    TS_ASSERT_THROWS(STypeInstruction s = STypeInstruction(4, 128, 0, 0, 0, 0, 0), InstructionException*);
   }
 
   void testCreateWithLargeImm5(void) {
-    TS_ASSERT_THROWS(STypeInstruction s = STypeInstruction(0, 32, 0, 0, 0, 0), InstructionException*);
+    TS_ASSERT_THROWS(STypeInstruction s = STypeInstruction(4, 0, 32, 0, 0, 0, 0), InstructionException*);
   }
 
   void testCreateWithLargeFunc3(void) {
-    TS_ASSERT_THROWS(STypeInstruction s = STypeInstruction(0, 0, 8, 0, 0, 0), InstructionException*);
+    TS_ASSERT_THROWS(STypeInstruction s = STypeInstruction(4, 0, 0, 8, 0, 0, 0), InstructionException*);
   }
 
   void testCreateWithLargeRS1(void) {
-    TS_ASSERT_THROWS(STypeInstruction s = STypeInstruction(0, 0, 0, 32, 0, 0), InstructionException*);
+    TS_ASSERT_THROWS(STypeInstruction s = STypeInstruction(4, 0, 0, 0, 32, 0, 0), InstructionException*);
   }
 
   void testCreateWithLargeRS2(void) {
-    TS_ASSERT_THROWS(STypeInstruction s = STypeInstruction(0, 0, 0, 0, 32, 0), InstructionException*);
+    TS_ASSERT_THROWS(STypeInstruction s = STypeInstruction(4, 0, 0, 0, 0, 32, 0), InstructionException*);
   }
 
   void testCreateWithLargeImm7(void) {
-    TS_ASSERT_THROWS(STypeInstruction s = STypeInstruction(0, 0, 0, 0, 0, 128), InstructionException*);
+    TS_ASSERT_THROWS(STypeInstruction s = STypeInstruction(4, 0, 0, 0, 0, 0, 128), InstructionException*);
   }
 
   void testDecodeWithWrongSizeInstruction(void) {
-    STypeInstruction s = STypeInstruction();
+    STypeInstruction s = STypeInstruction(4);
     TS_ASSERT_THROWS(s.decode(bytes{0, 255}), InstructionException*);
   }
 
   void testGetImmAtWrongPosition(void) {
-    STypeInstruction s = STypeInstruction();
+    STypeInstruction s = STypeInstruction(4);
     TS_ASSERT_THROWS(s.getImm(0, 1), InstructionException*);
   }
 };

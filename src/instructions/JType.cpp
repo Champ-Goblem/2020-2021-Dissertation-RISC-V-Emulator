@@ -1,14 +1,14 @@
 #include "../include/instructions/JType.h"
 #include "../include/bytemanip.h"
 
-JTypeInstruction::JTypeInstruction() {
+JTypeInstruction::JTypeInstruction(ushort XLEN): AbstractInstruction(XLEN) {
   this->opcode = 0;
   this->rd = 0;
   this->imm = bytes(3);
   this->type = InstructionType::J;
 }
 
-JTypeInstruction::JTypeInstruction(byte opcode, byte rd, byte imm8, byte imm1, bytes imm10, byte imm31) {
+JTypeInstruction::JTypeInstruction(ushort XLEN, byte opcode, byte rd, byte imm8, byte imm1, bytes imm10, byte imm31): AbstractInstruction(XLEN) {
   this->imm = bytes(3);
 
   if (opcode > OPCODE_MAX) {

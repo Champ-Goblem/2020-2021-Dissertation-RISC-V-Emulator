@@ -6,12 +6,12 @@ class JTypeInstructionTests : public CxxTest::TestSuite
 {
   public:
   void testCreateFromNothing(void) {
-    TS_ASSERT_THROWS_NOTHING(JTypeInstruction j = JTypeInstruction());
+    TS_ASSERT_THROWS_NOTHING(JTypeInstruction j = JTypeInstruction(4));
   }
 
   void testCreateFromArgs(void) {
     bytes imm10 = bytes{255, 3};
-    JTypeInstruction j = JTypeInstruction(127, 31, 255, 1, imm10, 1);
+    JTypeInstruction j = JTypeInstruction(4, 127, 31, 255, 1, imm10, 1);
     TS_ASSERT(j.getOpcode() == 127);
     TS_ASSERT(j.getRD() == 31);
     TS_ASSERT(j.getImm(12, 19)[0] == 255);
@@ -23,7 +23,7 @@ class JTypeInstructionTests : public CxxTest::TestSuite
   void testDecode(void) {
     // 1011101 00111 11001100 0 0101011100 1
     // 1011 1010 0111 1100 1100 0010 1011 1001
-    JTypeInstruction j = JTypeInstruction();
+    JTypeInstruction j = JTypeInstruction(4);
     j.decode(bytes{93, 62, 67, 157});
     TS_ASSERT(j.getOpcode() == 93);
     TS_ASSERT(j.getRD() == 28);
@@ -35,32 +35,32 @@ class JTypeInstructionTests : public CxxTest::TestSuite
   }
 
   void testCreateWithLargeOpcode(void) {
-    TS_ASSERT_THROWS(JTypeInstruction j = JTypeInstruction(128, 0, 0, 0, bytes{0, 0}, 0), InstructionException*);
+    TS_ASSERT_THROWS(JTypeInstruction j = JTypeInstruction(4, 128, 0, 0, 0, bytes{0, 0}, 0), InstructionException*);
   }
 
   void testCreateWithLargeRD(void) {
-    TS_ASSERT_THROWS(JTypeInstruction j = JTypeInstruction(0, 32, 0, 0, bytes{0, 0}, 0), InstructionException*);
+    TS_ASSERT_THROWS(JTypeInstruction j = JTypeInstruction(4, 0, 32, 0, 0, bytes{0, 0}, 0), InstructionException*);
   }
 
   void testCreateWithLargeImm1(void) {
-    TS_ASSERT_THROWS(JTypeInstruction j = JTypeInstruction(0, 0, 0, 2, bytes{0, 0}, 0), InstructionException*);
+    TS_ASSERT_THROWS(JTypeInstruction j = JTypeInstruction(4, 0, 0, 0, 2, bytes{0, 0}, 0), InstructionException*);
   }
 
   void testCreateWithLargeImm10(void) {
-    TS_ASSERT_THROWS(JTypeInstruction j = JTypeInstruction(128, 0, 0, 0, bytes{255, 4}, 0), InstructionException*);
+    TS_ASSERT_THROWS(JTypeInstruction j = JTypeInstruction(4, 128, 0, 0, 0, bytes{255, 4}, 0), InstructionException*);
   }
 
   void testCreateWithLargeImm31(void) {
-    TS_ASSERT_THROWS(JTypeInstruction j = JTypeInstruction(128, 0, 0, 0, bytes{0, 0}, 2), InstructionException*);
+    TS_ASSERT_THROWS(JTypeInstruction j = JTypeInstruction(4, 128, 0, 0, 0, bytes{0, 0}, 2), InstructionException*);
   }
 
   void testDecodeWithWrongSizeInstruction(void) {
-    JTypeInstruction j = JTypeInstruction();
+    JTypeInstruction j = JTypeInstruction(4);
     TS_ASSERT_THROWS(j.decode(bytes{0, 255, 0, 255, 0}), InstructionException*);
   }
 
   void testGetImmWrongPosition(void) {
-    JTypeInstruction j = JTypeInstruction(0, 0, 0, 0, bytes{255, 0}, 0);
+    JTypeInstruction j = JTypeInstruction(4, 0, 0, 0, 0, bytes{255, 0}, 0);
     TS_ASSERT_THROWS(j.getImm(0, 1), InstructionException*);
   }
   
