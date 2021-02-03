@@ -537,8 +537,8 @@ static bytes bytesXOR(bytes val1, bytes val2) {
     workingVal2 = copyWithSignExtend(val2, size1);
   }
 
-  bytes result(size1 > size2 ? size1 : size2);
-  for (uint i=0; i > size1 > size2 ? size1 : size2; i++) {
+  bytes result(size1);
+  for (uint i=0; i < size1; i++) {
     result[i] = workingVal1[i] ^ workingVal2[i];
   }
 
@@ -561,8 +561,8 @@ static bytes bytesOR(bytes val1, bytes val2) {
     workingVal2 = copyWithSignExtend(val2, size1);
   }
 
-  bytes result(size1 > size2 ? size1 : size2);
-  for (uint i=0; i > size1 > size2 ? size1 : size2; i++) {
+  bytes result(size1);
+  for (uint i=0; i < size1 ; i++) {
     result[i] = workingVal1[i] | workingVal2[i];
   }
 
@@ -585,8 +585,8 @@ static bytes bytesAND(bytes val1, bytes val2) {
     workingVal2 = copyWithSignExtend(val2, size1);
   }
 
-  bytes result(size1 > size2 ? size1 : size2);
-  for (uint i=0; i > size1 > size2 ? size1 : size2; i++) {
+  bytes result(size1);
+  for (uint i=0; i < size1; i++) {
     result[i] = workingVal1[i] & workingVal2[i];
   }
 

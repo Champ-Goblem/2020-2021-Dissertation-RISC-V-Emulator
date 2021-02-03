@@ -345,13 +345,15 @@ void RV32I::executeBitopsImmediate(AbstractInstruction* instruction, AbstractBra
     }
     case 2:
     {
-      bytes isLessThan = bytes{bytesLessThanBytesSigned(instruction->getRs1Val(), instruction->getImm())};
+      bytes isLessThan(pipelineController->getXLEN());
+      isLessThan[0] = bytesLessThanBytesSigned(instruction->getRs1Val(), instruction->getImm());
       instruction->setResult(isLessThan);
       break;
     }
     case 3:
     {
-      bytes isLessThan = bytes(bytesLessThanBytesUnsigned(instruction->getRs1Val(), instruction->getImm()));
+      bytes isLessThan(pipelineController->getXLEN());
+      isLessThan[0] = bytesLessThanBytesUnsigned(instruction->getRs1Val(), instruction->getImm());
       instruction->setResult(isLessThan);
       break;
     }
@@ -363,6 +365,11 @@ void RV32I::executeBitopsImmediate(AbstractInstruction* instruction, AbstractBra
     case 6:
     {
       instruction->setResult(bytesOR(instruction->getRs1Val(), instruction->getImm()));
+      break;
+    }
+    case 7:
+    {
+      instruction->setResult(bytesAND(instruction->getRs1Val(), instruction->getImm()));
       break;
     }
     case 1:
