@@ -163,7 +163,7 @@ static bytes bytesAdditionUnsigned(bytes val, bytes operand, bool throwForFlows=
   byte remainder = 0;
   for (uint i=0; i<operand.size(); i++) {
     ret[i] = val[i] + operand[i] + remainder;
-    remainder = ((ushort)val[i] + operand[i] + remainder) / 255;
+    remainder = ((ushort)val[i] + operand[i] + remainder) >> 8;
   }
 
   if (remainder != 0 && throwForFlows) {
@@ -218,7 +218,7 @@ static bytes bytesAdditionSigned(bytes val1, bytes val2, bool throwForFlows=fals
   uint i = 0;
   while (i < size1) {
     result[i] = workingVal1[i] + workingVal2[i] + remainder;
-    remainder = ((ushort)workingVal1[i] + workingVal2[i] + remainder) / 255;
+    remainder = ((ushort)workingVal1[i] + workingVal2[i] + remainder) >> 8;
     i++;
   }
 
