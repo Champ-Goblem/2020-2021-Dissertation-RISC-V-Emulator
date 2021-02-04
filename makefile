@@ -68,7 +68,7 @@ $(foreach targetdir, $(TARGETDIRS), $(eval $(call generateRules, $(targetdir))))
 define compiletest
 $(1)/%_Tests: $(1)/%_Tests.h $(subst $(TDIR), $(SDIR), $(1))/%.o
 	@echo Making test $$@
-	$(TESTBIN) --error-printer -o $$@.cpp $$<
+	$(TESTBIN) --error-printer --have-eh -o $$@.cpp $$<
 	# $(CXX) -c -o $$@.o $$@.cpp $(TESTBUILDFLAGS)
 	./testBuilder.sh $(1) $$*_Tests "$(subst $(TDIR), $(SDIR), $(1))/$$*.o" "$(TESTBUILDFLAGS)"
 	$$@.test
@@ -82,13 +82,13 @@ testbuild: testclean $(TEST_TARGET)
 
 $(TEST_TARGET): $(SOURCES_WO_MAIN) $(TESTPARTS)
 	@echo Bulding runner
-	$(TESTBIN) --root --xunit-printer --xunit-file=$(TEST_XML_RESULTS) -o $(TDIR)/runner.cpp
+	$(TESTBIN) --root --xunit-printer --xunit-file=$(TEST_XML_RESULTS) --have-eh -o $(TDIR)/runner.cpp
 	$(CXX) -g -o $@ -I$(TESTROOT) $(TDIR)/runner.cpp $(SOURCES_WO_MAIN) $(TESTPARTS) -pthread
 
 define compiletestparts
 $(1)/%.part.cpp: $(1)/%.h
 	@echo Making part $$@
-	$(TESTBIN) --part --xunit-printer -o $$@ $$<
+	$(TESTBIN) --part --xunit-printer --have-eh -o $$@ $$<
 endef
 
 $(foreach targetdir, $(TESTDIRS), $(eval $(call compiletestparts, $(targetdir))))

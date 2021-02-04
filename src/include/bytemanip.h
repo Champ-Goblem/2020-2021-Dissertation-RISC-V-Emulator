@@ -143,13 +143,22 @@ static bool bytesGreaterEqualToUint(bytes val1, uint val2) {
 
   // Get the highest non-zero position in the byte that we need to access
   uint highPosition = val2 / 255;
+  if (highPosition > (val1.size() - 1)) {
+    return false;
+  }
   // Get the value in range 0-255 of the highestPosition + 1
   // i.e 255 * highestPosition + remainder = val(val1)
   byte remainder = val2 - (255 * highPosition);
-  if (val1.size() > highPosition && val1[highPosition] >= remainder) {
-    return true;
-  } else if (val1.size() > highPosition && val1[highPosition] < remainder) {
-    return false;
+  int i = val1.size() - 1;
+  while (i >= 0) {
+    if (i > highPosition && val1[i] > 0) {
+      return true;
+    } else if (i == highPosition && val1[i] >= remainder) {
+      return true;
+    } else if (i == highPosition && val1[1] < remainder) {
+      return false;
+    }
+    i--;
   }
   return false;
 }
@@ -404,8 +413,8 @@ static bytes bytesLogicalRightShift(bytes val, uint shift) {
   // Create new array from size of original
   bytes result = bytes(size1);
   byte carry = 0;
-  uint i = size1 - 1;
-  while (i - fullShift >= 0) {
+  int i = size1 - 1;
+  while ((i - (int)fullShift) >= 0) {
     // By starting from i-fullShift these "full shifts" will all be zero in the result
     result[i-fullShift] = val[i] >> offset;
     // Copy any remaining carries from last operation
@@ -439,9 +448,9 @@ static bytes bytesLogicalRightShift(bytes val, bytes shift) {
   }
 
   bytes result = bytes(sizev);
-  uint i = sizev - 1;
+  int i = sizev - 1;
   byte carry = 0;
-  while (i - fullShift >= 0) {
+  while ((i - (int)fullShift) >= 0) {
     result[i - fullShift] = val[i] >> offset;
     result[i - fullShift] |= carry;
     carry = val[i] << (8-offset);
@@ -468,8 +477,8 @@ static bytes bytesArithmeticRightShift(bytes val, uint shift) {
   bytes result = bytes(size1, isSigned ? 255 : 0);
   // Calculate carry initial value as top MSB bits 1 if signed
   byte carry = isSigned ? 255 << (8-offset) : 0;
-  uint i = size1 - 1;
-  while (i - fullShift >= 0) {
+  int i = size1 - 1;
+  while ((i - (int)fullShift) >= 0) {
     // By starting from i-fullShift these "full shifts" will be filled with 1 if signed 0 otherwise
     result[i-fullShift] = val[i] >> offset;
     // Copy any remaining carries from last operation
@@ -507,11 +516,11 @@ static bytes bytesArithmeticRightShift(bytes val, bytes shift) {
     offset = (shift[i] + offset) % 8;
   }
 
-  uint i = sizev - 1;
+  int i = sizev - 1;
   // Define the initial carry as 0 for unsigned values
   // or 1s for the top X bits for first shift in order to maintain complement
   byte carry = isSigned ? 255 << (8-offset) : 0;
-  while (i - fullShift >= 0) {
+  while ((i - (int)fullShift) >= 0) {
     result[i - fullShift] = val[i] >> offset;
     result[i - fullShift] |= carry;
     carry = val[i] << (8-offset);

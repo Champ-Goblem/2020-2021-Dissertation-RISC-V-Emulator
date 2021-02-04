@@ -59,6 +59,7 @@ class AbstractInstruction {
 
   public:
   AbstractInstruction(ushort XLEN) { this->XLEN = XLEN; }
+  virtual void decode(bytes instruction) {};
   byte getOpcode();
   byte getRS1();
   byte getRS2();

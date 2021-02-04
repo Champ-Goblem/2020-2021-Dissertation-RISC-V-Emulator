@@ -11,20 +11,21 @@
 int main(int argc, char** argv) {
     RV32I base;
     vector<OpcodeSpace> OpS = base.registerOpcodeSpace();
-    DecodeRoutine decode = RV32I::findDecodeRoutineByOpcode(OpS, 19);
-    bytes instruction{147, 112, 129, 120};
+    DecodeRoutine decode = RV32I::findDecodeRoutineByOpcode(OpS, 51);
+    bytes instruction{179, 80, 49, 0};
     bytes initialPC{4,0,0,0};
     Memory m(3000);
     m.writeWord(4, instruction);
     RegisterFile rf(4, false);
-    rf.write(2, bytes{0, 23, 24, 0});
+    rf.write(2, bytes{162, 23, 24, 0});
+    rf.write(3, bytes{13, 0, 0, 0});
     PipelineHazardController phc(4, &rf, false);
     SimpleBranchPredictor sbp(&m, 4, &rf, initialPC);
     AbstractInstruction inst = decode(instruction, &phc);
     inst.setPC(sbp.getNextPC());
-    (inst.getType() == InstructionType::I);
+    (inst.getType() == InstructionType::R);
     inst.execute(&inst, &sbp, 3000, &phc);
-    bytes result{0, 7, 0, 0};
+    bytes result{0, 64, 244, 2};
     (inst.getResult() == result);
     inst.registerWriteback(&inst, &rf);
     (rf.get(1) == result);
