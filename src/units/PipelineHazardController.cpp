@@ -36,6 +36,8 @@ bool PipelineHazardController::checkForStaleRegister(ushort reg) {
 
   if (usedQueueSize >= (NUM_STAGES - STAGE_EXECUTE) && executingQueue[STAGE_EXECUTE].instruction->getRD() == reg) {
     return true;
+  } else if (usedQueueSize >= (NUM_STAGES - STAGE_MEM) && executingQueue[STAGE_MEM].instruction->getRD() == reg && executingQueue[STAGE_MEM].RDVal.size() == 0) {
+    return true;
   }
 
   return false;
@@ -71,7 +73,7 @@ bytes PipelineHazardController::fetchRegisterValue(ushort reg) {
 }
 
 void PipelineHazardController::storeResultAfterExecution(bytes result) {
-  if (result.size() == 0 || result.size() != this->XLEN) {
+  if (result.size() == 0 || result.size() != XLEN) {
     throw PipelineHazardException("Failed to store result for RD after execution, result is wrong size");
   }
 
@@ -80,4 +82,16 @@ void PipelineHazardController::storeResultAfterExecution(bytes result) {
   }
 
   executingQueue[STAGE_EXECUTE].RDVal = result;
+}
+
+void PipelineHazardController::storeResultAfterMemoryAccess(bytes result) {
+  if (result.size() == 0 || result.size() != XLEN) {
+    throw PipelineHazardException("Failed to store result for RD after execution, result is wrong size");
+  }
+
+  if (usedQueueSize < (NUM_STAGES - STAGE_MEM)) {
+    throw PipelineHazardException("Failed to store result for RD after execution, size of the pipeline queue is not sufficient");
+  }
+
+  executingQueue[STAGE_MEM].RDVal = result;
 }

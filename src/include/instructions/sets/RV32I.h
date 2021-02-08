@@ -70,17 +70,17 @@ class RV32I: public AbstractISA {
 
   private:
   // Decode routines:
-  static AbstractInstruction decodeBranch(bytes instruction, PipelineHazardController* pipelineController);
-  static AbstractInstruction decodeLUI(bytes instruction, PipelineHazardController* pipelineController);
-  static AbstractInstruction decodeAUIPC(bytes instruction, PipelineHazardController* pipelineController);
-  static AbstractInstruction decodeJAL(bytes instruction, PipelineHazardController* pipelineController);
-  static AbstractInstruction decodeJALR(bytes instruction, PipelineHazardController* pipelineController);
-  static AbstractInstruction decodeLoad(bytes instruction, PipelineHazardController* pipelineController);
-  static AbstractInstruction decodeStore(bytes instruction, PipelineHazardController* pipelineController);
-  static AbstractInstruction decodeBitopsImmediate(bytes instruction, PipelineHazardController* pipelineController);
-  static AbstractInstruction decodeBitops(bytes instruction, PipelineHazardController* pipelineController);
-  static AbstractInstruction decodeFence(bytes instruction, PipelineHazardController* pipelineController);
-  static AbstractInstruction decodeERoutines(bytes instruction, PipelineHazardController* pipelineController);
+  static AbstractInstruction decodeBranch(bytes instruction, PipelineHazardController* pipelineController, bool stall);
+  static AbstractInstruction decodeLUI(bytes instruction, PipelineHazardController* pipelineController, bool stall);
+  static AbstractInstruction decodeAUIPC(bytes instruction, PipelineHazardController* pipelineController, bool stall);
+  static AbstractInstruction decodeJAL(bytes instruction, PipelineHazardController* pipelineController, bool stall);
+  static AbstractInstruction decodeJALR(bytes instruction, PipelineHazardController* pipelineController, bool stall);
+  static AbstractInstruction decodeLoad(bytes instruction, PipelineHazardController* pipelineController, bool stall);
+  static AbstractInstruction decodeStore(bytes instruction, PipelineHazardController* pipelineController, bool stall);
+  static AbstractInstruction decodeBitopsImmediate(bytes instruction, PipelineHazardController* pipelineController, bool stall);
+  static AbstractInstruction decodeBitops(bytes instruction, PipelineHazardController* pipelineController, bool stall);
+  static AbstractInstruction decodeFence(bytes instruction, PipelineHazardController* pipelineController, bool stall);
+  static AbstractInstruction decodeERoutines(bytes instruction, PipelineHazardController* pipelineController, bool stall);
 
   // Execute routines:
   static void executeBranch(AbstractInstruction* instruction, AbstractBranchPredictor* branchPredictor, ulong memorySize, PipelineHazardController* pipelineController);
@@ -105,8 +105,8 @@ class RV32I: public AbstractISA {
   static void writebackBitops(AbstractInstruction* instruction, RegisterFile* registerFile);
 
   // Memory access routines
-  static void memLoad(AbstractInstruction* instruction, Memory* memory);
-  static void memStore(AbstractInstruction* instruction, Memory* memory);
+  static void memLoad(AbstractInstruction* instruction, Memory* memory, PipelineHazardController* pipelineController);
+  static void memStore(AbstractInstruction* instruction, Memory* memory, PipelineHazardController* pipelineController);
 };
 
 #endif

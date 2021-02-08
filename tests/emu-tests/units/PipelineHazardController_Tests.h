@@ -152,14 +152,29 @@ class PipelineHazardControllerTests : public CxxTest::TestSuite {
     TS_ASSERT(phc.fetchRegisterValue(5) == val);
   }
 
-  void testStoreResult(void) {
+  void testStoreResultAfterExecute(void) {
     RegisterFile rf(4, false);
     bytes val{255, 0, 0, 0};
     PipelineHazardController phc(4, &rf, false);
-    RTypeInstruction r = RTypeInstruction(4, 0, 1, 0, 0, 0, 0);
+    RTypeInstruction r = RTypeInstruction(4, 0, 1, 2, 0, 0, 0);
     phc.enqueue((AbstractInstruction*)&r);
-    RTypeInstruction r1 = RTypeInstruction(4, 0, 2, 0, 0, 0, 0);
+    RTypeInstruction r1 = RTypeInstruction(4, 0, 2, 1, 0, 0, 0);
     phc.enqueue((AbstractInstruction*)&r1);
     phc.storeResultAfterExecution(val);
+    phc.enqueue((AbstractInstruction*)&r1);
+    TS_ASSERT(phc.fetchRegisterValue(1) == val);
+  }
+
+  void testStoreResultAfterMemoryAccess(void) {
+    RegisterFile rf(4, false);
+    bytes val{255, 0, 0, 0};
+    PipelineHazardController phc(4, &rf, false);
+    RTypeInstruction r = RTypeInstruction(4, 0, 1, 2, 0, 0, 0);
+    phc.enqueue((AbstractInstruction*)&r);
+    RTypeInstruction r1 = RTypeInstruction(4, 0, 2, 1, 0, 0, 0);
+    phc.enqueue((AbstractInstruction*)&r1);
+    phc.enqueue((AbstractInstruction*)&r);
+    phc.storeResultAfterMemoryAccess(val);
+    TS_ASSERT(phc.fetchRegisterValue(1) == val);
   }
 };

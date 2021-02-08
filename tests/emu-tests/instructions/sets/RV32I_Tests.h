@@ -5,11 +5,12 @@
 #include "../../../../src/include/units/PipelineHazardController.h"
 #include "../../../../src/include/hw/Memory.h"
 #include "../../../../src/include/exceptions.h"
-
+#include "../../../../src/include/instructions/RType.h"
 class RV32ITests : public CxxTest::TestSuite
 {
   RV32I base;
   vector<OpcodeSpace> OpS = base.registerOpcodeSpace();
+  RTypeInstruction __NOP = RTypeInstruction(0, 51, 0, 0, 0, 0, 0);
 
   public:
   void testLUI(void) {
@@ -20,7 +21,8 @@ class RV32ITests : public CxxTest::TestSuite
     DecodeRoutine decode = RV32I::findDecodeRoutineByOpcode(OpS, 55);
     RegisterFile rf(4, false);
     PipelineHazardController phc(4, &rf, false);
-    AbstractInstruction inst = decode(bytes{183, 144, 245, 10}, &phc);
+    bool stall;
+    AbstractInstruction inst = decode(bytes{183, 144, 245, 10}, &phc, stall);
     TS_ASSERT(inst.getType() == InstructionType::U);
     inst.registerWriteback(&inst, &rf);
     // res: 0000 0000 0000 1001 1010 1111 0101 000
@@ -36,7 +38,9 @@ class RV32ITests : public CxxTest::TestSuite
     DecodeRoutine decode = RV32I::findDecodeRoutineByOpcode(OpS, 23);
     RegisterFile rf(4, false);
     PipelineHazardController phc(4, &rf, false);
-    AbstractInstruction inst = decode(bytes{151, 128, 129, 63}, &phc);
+    bool stall;
+    AbstractInstruction inst = decode(bytes{151, 128, 129, 63}, &phc, stall);
+    phc.enqueue(&inst);
     inst.setPC(bytes{0,0,0,0});
     TS_ASSERT(inst.getType() == InstructionType::U);
     inst.execute(&inst, nullptr, 0, &phc);
@@ -54,7 +58,9 @@ class RV32ITests : public CxxTest::TestSuite
     DecodeRoutine decode = RV32I::findDecodeRoutineByOpcode(OpS, 23);
     RegisterFile rf(4, false);
     PipelineHazardController phc(4, &rf, false);
-    AbstractInstruction inst = decode(bytes{151, 128, 129, 255}, &phc);
+    bool stall;
+    AbstractInstruction inst = decode(bytes{151, 128, 129, 255}, &phc, stall);
+    phc.enqueue(&inst);
     inst.setPC(bytes{1,12,0,2});
     TS_ASSERT(inst.getType() == InstructionType::U);
     inst.execute(&inst, nullptr, 0, &phc);
@@ -74,7 +80,9 @@ class RV32ITests : public CxxTest::TestSuite
     SimpleBranchPredictor sbp(&m, 4, &rf, bytes{0, 3, 0, 0});
     PipelineHazardController phc(4, &rf, false);
     DecodeRoutine decode = RV32I::findDecodeRoutineByOpcode(OpS, 111);
-    AbstractInstruction inst = decode(bytes{239, 0, 28, 2}, &phc);
+    bool stall;
+    AbstractInstruction inst = decode(bytes{239, 0, 28, 2}, &phc, stall);
+    phc.enqueue(&inst);
     inst.setPC(sbp.getNextPC());
     TS_ASSERT(inst.getType() == InstructionType::J);
     inst.execute(&inst, (AbstractBranchPredictor*)&sbp, m.getSize(), &phc);
@@ -96,7 +104,9 @@ class RV32ITests : public CxxTest::TestSuite
     PipelineHazardController phc(4, &rf, false);
     SimpleBranchPredictor sbp(&m, 4, &rf, initialPC);
     DecodeRoutine decode = RV32I::findDecodeRoutineByOpcode(OpS, 111);
-    AbstractInstruction inst = decode(instruction, &phc);
+    bool stall;
+    AbstractInstruction inst = decode(instruction, &phc, stall);
+    phc.enqueue(&inst);
     inst.setPC(sbp.getNextPC());
     TS_ASSERT(inst.getType() == InstructionType::J);
     inst.execute(&inst, (AbstractBranchPredictor*)&sbp, m.getSize(), &phc);
@@ -119,7 +129,9 @@ class RV32ITests : public CxxTest::TestSuite
     PipelineHazardController phc(4, &rf, false);
     SimpleBranchPredictor sbp(&m, 4, &rf, initialPC);
     DecodeRoutine decode = RV32I::findDecodeRoutineByOpcode(OpS, 103);
-    AbstractInstruction inst = decode(instruction, &phc);
+    bool stall;
+    AbstractInstruction inst = decode(instruction, &phc, stall);
+    phc.enqueue(&inst);
     inst.setPC(sbp.getNextPC());
     TS_ASSERT(inst.getType() == InstructionType::I);
     inst.execute(&inst, (AbstractBranchPredictor*)&sbp, m.getSize(), &phc);
@@ -142,7 +154,9 @@ class RV32ITests : public CxxTest::TestSuite
     PipelineHazardController phc(4, &rf, false);
     SimpleBranchPredictor sbp(&m, 4, &rf, initialPC);
     DecodeRoutine decode = RV32I::findDecodeRoutineByOpcode(OpS, 103);
-    AbstractInstruction inst = decode(instruction, &phc);
+    bool stall;
+    AbstractInstruction inst = decode(instruction, &phc, stall);
+    phc.enqueue(&inst);
     inst.setPC(sbp.getNextPC());
     TS_ASSERT(inst.getType() == InstructionType::I);
     inst.execute(&inst, (AbstractBranchPredictor*)&sbp, m.getSize(), &phc);
@@ -164,7 +178,9 @@ class RV32ITests : public CxxTest::TestSuite
     RegisterFile rf(4, false);
     PipelineHazardController phc(4, &rf, false);
     SimpleBranchPredictor sbp(&m, 4, &rf, initialPC);
-    AbstractInstruction inst = decode(instruction, &phc);
+    bool stall;
+    AbstractInstruction inst = decode(instruction, &phc, stall);
+    phc.enqueue(&inst);
     inst.setPC(sbp.getNextPC());
     TS_ASSERT(inst.getType() == InstructionType::B);
     TS_ASSERT_THROWS(inst.execute(&inst, &sbp, 200, &phc), FailedBranchPredictionException);
@@ -185,7 +201,9 @@ class RV32ITests : public CxxTest::TestSuite
     RegisterFile rf(4, false);
     PipelineHazardController phc(4, &rf, false);
     SimpleBranchPredictor sbp(&m, 4, &rf, initialPC);
-    AbstractInstruction inst = decode(instruction, &phc);
+    bool stall;
+    AbstractInstruction inst = decode(instruction, &phc, stall);
+    phc.enqueue(&inst);
     inst.setPC(sbp.getNextPC());
     TS_ASSERT(inst.getType() == InstructionType::B);
     inst.execute(&inst, &sbp, 200, &phc);
@@ -207,7 +225,9 @@ class RV32ITests : public CxxTest::TestSuite
     rf.write(1, bytes{1, 0, 0, 0});
     PipelineHazardController phc(4, &rf, false);
     SimpleBranchPredictor sbp(&m, 4, &rf, initialPC);
-    AbstractInstruction inst = decode(instruction, &phc);
+    bool stall;
+    AbstractInstruction inst = decode(instruction, &phc, stall);
+    phc.enqueue(&inst);
     inst.setPC(sbp.getNextPC());
     TS_ASSERT(inst.getType() == InstructionType::B);
     inst.execute(&inst, &sbp, 200, &phc);
@@ -229,7 +249,9 @@ class RV32ITests : public CxxTest::TestSuite
     rf.write(1, bytes{1, 0, 0, 0});
     PipelineHazardController phc(4, &rf, false);
     SimpleBranchPredictor sbp(&m, 4, &rf, initialPC);
-    AbstractInstruction inst = decode(instruction, &phc);
+    bool stall;
+    AbstractInstruction inst = decode(instruction, &phc, stall);
+    phc.enqueue(&inst);
     inst.setPC(sbp.getNextPC());
     TS_ASSERT(inst.getType() == InstructionType::B);
     TS_ASSERT_THROWS(inst.execute(&inst, &sbp, 200, &phc), FailedBranchPredictionException);
@@ -251,7 +273,9 @@ class RV32ITests : public CxxTest::TestSuite
     rf.write(1, bytes{1, 0, 0, 0});
     PipelineHazardController phc(4, &rf, false);
     SimpleBranchPredictor sbp(&m, 4, &rf, initialPC);
-    AbstractInstruction inst = decode(instruction, &phc);
+    bool stall;
+    AbstractInstruction inst = decode(instruction, &phc, stall);
+    phc.enqueue(&inst);
     inst.setPC(sbp.getNextPC());
     TS_ASSERT(inst.getType() == InstructionType::B);
     TS_ASSERT_THROWS(inst.execute(&inst, &sbp, 200, &phc), FailedBranchPredictionException);
@@ -273,7 +297,9 @@ class RV32ITests : public CxxTest::TestSuite
     rf.write(1, bytes{1, 0, 0, 0});
     PipelineHazardController phc(4, &rf, false);
     SimpleBranchPredictor sbp(&m, 4, &rf, initialPC);
-    AbstractInstruction inst = decode(instruction, &phc);
+    bool stall;
+    AbstractInstruction inst = decode(instruction, &phc, stall);
+    phc.enqueue(&inst);
     inst.setPC(sbp.getNextPC());
     TS_ASSERT(inst.getType() == InstructionType::B);
     inst.execute(&inst, &sbp, 200, &phc);
@@ -295,7 +321,9 @@ class RV32ITests : public CxxTest::TestSuite
     rf.write(1, bytes{1, 0, 0, 0});
     PipelineHazardController phc(4, &rf, false);
     SimpleBranchPredictor sbp(&m, 4, &rf, initialPC);
-    AbstractInstruction inst = decode(instruction, &phc);
+    bool stall;
+    AbstractInstruction inst = decode(instruction, &phc, stall);
+    phc.enqueue(&inst);
     inst.setPC(sbp.getNextPC());
     TS_ASSERT(inst.getType() == InstructionType::B);
     TS_ASSERT_THROWS(inst.execute(&inst, &sbp, 200, &phc), FailedBranchPredictionException);
@@ -317,7 +345,9 @@ class RV32ITests : public CxxTest::TestSuite
     rf.write(1, bytes{255, 255, 255, 255});
     PipelineHazardController phc(4, &rf, false);
     SimpleBranchPredictor sbp(&m, 4, &rf, initialPC);
-    AbstractInstruction inst = decode(instruction, &phc);
+    bool stall;
+    AbstractInstruction inst = decode(instruction, &phc, stall);
+    phc.enqueue(&inst);
     inst.setPC(sbp.getNextPC());
     TS_ASSERT(inst.getType() == InstructionType::B);
     inst.execute(&inst, &sbp, 200, &phc);
@@ -339,7 +369,9 @@ class RV32ITests : public CxxTest::TestSuite
     rf.write(1, bytes{255, 255, 255, 255});
     PipelineHazardController phc(4, &rf, false);
     SimpleBranchPredictor sbp(&m, 4, &rf, initialPC);
-    AbstractInstruction inst = decode(instruction, &phc);
+    bool stall;
+    AbstractInstruction inst = decode(instruction, &phc, stall);
+    phc.enqueue(&inst);
     inst.setPC(sbp.getNextPC());
     TS_ASSERT(inst.getType() == InstructionType::B);
     TS_ASSERT_THROWS(inst.execute(&inst, &sbp, 200, &phc), FailedBranchPredictionException);
@@ -361,7 +393,9 @@ class RV32ITests : public CxxTest::TestSuite
     rf.write(1, bytes{0, 0, 0, 129});
     PipelineHazardController phc(4, &rf, false);
     SimpleBranchPredictor sbp(&m, 4, &rf, initialPC);
-    AbstractInstruction inst = decode(instruction, &phc);
+    bool stall;
+    AbstractInstruction inst = decode(instruction, &phc, stall);
+    phc.enqueue(&inst);
     inst.setPC(sbp.getNextPC());
     TS_ASSERT(inst.getType() == InstructionType::B);
     inst.execute(&inst, &sbp, 200, &phc);
@@ -383,7 +417,9 @@ class RV32ITests : public CxxTest::TestSuite
     rf.write(1, bytes{255, 255, 255, 255});
     PipelineHazardController phc(4, &rf, false);
     SimpleBranchPredictor sbp(&m, 4, &rf, initialPC);
-    AbstractInstruction inst = decode(instruction, &phc);
+    bool stall;
+    AbstractInstruction inst = decode(instruction, &phc, stall);
+    phc.enqueue(&inst);
     inst.setPC(sbp.getNextPC());
     TS_ASSERT(inst.getType() == InstructionType::B);
     inst.execute(&inst, &sbp, 200, &phc);
@@ -405,7 +441,9 @@ class RV32ITests : public CxxTest::TestSuite
     rf.write(1, bytes{255, 255, 255, 255});
     PipelineHazardController phc(4, &rf, false);
     SimpleBranchPredictor sbp(&m, 4, &rf, initialPC);
-    AbstractInstruction inst = decode(instruction, &phc);
+    bool stall;
+    AbstractInstruction inst = decode(instruction, &phc, stall);
+    phc.enqueue(&inst);
     inst.setPC(sbp.getNextPC());
     TS_ASSERT(inst.getType() == InstructionType::B);
     inst.execute(&inst, &sbp, 200, &phc);
@@ -426,8 +464,10 @@ class RV32ITests : public CxxTest::TestSuite
     RegisterFile rf(4, false);
     rf.write(1, bytes{255, 255, 255, 255});
     PipelineHazardController phc(4, &rf, false);
+    bool stall;
     SimpleBranchPredictor sbp(&m, 4, &rf, initialPC);
-    AbstractInstruction inst = decode(instruction, &phc);
+    AbstractInstruction inst = decode(instruction, &phc, stall);
+    phc.enqueue(&inst);
     inst.setPC(sbp.getNextPC());
     TS_ASSERT(inst.getType() == InstructionType::B);
     TS_ASSERT_THROWS(inst.execute(&inst, &sbp, 3000, &phc), FailedBranchPredictionException);
@@ -449,7 +489,9 @@ class RV32ITests : public CxxTest::TestSuite
     rf.write(1, bytes{255, 255, 255, 255});
     PipelineHazardController phc(4, &rf, false);
     SimpleBranchPredictor sbp(&m, 4, &rf, initialPC);
-    AbstractInstruction inst = decode(instruction, &phc);
+    bool stall;
+    AbstractInstruction inst = decode(instruction, &phc, stall);
+    phc.enqueue(&inst);
     inst.setPC(sbp.getNextPC());
     TS_ASSERT(inst.getType() == InstructionType::B);
     TS_ASSERT_THROWS(inst.execute(&inst, &sbp, 3000, &phc), FailedBranchPredictionException);
@@ -472,13 +514,16 @@ class RV32ITests : public CxxTest::TestSuite
     RegisterFile rf(4, false);
     PipelineHazardController phc(4, &rf, false);
     SimpleBranchPredictor sbp(&m, 4, &rf, initialPC);
-    AbstractInstruction inst = decode(instruction, &phc);
+    bool stall;
+    AbstractInstruction inst = decode(instruction, &phc, stall);
+    phc.enqueue(&inst);
     inst.setPC(sbp.getNextPC());
     TS_ASSERT(inst.getType() == InstructionType::I);
     inst.execute(&inst, &sbp, 3000, &phc);
     bytes result{32, 2, 0, 0};
     TS_ASSERT(inst.getResult() == result);
-    inst.memoryAccess(&inst, &m);
+    phc.enqueue(&__NOP);
+    inst.memoryAccess(&inst, &m, &phc);
     inst.registerWriteback(&inst, &rf);
     TS_ASSERT(rf.get(1)[0] == memoryVal);
   }
@@ -499,13 +544,16 @@ class RV32ITests : public CxxTest::TestSuite
     rf.write(3, bytes{24, 0, 0, 0});
     PipelineHazardController phc(4, &rf, false);
     SimpleBranchPredictor sbp(&m, 4, &rf, initialPC);
-    AbstractInstruction inst = decode(instruction, &phc);
+    bool stall;
+    AbstractInstruction inst = decode(instruction, &phc, stall);
+    phc.enqueue(&inst);
     inst.setPC(sbp.getNextPC());
     TS_ASSERT(inst.getType() == InstructionType::I);
     inst.execute(&inst, &sbp, 3000, &phc);
     bytes result{23, 0, 0, 0};
     TS_ASSERT(inst.getResult() == result);
-    inst.memoryAccess(&inst, &m);
+    phc.enqueue(&__NOP);
+    inst.memoryAccess(&inst, &m, &phc);
     inst.registerWriteback(&inst, &rf);
     TS_ASSERT(rf.get(1) == memoryVal);
   }
@@ -526,13 +574,16 @@ class RV32ITests : public CxxTest::TestSuite
     rf.write(3, bytes{24, 0, 0, 0});
     PipelineHazardController phc(4, &rf, false);
     SimpleBranchPredictor sbp(&m, 4, &rf, initialPC);
-    AbstractInstruction inst = decode(instruction, &phc);
+    bool stall;
+    AbstractInstruction inst = decode(instruction, &phc, stall);
+    phc.enqueue(&inst);
     inst.setPC(sbp.getNextPC());
     TS_ASSERT(inst.getType() == InstructionType::I);
     inst.execute(&inst, &sbp, 3000, &phc);
     bytes result{88, 0, 0, 0};
     TS_ASSERT(inst.getResult() == result);
-    inst.memoryAccess(&inst, &m);
+    phc.enqueue(&__NOP);
+    inst.memoryAccess(&inst, &m, &phc);
     inst.registerWriteback(&inst, &rf);
     TS_ASSERT(rf.get(1) == memoryVal);
   }
@@ -552,13 +603,16 @@ class RV32ITests : public CxxTest::TestSuite
     RegisterFile rf(4, false);
     PipelineHazardController phc(4, &rf, false);
     SimpleBranchPredictor sbp(&m, 4, &rf, initialPC);
-    AbstractInstruction inst = decode(instruction, &phc);
+    bool stall;
+    AbstractInstruction inst = decode(instruction, &phc, stall);
+    phc.enqueue(&inst);
     inst.setPC(sbp.getNextPC());
     TS_ASSERT(inst.getType() == InstructionType::I);
     inst.execute(&inst, &sbp, 3000, &phc);
     bytes result{32, 2, 0, 0};
     TS_ASSERT(inst.getResult() == result);
-    inst.memoryAccess(&inst, &m);
+    phc.enqueue(&__NOP);
+    inst.memoryAccess(&inst, &m, &phc);
     inst.registerWriteback(&inst, &rf);
     bytes memVal{memoryVal, 0, 0, 0};
     TS_ASSERT(rf.get(1) == memVal);
@@ -580,13 +634,16 @@ class RV32ITests : public CxxTest::TestSuite
     rf.write(3, bytes{24, 0, 0, 0});
     PipelineHazardController phc(4, &rf, false);
     SimpleBranchPredictor sbp(&m, 4, &rf, initialPC);
-    AbstractInstruction inst = decode(instruction, &phc);
+    bool stall;
+    AbstractInstruction inst = decode(instruction, &phc, stall);
+    phc.enqueue(&inst);
     inst.setPC(sbp.getNextPC());
     TS_ASSERT(inst.getType() == InstructionType::I);
     inst.execute(&inst, &sbp, 3000, &phc);
     bytes result{23, 0, 0, 0};
     TS_ASSERT(inst.getResult() == result);
-    inst.memoryAccess(&inst, &m);
+    phc.enqueue(&__NOP);
+    inst.memoryAccess(&inst, &m, &phc);
     inst.registerWriteback(&inst, &rf);
     TS_ASSERT(rf.get(1) == memoryVal);
   }
@@ -606,13 +663,14 @@ class RV32ITests : public CxxTest::TestSuite
     rf.write(2, memoryVal);
     PipelineHazardController phc(4, &rf, false);
     SimpleBranchPredictor sbp(&m, 4, &rf, initialPC);
-    AbstractInstruction inst = decode(instruction, &phc);
+    bool stall;
+    AbstractInstruction inst = decode(instruction, &phc, stall);
     inst.setPC(sbp.getNextPC());
     TS_ASSERT(inst.getType() == InstructionType::S);
     inst.execute(&inst, &sbp, 3000, &phc);
     bytes result{8, 0, 0, 0};
     TS_ASSERT(inst.getResult() == result);
-    inst.memoryAccess(&inst, &m);
+    inst.memoryAccess(&inst, &m, &phc);
     bytes memVal{2, 0, 0, 0};
     TS_ASSERT(m.readWord(8) == memVal);
   }
@@ -633,13 +691,14 @@ class RV32ITests : public CxxTest::TestSuite
     rf.write(2, memoryVal);
     PipelineHazardController phc(4, &rf, false);
     SimpleBranchPredictor sbp(&m, 4, &rf, initialPC);
-    AbstractInstruction inst = decode(instruction, &phc);
+    bool stall;
+    AbstractInstruction inst = decode(instruction, &phc, stall);
     inst.setPC(sbp.getNextPC());
     TS_ASSERT(inst.getType() == InstructionType::S);
     inst.execute(&inst, &sbp, 3000, &phc);
     bytes result{93, 0, 0, 0};
     TS_ASSERT(inst.getResult() == result);
-    inst.memoryAccess(&inst, &m);
+    inst.memoryAccess(&inst, &m, &phc);
     bytes memVal{2, 183, 0, 0};
     TS_ASSERT(m.readWord(93) == memVal);
   }
@@ -660,13 +719,14 @@ class RV32ITests : public CxxTest::TestSuite
     rf.write(2, memoryVal);
     PipelineHazardController phc(4, &rf, false);
     SimpleBranchPredictor sbp(&m, 4, &rf, initialPC);
-    AbstractInstruction inst = decode(instruction, &phc);
+    bool stall;
+    AbstractInstruction inst = decode(instruction, &phc, stall);
     inst.setPC(sbp.getNextPC());
     TS_ASSERT(inst.getType() == InstructionType::S);
     inst.execute(&inst, &sbp, 3000, &phc);
     bytes result{132, 0, 0, 0};
     TS_ASSERT(inst.getResult() == result);
-    inst.memoryAccess(&inst, &m);
+    inst.memoryAccess(&inst, &m, &phc);
     TS_ASSERT(m.readWord(132) == memoryVal);
   }
 
@@ -684,7 +744,9 @@ class RV32ITests : public CxxTest::TestSuite
     rf.write(2, bytes{32, 14, 0, 0});
     PipelineHazardController phc(4, &rf, false);
     SimpleBranchPredictor sbp(&m, 4, &rf, initialPC);
-    AbstractInstruction inst = decode(instruction, &phc);
+    bool stall;
+    AbstractInstruction inst = decode(instruction, &phc, stall);
+    phc.enqueue(&inst);
     inst.setPC(sbp.getNextPC());
     TS_ASSERT(inst.getType() == InstructionType::I);
     inst.execute(&inst, &sbp, 3000, &phc);
@@ -708,7 +770,9 @@ class RV32ITests : public CxxTest::TestSuite
     rf.write(2, bytes{32, 254, 255, 255}); // -480
     PipelineHazardController phc(4, &rf, false);
     SimpleBranchPredictor sbp(&m, 4, &rf, initialPC);
-    AbstractInstruction inst = decode(instruction, &phc);
+    bool stall;
+    AbstractInstruction inst = decode(instruction, &phc, stall);
+    phc.enqueue(&inst);
     inst.setPC(sbp.getNextPC());
     TS_ASSERT(inst.getType() == InstructionType::I);
     inst.execute(&inst, &sbp, 3000, &phc);
@@ -732,7 +796,9 @@ class RV32ITests : public CxxTest::TestSuite
     rf.write(2, bytes{32, 254, 255, 255}); // -480
     PipelineHazardController phc(4, &rf, false);
     SimpleBranchPredictor sbp(&m, 4, &rf, initialPC);
-    AbstractInstruction inst = decode(instruction, &phc);
+    bool stall;
+    AbstractInstruction inst = decode(instruction, &phc, stall);
+    phc.enqueue(&inst);
     inst.setPC(sbp.getNextPC());
     TS_ASSERT(inst.getType() == InstructionType::I);
     inst.execute(&inst, &sbp, 3000, &phc);
@@ -756,7 +822,9 @@ class RV32ITests : public CxxTest::TestSuite
     rf.write(2, bytes{32, 254, 255, 255}); // -480
     PipelineHazardController phc(4, &rf, false);
     SimpleBranchPredictor sbp(&m, 4, &rf, initialPC);
-    AbstractInstruction inst = decode(instruction, &phc);
+    bool stall;
+    AbstractInstruction inst = decode(instruction, &phc, stall);
+    phc.enqueue(&inst);
     inst.setPC(sbp.getNextPC());
     TS_ASSERT(inst.getType() == InstructionType::I);
     inst.execute(&inst, &sbp, 3000, &phc);
@@ -780,7 +848,9 @@ class RV32ITests : public CxxTest::TestSuite
     rf.write(2, bytes{32, 254, 255, 255});
     PipelineHazardController phc(4, &rf, false);
     SimpleBranchPredictor sbp(&m, 4, &rf, initialPC);
-    AbstractInstruction inst = decode(instruction, &phc);
+    bool stall;
+    AbstractInstruction inst = decode(instruction, &phc, stall);
+    phc.enqueue(&inst);
     inst.setPC(sbp.getNextPC());
     TS_ASSERT(inst.getType() == InstructionType::I);
     inst.execute(&inst, &sbp, 3000, &phc);
@@ -804,7 +874,9 @@ class RV32ITests : public CxxTest::TestSuite
     rf.write(2, bytes{0, 23, 24, 0});
     PipelineHazardController phc(4, &rf, false);
     SimpleBranchPredictor sbp(&m, 4, &rf, initialPC);
-    AbstractInstruction inst = decode(instruction, &phc);
+    bool stall;
+    AbstractInstruction inst = decode(instruction, &phc, stall);
+    phc.enqueue(&inst);
     inst.setPC(sbp.getNextPC());
     TS_ASSERT(inst.getType() == InstructionType::I);
     inst.execute(&inst, &sbp, 3000, &phc);
@@ -828,7 +900,9 @@ class RV32ITests : public CxxTest::TestSuite
     rf.write(2, bytes{0, 23, 24, 0});
     PipelineHazardController phc(4, &rf, false);
     SimpleBranchPredictor sbp(&m, 4, &rf, initialPC);
-    AbstractInstruction inst = decode(instruction, &phc);
+    bool stall;
+    AbstractInstruction inst = decode(instruction, &phc, stall);
+    phc.enqueue(&inst);
     inst.setPC(sbp.getNextPC());
     TS_ASSERT(inst.getType() == InstructionType::I);
     inst.execute(&inst, &sbp, 3000, &phc);
@@ -852,7 +926,9 @@ class RV32ITests : public CxxTest::TestSuite
     rf.write(2, bytes{0, 23, 24, 0});
     PipelineHazardController phc(4, &rf, false);
     SimpleBranchPredictor sbp(&m, 4, &rf, initialPC);
-    AbstractInstruction inst = decode(instruction, &phc);
+    bool stall;
+    AbstractInstruction inst = decode(instruction, &phc, stall);
+    phc.enqueue(&inst);
     inst.setPC(sbp.getNextPC());
     TS_ASSERT(inst.getType() == InstructionType::I);
     inst.execute(&inst, &sbp, 3000, &phc);
@@ -876,7 +952,9 @@ class RV32ITests : public CxxTest::TestSuite
     rf.write(2, bytes{162, 23, 24, 0});
     PipelineHazardController phc(4, &rf, false);
     SimpleBranchPredictor sbp(&m, 4, &rf, initialPC);
-    AbstractInstruction inst = decode(instruction, &phc);
+    bool stall;
+    AbstractInstruction inst = decode(instruction, &phc, stall);
+    phc.enqueue(&inst);
     inst.setPC(sbp.getNextPC());
     TS_ASSERT(inst.getType() == InstructionType::I);
     inst.execute(&inst, &sbp, 3000, &phc);
@@ -900,7 +978,9 @@ class RV32ITests : public CxxTest::TestSuite
     rf.write(2, bytes{162, 23, 24, 0});
     PipelineHazardController phc(4, &rf, false);
     SimpleBranchPredictor sbp(&m, 4, &rf, initialPC);
-    AbstractInstruction inst = decode(instruction, &phc);
+    bool stall;
+    AbstractInstruction inst = decode(instruction, &phc, stall);
+    phc.enqueue(&inst);
     inst.setPC(sbp.getNextPC());
     TS_ASSERT(inst.getType() == InstructionType::I);
     inst.execute(&inst, &sbp, 3000, &phc);
@@ -924,7 +1004,9 @@ class RV32ITests : public CxxTest::TestSuite
     rf.write(2, bytes{162, 23, 24, 128});
     PipelineHazardController phc(4, &rf, false);
     SimpleBranchPredictor sbp(&m, 4, &rf, initialPC);
-    AbstractInstruction inst = decode(instruction, &phc);
+    bool stall;
+    AbstractInstruction inst = decode(instruction, &phc, stall);
+    phc.enqueue(&inst);
     inst.setPC(sbp.getNextPC());
     TS_ASSERT(inst.getType() == InstructionType::I);
     inst.execute(&inst, &sbp, 3000, &phc);
@@ -948,7 +1030,9 @@ class RV32ITests : public CxxTest::TestSuite
     rf.write(3, bytes{0, 3, 4, 5});
     PipelineHazardController phc(4, &rf, false);
     SimpleBranchPredictor sbp(&m, 4, &rf, initialPC);
-    AbstractInstruction inst = decode(instruction, &phc);
+    bool stall;
+    AbstractInstruction inst = decode(instruction, &phc, stall);
+    phc.enqueue(&inst);
     inst.setPC(sbp.getNextPC());
     TS_ASSERT(inst.getType() == InstructionType::R);
     inst.execute(&inst, &sbp, 3000, &phc);
@@ -972,7 +1056,9 @@ class RV32ITests : public CxxTest::TestSuite
     rf.write(3, bytes{0, 3, 4, 5});
     PipelineHazardController phc(4, &rf, false);
     SimpleBranchPredictor sbp(&m, 4, &rf, initialPC);
-    AbstractInstruction inst = decode(instruction, &phc);
+    bool stall;
+    AbstractInstruction inst = decode(instruction, &phc, stall);
+    phc.enqueue(&inst);
     inst.setPC(sbp.getNextPC());
     TS_ASSERT(inst.getType() == InstructionType::R);
     inst.execute(&inst, &sbp, 3000, &phc);
@@ -996,7 +1082,9 @@ class RV32ITests : public CxxTest::TestSuite
     rf.write(3, bytes{0, 3, 4, 5});
     PipelineHazardController phc(4, &rf, false);
     SimpleBranchPredictor sbp(&m, 4, &rf, initialPC);
-    AbstractInstruction inst = decode(instruction, &phc);
+    bool stall;
+    AbstractInstruction inst = decode(instruction, &phc, stall);
+    phc.enqueue(&inst);
     inst.setPC(sbp.getNextPC());
     TS_ASSERT(inst.getType() == InstructionType::R);
     inst.execute(&inst, &sbp, 3000, &phc);
@@ -1020,7 +1108,9 @@ class RV32ITests : public CxxTest::TestSuite
     rf.write(3, bytes{255, 255, 255, 255});
     PipelineHazardController phc(4, &rf, false);
     SimpleBranchPredictor sbp(&m, 4, &rf, initialPC);
-    AbstractInstruction inst = decode(instruction, &phc);
+    bool stall;
+    AbstractInstruction inst = decode(instruction, &phc, stall);
+    phc.enqueue(&inst);
     inst.setPC(sbp.getNextPC());
     TS_ASSERT(inst.getType() == InstructionType::R);
     inst.execute(&inst, &sbp, 3000, &phc);
@@ -1044,7 +1134,9 @@ class RV32ITests : public CxxTest::TestSuite
     rf.write(3, bytes{255, 255, 255, 255});
     PipelineHazardController phc(4, &rf, false);
     SimpleBranchPredictor sbp(&m, 4, &rf, initialPC);
-    AbstractInstruction inst = decode(instruction, &phc);
+    bool stall;
+    AbstractInstruction inst = decode(instruction, &phc, stall);
+    phc.enqueue(&inst);
     inst.setPC(sbp.getNextPC());
     TS_ASSERT(inst.getType() == InstructionType::R);
     inst.execute(&inst, &sbp, 3000, &phc);
@@ -1068,7 +1160,9 @@ class RV32ITests : public CxxTest::TestSuite
     rf.write(3, bytes{255, 255, 255, 255});
     PipelineHazardController phc(4, &rf, false);
     SimpleBranchPredictor sbp(&m, 4, &rf, initialPC);
-    AbstractInstruction inst = decode(instruction, &phc);
+    bool stall;
+    AbstractInstruction inst = decode(instruction, &phc, stall);
+    phc.enqueue(&inst);
     inst.setPC(sbp.getNextPC());
     TS_ASSERT(inst.getType() == InstructionType::R);
     inst.execute(&inst, &sbp, 3000, &phc);
@@ -1092,7 +1186,9 @@ class RV32ITests : public CxxTest::TestSuite
     rf.write(3, bytes{13, 0, 0, 0});
     PipelineHazardController phc(4, &rf, false);
     SimpleBranchPredictor sbp(&m, 4, &rf, initialPC);
-    AbstractInstruction inst = decode(instruction, &phc);
+    bool stall;
+    AbstractInstruction inst = decode(instruction, &phc, stall);
+    phc.enqueue(&inst);
     inst.setPC(sbp.getNextPC());
     TS_ASSERT(inst.getType() == InstructionType::R);
     inst.execute(&inst, &sbp, 3000, &phc);
@@ -1116,7 +1212,9 @@ class RV32ITests : public CxxTest::TestSuite
     rf.write(3, bytes{13, 0, 0, 0});
     PipelineHazardController phc(4, &rf, false);
     SimpleBranchPredictor sbp(&m, 4, &rf, initialPC);
-    AbstractInstruction inst = decode(instruction, &phc);
+    bool stall;
+    AbstractInstruction inst = decode(instruction, &phc, stall);
+    phc.enqueue(&inst);
     inst.setPC(sbp.getNextPC());
     TS_ASSERT(inst.getType() == InstructionType::R);
     inst.execute(&inst, &sbp, 3000, &phc);
@@ -1140,7 +1238,9 @@ void testOR(void) {
     rf.write(3, bytes{13, 0, 255, 0});
     PipelineHazardController phc(4, &rf, false);
     SimpleBranchPredictor sbp(&m, 4, &rf, initialPC);
-    AbstractInstruction inst = decode(instruction, &phc);
+    bool stall;
+    AbstractInstruction inst = decode(instruction, &phc, stall);
+    phc.enqueue(&inst);
     inst.setPC(sbp.getNextPC());
     TS_ASSERT(inst.getType() == InstructionType::R);
     inst.execute(&inst, &sbp, 3000, &phc);
@@ -1164,7 +1264,9 @@ void testAND(void) {
     rf.write(3, bytes{13, 0, 255, 0});
     PipelineHazardController phc(4, &rf, false);
     SimpleBranchPredictor sbp(&m, 4, &rf, initialPC);
-    AbstractInstruction inst = decode(instruction, &phc);
+    bool stall;
+    AbstractInstruction inst = decode(instruction, &phc, stall);
+    phc.enqueue(&inst);
     inst.setPC(sbp.getNextPC());
     TS_ASSERT(inst.getType() == InstructionType::R);
     inst.execute(&inst, &sbp, 3000, &phc);

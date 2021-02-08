@@ -12,10 +12,10 @@ class AbstractBranchPredictor;
 class RegisterFile;
 class Memory;
 
-typedef AbstractInstruction (*DecodeRoutine)(bytes, PipelineHazardController*);
+typedef AbstractInstruction (*DecodeRoutine)(bytes, PipelineHazardController*, bool);
 typedef void (*ExecuteRoutine)(AbstractInstruction*, AbstractBranchPredictor*, ulong, PipelineHazardController*);
 typedef void (*WritebackRoutine)(AbstractInstruction*, RegisterFile*);
-typedef void (*MemoryAccessRoutine)(AbstractInstruction* instruction, Memory* memory);
+typedef void (*MemoryAccessRoutine)(AbstractInstruction* instruction, Memory* memory, PipelineHazardController*);
 
 struct OpcodeSpace {
   ushort opcode;

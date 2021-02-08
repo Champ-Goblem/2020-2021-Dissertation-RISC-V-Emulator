@@ -57,6 +57,9 @@ bytes AbstractInstruction::getResult() {
 }
 
 void AbstractInstruction::setResult(bytes result) {
+  if (result.size() != XLEN) {
+    throw InstructionException("Failed to set result, size not equal to XLEN");
+  }
   this->result = result;
 }
 

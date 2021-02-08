@@ -10,9 +10,7 @@
 #include "../../include/units/PipelineHazardController.h"
 #include "../../include/hw/Memory.h"
 
-// TODO: Decode needs to fetch register values
-
-AbstractInstruction RV32I::decodeLUI(bytes instruction, PipelineHazardController* pipelineController) {
+AbstractInstruction RV32I::decodeLUI(bytes instruction, PipelineHazardController* pipelineController, bool stall) {
   // U-Type
   UTypeInstruction ins = UTypeInstruction(pipelineController->getXLEN());
   ins.decode(instruction);
@@ -23,7 +21,7 @@ AbstractInstruction RV32I::decodeLUI(bytes instruction, PipelineHazardController
   return ins;
 }
 
-AbstractInstruction RV32I::decodeAUIPC(bytes instruction, PipelineHazardController* pipelineController) {
+AbstractInstruction RV32I::decodeAUIPC(bytes instruction, PipelineHazardController* pipelineController, bool stall) {
   // U-Type
   UTypeInstruction ins = UTypeInstruction(pipelineController->getXLEN());
   ins.decode(instruction);
@@ -34,7 +32,7 @@ AbstractInstruction RV32I::decodeAUIPC(bytes instruction, PipelineHazardControll
   return ins;
 }
 
-AbstractInstruction RV32I::decodeJAL(bytes instruction, PipelineHazardController* pipelineController) {
+AbstractInstruction RV32I::decodeJAL(bytes instruction, PipelineHazardController* pipelineController, bool stall) {
   // J-Type
   JTypeInstruction ins = JTypeInstruction(pipelineController->getXLEN());
   ins.decode(instruction);
@@ -45,122 +43,143 @@ AbstractInstruction RV32I::decodeJAL(bytes instruction, PipelineHazardController
   return ins;
 }
 
-AbstractInstruction RV32I::decodeJALR(bytes instruction, PipelineHazardController* pipelineController) {
+AbstractInstruction RV32I::decodeJALR(bytes instruction, PipelineHazardController* pipelineController, bool stall) {
   // I-Type
   ITypeInstruction ins = ITypeInstruction(pipelineController->getXLEN());
   ins.decode(instruction);
   ins.execute = &executeJALR;
   ins.memoryAccess = nullptr;
   ins.registerWriteback = &writebackJALR;
-  pipelineController->enqueue(&ins);
   if (pipelineController->checkForStaleRegister(ins.getRS1())) {
-    return NOP;
+    RTypeInstruction _NOP = NOP;
+    pipelineController->enqueue(&_NOP);
+    stall = true;
+    return _NOP;
   } else {
     ins.setRs1Val(pipelineController->fetchRegisterValue(ins.getRS1()));
   }
+  pipelineController->enqueue(&ins);
   return ins;
 }
 
-AbstractInstruction RV32I::decodeBranch(bytes instruction, PipelineHazardController* pipelineController) {
+AbstractInstruction RV32I::decodeBranch(bytes instruction, PipelineHazardController* pipelineController, bool stall) {
   // B-Type
   BTypeInstruction ins = BTypeInstruction(pipelineController->getXLEN());
   ins.decode(instruction);
   ins.execute = &executeBranch;
   ins.memoryAccess = nullptr;
   ins.registerWriteback = nullptr;
-  pipelineController->enqueue(&ins);
   if (pipelineController->checkForStaleRegister(ins.getRS1()) || pipelineController->checkForStaleRegister(ins.getRS2())) {
-    return NOP;
+    RTypeInstruction _NOP = NOP;
+    pipelineController->enqueue(&_NOP);
+    stall = true;
+    return _NOP;
   } else {
     ins.setRs1Val(pipelineController->fetchRegisterValue(ins.getRS1()));
     ins.setRs2Val(pipelineController->fetchRegisterValue(ins.getRS2()));
   }
+  pipelineController->enqueue(&ins);
   return ins;
 }
 
-AbstractInstruction RV32I::decodeLoad(bytes instruction, PipelineHazardController* pipelineController) {
+AbstractInstruction RV32I::decodeLoad(bytes instruction, PipelineHazardController* pipelineController, bool stall) {
   // I-Type
   ITypeInstruction ins = ITypeInstruction(pipelineController->getXLEN());
   ins.decode(instruction);
   ins.execute = &executeLoad;
   ins.memoryAccess = &memLoad;
   ins.registerWriteback = &writebackLoad;
-  pipelineController->enqueue(&ins);
   if (pipelineController->checkForStaleRegister(ins.getRS1())) {
-    return NOP;
+    RTypeInstruction _NOP = NOP;
+    pipelineController->enqueue(&_NOP);
+    stall = true;
+    return _NOP;
   } else {
     ins.setRs1Val(pipelineController->fetchRegisterValue(ins.getRS1()));
   }
+  pipelineController->enqueue(&ins);
   return ins;
 }
 
-AbstractInstruction RV32I::decodeStore(bytes instruction, PipelineHazardController* pipelineController) {
+AbstractInstruction RV32I::decodeStore(bytes instruction, PipelineHazardController* pipelineController, bool stall) {
   // S-Type
   STypeInstruction ins = STypeInstruction(pipelineController->getXLEN());
   ins.decode(instruction);
   ins.execute = &executeStore;
   ins.memoryAccess = &memStore;
   ins.registerWriteback = nullptr;
-  pipelineController->enqueue(&ins);
   if (pipelineController->checkForStaleRegister(ins.getRS1()) || pipelineController->checkForStaleRegister(ins.getRS2())) {
-    return NOP;
+    RTypeInstruction _NOP = NOP;
+    pipelineController->enqueue(&_NOP);
+    stall = true;
+    return _NOP;
   } else {
     ins.setRs1Val(pipelineController->fetchRegisterValue(ins.getRS1()));
     ins.setRs2Val(pipelineController->fetchRegisterValue(ins.getRS2()));
   }
+  pipelineController->enqueue(&ins);
   return ins;
 }
 
-AbstractInstruction RV32I::decodeBitopsImmediate(bytes instruction, PipelineHazardController* pipelineController) {
+AbstractInstruction RV32I::decodeBitopsImmediate(bytes instruction, PipelineHazardController* pipelineController, bool stall) {
   // I-Type
   ITypeInstruction ins = ITypeInstruction(pipelineController->getXLEN());
   ins.decode(instruction);
   ins.execute = &executeBitopsImmediate;
   ins.memoryAccess = nullptr;
   ins.registerWriteback = &writebackBitopsImmediate;
-  pipelineController->enqueue(&ins);
   if (pipelineController->checkForStaleRegister(ins.getRS1())) {
-    return NOP;
+    RTypeInstruction _NOP = NOP;
+    pipelineController->enqueue(&_NOP);
+    stall = true;
+    return _NOP;
   } else {
     ins.setRs1Val(pipelineController->fetchRegisterValue(ins.getRS1()));
   }
+  pipelineController->enqueue(&ins);
   return ins;
 }
 
-AbstractInstruction RV32I::decodeBitops(bytes instruction, PipelineHazardController* pipelineController) {
+AbstractInstruction RV32I::decodeBitops(bytes instruction, PipelineHazardController* pipelineController, bool stall) {
   // R-Type
   RTypeInstruction ins = RTypeInstruction(pipelineController->getXLEN());
   ins.decode(instruction);
   ins.execute = &executeBitops;
   ins.memoryAccess = nullptr;
   ins.registerWriteback = &writebackBitops;
-  pipelineController->enqueue(&ins);
   if (pipelineController->checkForStaleRegister(ins.getRS1()) || pipelineController->checkForStaleRegister(ins.getRS2())) {
-    return NOP;
+    RTypeInstruction _NOP = NOP;
+    pipelineController->enqueue(&_NOP);
+    stall = true;
+    return _NOP;
   } else {
     ins.setRs1Val(pipelineController->fetchRegisterValue(ins.getRS1()));
     ins.setRs2Val(pipelineController->fetchRegisterValue(ins.getRS2()));
   }
+  pipelineController->enqueue(&ins);
   return ins;
 }
 
-AbstractInstruction RV32I::decodeFence(bytes instruction, PipelineHazardController* pipelineController) {
+AbstractInstruction RV32I::decodeFence(bytes instruction, PipelineHazardController* pipelineController, bool stall) {
   // I-Type
   ITypeInstruction ins = ITypeInstruction(pipelineController->getXLEN());
   ins.decode(instruction);
   ins.execute = &executeFence;
   ins.memoryAccess = nullptr;
   ins.registerWriteback = nullptr;
-  pipelineController->enqueue(&ins);
   if (pipelineController->checkForStaleRegister(ins.getRS1())) {
-    return NOP;
+    RTypeInstruction _NOP = NOP;
+    pipelineController->enqueue(&_NOP);
+    stall = true;
+    return _NOP;
   } else {
     ins.setRs1Val(pipelineController->fetchRegisterValue(ins.getRS1()));
   }
+  pipelineController->enqueue(&ins);
   return ins;
 }
 
-AbstractInstruction RV32I::decodeERoutines(bytes instruction, PipelineHazardController* pipelineController) {
+AbstractInstruction RV32I::decodeERoutines(bytes instruction, PipelineHazardController* pipelineController, bool stall) {
   // I-Type
   ITypeInstruction ins = ITypeInstruction(pipelineController->getXLEN());
   ins.decode(instruction);
@@ -227,7 +246,8 @@ void RV32I::executeBranch(AbstractInstruction* instruction, AbstractBranchPredic
     default:
       throw UndefinedInstructionException(instruction);
   }
-
+  
+  pipelineController->storeResultAfterExecution(instruction->getResult());
   bytes nextPC = instruction->getResult();
 
   if (nextPC[0] % 4 != 0) {
@@ -250,6 +270,7 @@ void RV32I::executeAUIPC(AbstractInstruction* instruction, AbstractBranchPredict
   }
 
   instruction->setResult(bytesAddSignedToPC(instruction->getPC(), instruction->getImm()));
+  pipelineController->storeResultAfterExecution(instruction->getResult());
 }
 
 void RV32I::executeJAL(AbstractInstruction* instruction, AbstractBranchPredictor* branchPredictor, ulong memorySize, PipelineHazardController* pipelineController) {
@@ -260,6 +281,7 @@ void RV32I::executeJAL(AbstractInstruction* instruction, AbstractBranchPredictor
   bytes jumpPC = bytesAddSignedToPC(instruction->getPC(), instruction->getImm());
   bytes nextPC = addByteToBytes(instruction->getPC(), 4);
   instruction->setResult(nextPC);
+  pipelineController->storeResultAfterExecution(nextPC);
 
   if (jumpPC[0] % 4 != 0) {
     throw AddressMisalignedException(instruction, "Exception generated on JAL instruction");
@@ -284,6 +306,7 @@ void RV32I::executeJALR(AbstractInstruction* instruction, AbstractBranchPredicto
   bytes jumpPC = bytesAdditionSigned(instruction->getRs1Val(), instruction->getImm());
   bytes nextPC = addByteToBytes(instruction->getPC(), 4);
   instruction->setResult(nextPC);
+  pipelineController->storeResultAfterExecution(instruction->getResult());
 
   if (jumpPC[0] % 4 != 0) {
     throw AddressMisalignedException(instruction, "Exception generated on JALR instruction");
@@ -391,6 +414,7 @@ void RV32I::executeBitopsImmediate(AbstractInstruction* instruction, AbstractBra
     default:
       throw UndefinedInstructionException(instruction, "Failed to decode, func3 undefined");
   }
+  pipelineController->storeResultAfterExecution(instruction->getResult());
 }
 
 void RV32I::executeBitops(AbstractInstruction* instruction, AbstractBranchPredictor* branchPredictor, ulong memorySize, PipelineHazardController* pipelineController) {
@@ -462,6 +486,7 @@ void RV32I::executeBitops(AbstractInstruction* instruction, AbstractBranchPredic
     default:
       throw UndefinedInstructionException(instruction, "Failed to decode, func3 undefined");
   }
+  pipelineController->storeResultAfterExecution(instruction->getResult());
 }
 
 void RV32I::executeFence(AbstractInstruction* instruction, AbstractBranchPredictor* branchPredictor, ulong memorySize, PipelineHazardController* pipelineController) {}
@@ -484,17 +509,7 @@ void RV32I::writebackJALR(AbstractInstruction* instruction, RegisterFile* regist
 }
 
 void RV32I::writebackLoad(AbstractInstruction* instruction, RegisterFile* registerFile) {
-  // Writeback to RD and check and sign extend if necessary
-  if (instruction->getFunc3() == 4 || instruction->getFunc3() == 5) {
-    // LBU | LHU
-    bytes extendedResult = instruction->getResult();
-    if (instruction->getXLEN() != extendedResult.size()) {
-      extendedResult.resize(instruction->getXLEN());
-    }
-    registerFile->write(instruction->getRD(), extendedResult);
-  } else {
-    registerFile->write(instruction->getRD(), copyWithSignExtend(instruction->getResult(), instruction->getXLEN()));
-  }
+  registerFile->write(instruction->getRD(), instruction->getResult());
 }
 
 void RV32I::writebackBitopsImmediate(AbstractInstruction* instruction, RegisterFile* registerFile) {
@@ -505,43 +520,59 @@ void RV32I::writebackBitops(AbstractInstruction* instruction, RegisterFile* regi
   registerFile->write(instruction->getRD(), instruction->getResult());
 }
 
-void RV32I::memLoad(AbstractInstruction* instruction, Memory* memory) {
+void RV32I::memLoad(AbstractInstruction* instruction, Memory* memory, PipelineHazardController* pipelineController) {
   bytes result;
   switch (instruction->getFunc3()) {
     case 0:
-      {
-        result = bytes{memory->readByte(getBytesToULong(instruction->getResult()))};
-        break;
+    {
+      result = bytes{memory->readByte(getBytesToULong(instruction->getResult()))};
+      if (result.size() != instruction->getXLEN()) {
+        result = copyWithSignExtend(result, instruction->getXLEN());
       }
+      break;
+    }
     case 1:
     {
       result = memory->readHWord(getBytesToULong(instruction->getResult()));
+      if (result.size() != instruction->getXLEN()) {
+        result = copyWithSignExtend(result, instruction->getXLEN());
+      }
       break;
     }
     case 2:
     {
       result = memory->readWord(getBytesToULong(instruction->getResult()));
+      if (result.size() != instruction->getXLEN()) {
+        result = copyWithSignExtend(result, instruction->getXLEN());
+      }
       break;
     }
     case 4:
     {
       result = bytes{memory->readByte(getBytesToULong(instruction->getResult()))};
+      if (result.size() != instruction->getXLEN()) {
+        result.resize(instruction->getXLEN());
+      }
       break;
     }
     case 5:
     {
       result = memory->readHWord(getBytesToULong(instruction->getResult()));
+      if (result.size() != instruction->getXLEN()) {
+        result.resize(instruction->getXLEN());
+      }
       break;
     }
 
     default:
-    throw UndefinedInstructionException(instruction, "Func3 undefined during memory access");
+      throw UndefinedInstructionException(instruction, "Func3 undefined during memory access");
   }
 
   instruction->setResult(result);
+  pipelineController->storeResultAfterMemoryAccess(result);
 }
 
-void RV32I::memStore(AbstractInstruction* instruction, Memory* memory) {
+void RV32I::memStore(AbstractInstruction* instruction, Memory* memory, PipelineHazardController* pipelineController) {
   switch(instruction->getFunc3()) {
     case 0:
     {
