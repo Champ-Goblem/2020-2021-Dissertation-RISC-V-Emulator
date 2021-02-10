@@ -3,7 +3,7 @@
 
 #include "../emustd.h"
 #include "AbstractUnit.h"
-// #include "../instructions/AbstractInstruction.h"
+#include "../instructions/AbstractInstruction.h"
 // #include "../hw/RegisterFile.h"
 
 // reverse order as we push values on to the back and remove from the front
@@ -15,7 +15,7 @@
 #define NUM_STAGES 4
 
 class RegisterFile;
-class AbstractInstruction;
+// class AbstractInstruction;
 
 class PipelineHazardException: public EmulatorException {
   public:
@@ -24,7 +24,7 @@ class PipelineHazardException: public EmulatorException {
 };
 
 struct InstructionQueueEntry {
-  AbstractInstruction* instruction;
+  AbstractInstruction instruction;
   bytes RDVal;
 };
 
@@ -40,7 +40,8 @@ class PipelineHazardController: public AbstractUnit {
   public:
   PipelineHazardController(ushort XLEN, RegisterFile* registerFile, bool isRV32E);
 
-  void enqueue(AbstractInstruction* instruction);
+  void bump();
+  void enqueue(AbstractInstruction instruction);
   bool checkForStaleRegister(ushort reg);
   bytes fetchRegisterValue(ushort reg);
   void storeResultAfterExecution(bytes result);

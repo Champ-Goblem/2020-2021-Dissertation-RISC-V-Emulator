@@ -9,16 +9,21 @@ PipelineHazardController::PipelineHazardController(ushort XLEN, RegisterFile* re
   this->executingQueue = vector<InstructionQueueEntry>(NUM_STAGES);
 }
 
-void PipelineHazardController::enqueue(AbstractInstruction* instruction) {
-  InstructionQueueEntry instructionQueueEntry {
-    .instruction = instruction
-  };
+// Moves the pipeline along one position and adds empty
+// item for decode stage
+void PipelineHazardController::bump() {
+  InstructionQueueEntry instructionQueueEntry {};
 
   this->executingQueue.push_back(instructionQueueEntry);
   this->executingQueue.erase(this->executingQueue.begin());
   if (usedQueueSize < NUM_STAGES) {
     usedQueueSize += 1;
   }
+}
+
+// Update code stage with new instruction
+void PipelineHazardController::enqueue(AbstractInstruction instruction) {
+  this->executingQueue[STAGE_DECODE].instruction = instruction;
 }
 
 // This function checks if there is a dependency on the execute stage
@@ -34,9 +39,11 @@ bool PipelineHazardController::checkForStaleRegister(ushort reg) {
     return false;
   }
 
-  if (usedQueueSize >= (NUM_STAGES - STAGE_EXECUTE) && executingQueue[STAGE_EXECUTE].instruction->getRD() == reg) {
+  /* if (usedQueueSize >= (NUM_STAGES - STAGE_DECODE) && executingQueue[STAGE_DECODE].instruction.getRD() == reg) {
     return true;
-  } else if (usedQueueSize >= (NUM_STAGES - STAGE_MEM) && executingQueue[STAGE_MEM].instruction->getRD() == reg && executingQueue[STAGE_MEM].RDVal.size() == 0) {
+  } else  */if (usedQueueSize >= (NUM_STAGES - STAGE_EXECUTE) && executingQueue[STAGE_EXECUTE].instruction.getRD() == reg) {
+    return true;
+  } else if (usedQueueSize >= (NUM_STAGES - STAGE_MEM) && executingQueue[STAGE_MEM].instruction.getRD() == reg && executingQueue[STAGE_MEM].RDVal.size() == 0) {
     return true;
   }
 
@@ -52,16 +59,16 @@ bytes PipelineHazardController::fetchRegisterValue(ushort reg) {
     return bytes(this->XLEN);
   }
 
-  if (usedQueueSize >= (NUM_STAGES - STAGE_EXECUTE) && executingQueue[STAGE_EXECUTE].instruction->getRD() == reg) {
+  if (usedQueueSize >= (NUM_STAGES - STAGE_EXECUTE) && executingQueue[STAGE_EXECUTE].instruction.getRD() == reg) {
     // TODO: Should we throw here?
     throw PipelineHazardException("Failed to fetch data for register, has a dependency on the execute stage, no value calculated yet");
-  } else if (usedQueueSize >= (NUM_STAGES - STAGE_MEM) && executingQueue[STAGE_MEM].instruction->getRD() == reg) {
+  } else if (usedQueueSize >= (NUM_STAGES - STAGE_MEM) && executingQueue[STAGE_MEM].instruction.getRD() == reg) {
     if (executingQueue[STAGE_MEM].RDVal.size() == 0) {
       throw PipelineHazardException("Failed to fetch data for register, RD result is zero bytes long");
     }
 
     return executingQueue[STAGE_MEM].RDVal;
-  } else if (usedQueueSize >= (NUM_STAGES - STAGE_WB) && executingQueue[STAGE_WB].instruction->getRD() == reg) {
+  } else if (usedQueueSize >= (NUM_STAGES - STAGE_WB) && executingQueue[STAGE_WB].instruction.getRD() == reg) {
     if (executingQueue[STAGE_WB].RDVal.size() == 0) {
       throw PipelineHazardException("Failed to fetch data for register, RD result is zero bytes long");
     }

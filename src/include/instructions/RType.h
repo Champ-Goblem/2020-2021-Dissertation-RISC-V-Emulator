@@ -3,7 +3,7 @@
 
 #include "AbstractInstruction.h"
 
-#define NOP RTypeInstruction(0, 51, 0, 0, 0, 0, 0)
+#define NOP(XLEN) RTypeInstruction((XLEN), 51, 0, 0, 0, 0, 0)
 class RTypeInstruction: public AbstractInstruction {
   
   public:

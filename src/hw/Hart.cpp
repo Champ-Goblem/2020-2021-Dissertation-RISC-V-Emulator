@@ -27,43 +27,65 @@ Hart::Hart(Memory* memory, RegisterFile* registerFile, AbstractISA baseISA, Exte
   }
 
   this->opcodeSpace = opcodeSpace;
-  this->branchPredictor = SimpleBranchPredictor(memory, XLEN, registerFile, initialPC);
+  this->branchPredictor = new SimpleBranchPredictor(memory, XLEN, registerFile, initialPC);
 }
 
-// void Hart::startExecution() {
-//   controlThread = thread(&Hart::controller, this);
-// }
-
 void Hart::tick() {
-  exception_ptr fetchException, decodeException, executeException, memException, wbException;
-  AbstractInstruction newlyDecoded;
-
+  fetchException = nullptr;
+  decodeException = nullptr;
+  executeException = nullptr;
+  memException = nullptr;
+  wbException = nullptr;
+  
   // Reset stall flag
-  stall = false;
+  stallNextTick = false;
+
+  pipelineController.bump();
 
   // If we need to stall due to a dependecy we dont want to
   // fetch again otherwise that will poll branch predictor
   // causing it to become out of sync
-  thread fetch;
+  thread fetch, decode, execute, memoryAccess, writeback;
   if (!stall) {
-    fetch = thread(&Hart::fetch, this, fetchException, fetchPC, fromFetch);
+    fetch = thread(&Hart::fetch, this);
   }
-  thread decode(&Hart::decode, this, fromFetch, fetchPC, decodeException, newlyDecoded);
-  thread execute(&Hart::execute, this, &fromDecode, executeException);
-  thread memoryAccess(&Hart::memoryAccess, this, &fromExecute, memException);
-  thread writeback(&Hart::writeback, this, &fromMem, wbException);
+  if (toDecode.size() > 0) {
+    decode = thread(&Hart::decode, this, toDecode, decodePC);
+  }
+  if (toExecute.getXLEN() > 0) {
+    execute = thread(&Hart::execute, this, &toExecute);
+  }
+  if (toMem.getXLEN() > 0) {
+    memoryAccess = thread(&Hart::memoryAccess, this, &toMem);
+  }
+  if (toWB.getXLEN() > 0) {
+    writeback = thread(&Hart::writeback, this, &toWB);
+  }
 
   if (!stall) {
     fetch.join();
   }
-  decode.join();
-  execute.join();
-  memoryAccess.join();
-  writeback.join();
+  if (toDecode.size() > 0) {
+    decode.join();
+  }
+  if (toExecute.getXLEN() > 0) {
+    execute.join();
+  }
+  if (toMem.getXLEN() > 0) {
+    memoryAccess.join();
+  }
+  if (toWB.getXLEN() > 0) {
+    writeback.join();
+  }
 
-  fromMem = fromExecute;
-  fromExecute = fromDecode;
-  fromDecode = newlyDecoded;
+  toWB = fromMem;
+  toMem = fromExecute;
+  toExecute = fromDecode;
+  if (!stallNextTick) {
+    toDecode = fromFetch;
+    decodePC = fetchPC;
+  }
+  stall = stallNextTick;
 
   if (fetchException) {
     rethrow_exception(fetchException);
@@ -82,53 +104,59 @@ void Hart::tick() {
   }
 }
 
-void Hart::fetch(exception_ptr exception, bytes outPC, bytes outInstruction) {
+void Hart::fetch() {
   try {
-    outPC = branchPredictor.getNextPC();
-    outInstruction = memory->readWord(getBytesToULong(outPC));
+    this->fetchPC = branchPredictor->getNextPC();
+    this->fromFetch = memory->readWord(getBytesToULong(fetchPC));
   } catch (...) { 
-    exception = current_exception();
+    this->fetchException = current_exception();
   }
 }
 
-void Hart::decode(bytes instruction, bytes pc, exception_ptr exception, AbstractInstruction outInstruction) {
+void Hart::decode(bytes instruction, bytes pc) {
   try {
     byte opcode = instruction[0] & 127;
     DecodeRoutine decodeRoutine = AbstractISA::findDecodeRoutineByOpcode(opcodeSpace, opcode);
-    AbstractInstruction inst = decodeRoutine(instruction, &pipelineController, stall);
+    AbstractInstruction inst = decodeRoutine(instruction, &pipelineController, &stallNextTick);
     inst.setPC(pc);
-    outInstruction = inst;
+    this->fromDecode = inst;
   } catch (...) {
-    exception = current_exception();
+    this->decodeException = current_exception();
   }
 }
 
-void Hart::execute(AbstractInstruction* instruction, exception_ptr exception) {
+void Hart::execute(AbstractInstruction* instruction) {
   try {
     if (instruction->execute) {
-      instruction->execute(instruction, &branchPredictor, memory->getSize(), &pipelineController);
+      instruction->execute(instruction, branchPredictor, memory->getSize(), &pipelineController);
     }
+    this->fromExecute = *instruction;
   } catch (...) {
-    exception = current_exception();
+    this->executeException = current_exception();
   }
 }
 
-void Hart::memoryAccess(AbstractInstruction* instruction, exception_ptr exception) {
+void Hart::memoryAccess(AbstractInstruction* instruction) {
   try {
     if (instruction->memoryAccess) {
       instruction->memoryAccess(instruction, memory, &pipelineController);
     }
+    this->fromMem = *instruction;
   } catch (...) {
-    exception = current_exception();
+    this->memException = current_exception();
   }
 }
 
-void Hart::writeback(AbstractInstruction* instruction, exception_ptr exception) {
+void Hart::writeback(AbstractInstruction* instruction) {
   try {
     if (instruction->registerWriteback) {
       instruction->registerWriteback(instruction, registerFile);
     }
   } catch (...) {
-    exception = current_exception();
+    this->wbException = current_exception();
   }
+}
+
+Hart::~Hart() {
+  delete(this->branchPredictor);
 }

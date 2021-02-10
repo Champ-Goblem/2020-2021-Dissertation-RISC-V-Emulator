@@ -12,7 +12,7 @@ class AbstractBranchPredictor;
 class RegisterFile;
 class Memory;
 
-typedef AbstractInstruction (*DecodeRoutine)(bytes, PipelineHazardController*, bool);
+typedef AbstractInstruction (*DecodeRoutine)(bytes, PipelineHazardController*, bool*);
 typedef void (*ExecuteRoutine)(AbstractInstruction*, AbstractBranchPredictor*, ulong, PipelineHazardController*);
 typedef void (*WritebackRoutine)(AbstractInstruction*, RegisterFile*);
 typedef void (*MemoryAccessRoutine)(AbstractInstruction* instruction, Memory* memory, PipelineHazardController*);
@@ -35,8 +35,12 @@ class UndefinedDecodeRoutineException: public EmulatorException {
 };
 
 class AbstractISA {
+  protected:
+  vector<struct OpcodeSpace> opcodeSpace;
+
   public:
-  virtual vector<struct OpcodeSpace> registerOpcodeSpace() { return vector<struct OpcodeSpace>(0); };
+  vector<struct OpcodeSpace> registerOpcodeSpace() { return opcodeSpace; };
+
   static DecodeRoutine findDecodeRoutineByOpcode(vector<struct OpcodeSpace> opcodeSpace, ushort opcode) {
     if (opcodeSpace.size() == 0) {
       throw new EmulatorException("Failed find by opcode, opcode space undefined");

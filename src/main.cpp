@@ -7,25 +7,41 @@
 #include "include/instructions/UType.h"
 #include "include/instructions/sets/RV32I.h"
 #include "include/units/PipelineHazardController.h"
+#include "include/hw/Hart.h"
 
 int main(int argc, char** argv) {
-    RV32I base;
-    vector<OpcodeSpace> OpS = base.registerOpcodeSpace();
-    DecodeRoutine decode = RV32I::findDecodeRoutineByOpcode(OpS, 99);
-    bytes instruction{99, 2, 16, 0};
-    bytes initialPC{32,0,0,0};
-    Memory m(3000);
-    m.writeWord(32, instruction);
-    RegisterFile rf(4, false);
-    rf.write(1, bytes{1, 0, 0, 0});
-    PipelineHazardController phc(4, &rf, false);
-    SimpleBranchPredictor sbp(&m, 4, &rf, initialPC);
-    bool stall;
-    AbstractInstruction inst = decode(instruction, &phc, stall);
-    phc.enqueue(&inst);
-    inst.setPC(sbp.getNextPC());
-    (inst.getType() == InstructionType::B);
-    inst.execute(&inst, &sbp, 200, &phc);
-    bytes result{36, 0, 0, 0};
-    (inst.getResult() == result);
+    Memory memory = Memory(3000);
+    RegisterFile registerFile = RegisterFile(4, false);
+    RV32I base = RV32I();
+    Hart hart1 = Hart(&memory, &registerFile, base, ExtensionSet(0), 4, bytes{0, 0, 0, 0}, false);
+    memory.writeWord(300, bytes{255, 255, 255, 255});
+    memory.writeWord(0, bytes{0x93, 0x80, 0xc0, 0x12});
+    memory.writeWord(4, bytes{0x03, 0xa1, 0x00, 0x00});
+    memory.writeWord(8, bytes{0x93, 0x01, 0xa1, 0x00});
+    memory.writeWord(12, bytes{0x33, 0, 0, 0});
+    memory.writeWord(16, bytes{0x33, 0, 0, 0});
+    memory.writeWord(20, bytes{0x33, 0, 0, 0});
+    memory.writeWord(24, bytes{0x33, 0, 0, 0});
+    memory.writeWord(28, bytes{0x33, 0, 0, 0});
+    memory.writeWord(32, bytes{0x33, 0, 0, 0});
+    memory.writeWord(36, bytes{0x33, 0, 0, 0});
+    memory.writeWord(40, bytes{0x33, 0, 0, 0});
+    try {
+        hart1.tick();
+        hart1.tick();
+        hart1.tick();
+        hart1.tick();
+        hart1.tick();
+        hart1.tick();
+        hart1.tick();
+        hart1.tick();
+        hart1.tick();
+        hart1.tick();
+        hart1.tick();
+    } catch (EmulatorException e) {
+        cerr << e.getMessage();
+    } catch (exception e) {
+        cerr << e.what();
+    }
+    cout << "";
 }

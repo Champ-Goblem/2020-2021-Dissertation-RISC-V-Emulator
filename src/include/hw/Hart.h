@@ -14,7 +14,7 @@ class RegisterFile;
 
 class Hart {
   private:
-  AbstractBranchPredictor branchPredictor;
+  AbstractBranchPredictor* branchPredictor;
   Memory* memory;
   RegisterFile* registerFile;
   PipelineHazardController pipelineController;
@@ -22,24 +22,25 @@ class Hart {
   ExtensionSet extensions;
   ushort XLEN;
   vector<OpcodeSpace> opcodeSpace;
-  thread controlThread;
 
-  bytes fromFetch, fetchPC;
-  AbstractInstruction fromDecode, fromExecute, fromMem;
+  bytes fromFetch, fetchPC, toDecode, decodePC;
+  AbstractInstruction fromDecode, fromExecute, fromMem, toExecute, toMem, toWB;
+  exception_ptr fetchException, decodeException, executeException, memException, wbException;
 
-  bool stall;
+  bool stall, stallNextTick;
 
   public:
   Hart(Memory* memory, RegisterFile* registerFile, AbstractISA baseISA, ExtensionSet extensions, ushort XLEN, bytes initialPC, bool isRV32E);
+  ~Hart();
   // void startExecution();
   void tick();
   
   private:
-  void fetch(exception_ptr exception, bytes outPC, bytes outInstruction);
-  void decode(bytes instruction, bytes pc, exception_ptr exception, AbstractInstruction outInstruction);
-  void execute(AbstractInstruction* instruction, exception_ptr exception);
-  void memoryAccess(AbstractInstruction* instruction, exception_ptr exception);
-  void writeback(AbstractInstruction* instruction, exception_ptr exception);
+  void fetch();
+  void decode(bytes instruction, bytes pc);
+  void execute(AbstractInstruction* instruction);
+  void memoryAccess(AbstractInstruction* instruction);
+  void writeback(AbstractInstruction* instruction);
 };
 
 #endif
