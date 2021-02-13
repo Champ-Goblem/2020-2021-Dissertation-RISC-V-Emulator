@@ -7,6 +7,8 @@
 #include "../instructions/sets/AbstractISA.h"
 #include "../instructions/AbstractInstruction.h"
 
+#define NOP_BYTES bytes{0x33, 0, 0, 0}
+
 typedef vector<AbstractISA> ExtensionSet;
 
 class Memory;
@@ -27,7 +29,7 @@ class Hart {
   AbstractInstruction fromDecode, fromExecute, fromMem, toExecute, toMem, toWB;
   exception_ptr fetchException, decodeException, executeException, memException, wbException;
 
-  bool stall, stallNextTick;
+  bool stall = false, stallNextTick = false, failedPrediction = false;
 
   public:
   Hart(Memory* memory, RegisterFile* registerFile, AbstractISA baseISA, ExtensionSet extensions, ushort XLEN, bytes initialPC, bool isRV32E);

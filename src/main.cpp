@@ -14,12 +14,11 @@ int main(int argc, char** argv) {
     RegisterFile registerFile = RegisterFile(4, false);
     RV32I base = RV32I();
     Hart hart1 = Hart(&memory, &registerFile, base, ExtensionSet(0), 4, bytes{0, 0, 0, 0}, false);
-    memory.writeWord(300, bytes{255, 255, 255, 255});
-    memory.writeWord(0, bytes{0x93, 0x80, 0xc0, 0x12});
-    memory.writeWord(4, bytes{0x03, 0xa1, 0x00, 0x00});
-    memory.writeWord(8, bytes{0x93, 0x01, 0xa1, 0x00});
-    memory.writeWord(12, bytes{0x33, 0, 0, 0});
-    memory.writeWord(16, bytes{0x33, 0, 0, 0});
+    memory.writeWord(0, bytes{0x93, 0x80, 0xa0, 0x00});
+    memory.writeWord(4, bytes{0x13, 0x01, 0x11, 0x00});
+    memory.writeWord(8, bytes{0xe3, 0x9e, 0x20, 0xfe});
+    memory.writeWord(12, bytes{0x33, 0x01, 0x00, 0x00});
+    memory.writeWord(16, bytes{239, 241, 31, 255});
     memory.writeWord(20, bytes{0x33, 0, 0, 0});
     memory.writeWord(24, bytes{0x33, 0, 0, 0});
     memory.writeWord(28, bytes{0x33, 0, 0, 0});
@@ -27,17 +26,10 @@ int main(int argc, char** argv) {
     memory.writeWord(36, bytes{0x33, 0, 0, 0});
     memory.writeWord(40, bytes{0x33, 0, 0, 0});
     try {
-        hart1.tick();
-        hart1.tick();
-        hart1.tick();
-        hart1.tick();
-        hart1.tick();
-        hart1.tick();
-        hart1.tick();
-        hart1.tick();
-        hart1.tick();
-        hart1.tick();
-        hart1.tick();
+        for (int i=0; i <= 100; i++) {
+            hart1.tick();
+            // registerFile.debug();
+        }
     } catch (EmulatorException e) {
         cerr << e.getMessage();
     } catch (exception e) {

@@ -76,6 +76,7 @@ class FailedBranchPredictionException: public EmulatorException {
     str << "Branch prediction failed to predict correctly, resetting the pipeline\n";
     str << "Message: " << message << "\n";
     str << "\tPC: " << getBytesForPrint(instruction->getPC()) << "\n";
+    str << "\tTarget: " << getBytesForPrint(instruction->getResult()) << "\n";
     this->message = str.str();
   };
 };

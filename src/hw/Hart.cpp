@@ -1,9 +1,12 @@
+#include <exception>
+
 #include "../include/hw/Hart.h"
 #include "../include/hw/Memory.h"
 #include "../include/hw/RegisterFile.h"
 #include "../include/units/SimpleBranchPredictor.h"
 #include "../include/bytemanip.h"
-#include <exception>
+#include "../include/exceptions.h"
+#include "../include/instructions/RType.h"
 
 Hart::Hart(Memory* memory, RegisterFile* registerFile, AbstractISA baseISA, ExtensionSet extensions, ushort XLEN, bytes initialPC, bool isRV32E): pipelineController(XLEN, registerFile, isRV32E) {
   if (XLEN == 0) {
@@ -31,6 +34,10 @@ Hart::Hart(Memory* memory, RegisterFile* registerFile, AbstractISA baseISA, Exte
 }
 
 void Hart::tick() {
+  if (stall) cout << "stall\n";
+  cout << getBytesForPrint(branchPredictor->peak()) << "\t" << getBytesForPrint(decodePC) << "\t" << getBytesForPrint(toExecute.getPC()) << "\t"
+    << getBytesForPrint(toMem.getPC()) << "\t" << getBytesForPrint(toWB.getPC()) << "\n";
+  // Reset exception pointers
   fetchException = nullptr;
   decodeException = nullptr;
   executeException = nullptr;
@@ -39,7 +46,13 @@ void Hart::tick() {
   
   // Reset stall flag
   stallNextTick = false;
+  // Reset failed prediction
+  failedPrediction = false;
 
+  // Bump the controller so all instruction are
+  // in the correct spot for the coming cycle
+  // and so that the new instruction can be added
+  // when decoded
   pipelineController.bump();
 
   // If we need to stall due to a dependecy we dont want to
@@ -80,11 +93,19 @@ void Hart::tick() {
 
   toWB = fromMem;
   toMem = fromExecute;
-  toExecute = fromDecode;
+  toExecute = failedPrediction ? NOP(XLEN) : fromDecode;
   if (!stallNextTick) {
     toDecode = fromFetch;
     decodePC = fetchPC;
   }
+  if (failedPrediction) {
+    // As we failed prediction we need to set current decode
+    // to NOP and set next to be decoded to NOP
+    pipelineController.enqueue(NOP(XLEN));
+    toDecode = NOP_BYTES;
+    decodePC = bytes(0);
+  }
+
   stall = stallNextTick;
 
   if (fetchException) {
@@ -118,7 +139,9 @@ void Hart::decode(bytes instruction, bytes pc) {
     byte opcode = instruction[0] & 127;
     DecodeRoutine decodeRoutine = AbstractISA::findDecodeRoutineByOpcode(opcodeSpace, opcode);
     AbstractInstruction inst = decodeRoutine(instruction, &pipelineController, &stallNextTick);
-    inst.setPC(pc);
+    if (!stallNextTick) {
+      inst.setPC(pc);
+    }
     this->fromDecode = inst;
   } catch (...) {
     this->decodeException = current_exception();
@@ -131,6 +154,9 @@ void Hart::execute(AbstractInstruction* instruction) {
       instruction->execute(instruction, branchPredictor, memory->getSize(), &pipelineController);
     }
     this->fromExecute = *instruction;
+  } catch (FailedBranchPredictionException e) {
+    cerr << e.getMessage();
+    this->failedPrediction = true;
   } catch (...) {
     this->executeException = current_exception();
   }

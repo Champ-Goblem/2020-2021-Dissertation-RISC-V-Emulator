@@ -41,6 +41,10 @@ bytes SimpleBranchPredictor::getNextPC() {
     // TODO: decide what to do here
   }
 
+  if (this->executingQueue.size() > 2) {
+    this->executingQueue.pop();
+  }
+
   // Get the next PC from the queue
   bytes nextPC = this->PCQueue.front();
   // Drop the front of the queue
@@ -165,6 +169,10 @@ void SimpleBranchPredictor::predictionWorkloop() {
       this->PCQueue.push(nextPC);
     }
   }
+}
+
+bytes SimpleBranchPredictor::peak() {
+  return this->PCQueue.front();
 }
 
 SimpleBranchPredictor::~SimpleBranchPredictor() {

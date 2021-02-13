@@ -18,6 +18,7 @@ class SimpleBranchPredictor: public AbstractBranchPredictor {
   SimpleBranchPredictor(Memory* memory, ushort XLEN, RegisterFile* registerFile, bytes initialPC);
   bytes getNextPC();
   bool checkPrediction(bytes pc, bytes address);
+  bytes peak();
   ~SimpleBranchPredictor();
 
   private:

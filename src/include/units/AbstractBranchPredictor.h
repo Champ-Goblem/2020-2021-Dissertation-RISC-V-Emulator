@@ -24,6 +24,7 @@ class AbstractBranchPredictor: public AbstractUnit {
   public:
   virtual bytes getNextPC(){ return bytes(0); };
   virtual bool checkPrediction(bytes pc, bytes addr){ return false; };
+  virtual bytes peak() { return bytes(0); };
 };
 
 #endif
