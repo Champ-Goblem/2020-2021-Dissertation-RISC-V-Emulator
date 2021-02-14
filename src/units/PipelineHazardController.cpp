@@ -13,6 +13,7 @@ PipelineHazardController::PipelineHazardController(ushort XLEN, RegisterFile* re
 // Moves the pipeline along one position and adds empty
 // item for decode stage
 void PipelineHazardController::bump() {
+  lock_guard<mutex> lck(lock);
   InstructionQueueEntry instructionQueueEntry {};
 
   this->executingQueue.push_back(instructionQueueEntry);
@@ -24,6 +25,7 @@ void PipelineHazardController::bump() {
 
 // Update code stage with new instruction
 void PipelineHazardController::enqueue(AbstractInstruction instruction) {
+  lock_guard<mutex> lck(lock);
   this->executingQueue[STAGE_DECODE].instruction = instruction;
 }
 
@@ -32,6 +34,7 @@ void PipelineHazardController::enqueue(AbstractInstruction instruction) {
 // after the decode stage with data dependencies have posted their result
 // already so there should be no issues
 bool PipelineHazardController::checkForStaleRegister(ushort reg) {
+  lock_guard<mutex> lck(lock);
   if (reg >= (this->isRV32E ? 16 : 32)) {
     throw PipelineHazardException("Failed to check hazards, register invalid");
   }
@@ -52,6 +55,7 @@ bool PipelineHazardController::checkForStaleRegister(ushort reg) {
 }
 
 bytes PipelineHazardController::fetchRegisterValue(ushort reg) {
+  lock_guard<mutex> lck(lock);
   if (reg >= (this->isRV32E ? 16 : 32)) {
     throw PipelineHazardException("Failed to fetch data for register, register invalid");
   }
@@ -81,6 +85,7 @@ bytes PipelineHazardController::fetchRegisterValue(ushort reg) {
 }
 
 void PipelineHazardController::storeResultAfterExecution(bytes result) {
+  lock_guard<mutex> lck(lock);
   if (result.size() == 0 || result.size() != XLEN) {
     throw PipelineHazardException("Failed to store result for RD after execution, result is wrong size");
   }
@@ -93,6 +98,7 @@ void PipelineHazardController::storeResultAfterExecution(bytes result) {
 }
 
 void PipelineHazardController::storeResultAfterMemoryAccess(bytes result) {
+  lock_guard<mutex> lck(lock);
   if (result.size() == 0 || result.size() != XLEN) {
     throw PipelineHazardException("Failed to store result for RD after execution, result is wrong size");
   }

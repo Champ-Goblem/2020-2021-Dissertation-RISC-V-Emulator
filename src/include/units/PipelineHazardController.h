@@ -4,6 +4,7 @@
 #include "../emustd.h"
 #include "AbstractUnit.h"
 #include "../instructions/AbstractInstruction.h"
+#include <mutex>
 // #include "../hw/RegisterFile.h"
 
 // reverse order as we push values on to the back and remove from the front
@@ -36,6 +37,7 @@ class PipelineHazardController: public AbstractUnit {
   RegisterFile* registerFile;
   bool isRV32E;
   ushort usedQueueSize = 0;
+  mutable mutex lock;
 
   public:
   PipelineHazardController(ushort XLEN, RegisterFile* registerFile, bool isRV32E);

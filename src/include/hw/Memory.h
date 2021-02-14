@@ -2,6 +2,7 @@
 #define __Memory__
 
 #include "../emustd.h"
+#include <mutex>
 
 #define HWORD_SIZE 2
 #define WORD_SIZE 4
@@ -18,6 +19,7 @@ class Memory {
   private:
   bytes memory;
   ulong size;
+  mutable mutex lock;
 
   public:
   Memory(ulong size);

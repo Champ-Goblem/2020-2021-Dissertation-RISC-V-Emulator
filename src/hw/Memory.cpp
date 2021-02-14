@@ -2,12 +2,13 @@
 #include "../include/exceptions.h"
 #include "../include/bytemanip.h"
 
-Memory::Memory(ulong size) {
+Memory::Memory(ulong size): lock() {
   memory = bytes(size);
   this->size = size;
 }
 
 void Memory::writeByte(ulong addr, byte val) {
+  lock_guard<mutex> lck(lock);
   if (addr >= size) {
     throw AddressOutOfMemoryException(addr, 0, size, false);
   }
@@ -15,6 +16,7 @@ void Memory::writeByte(ulong addr, byte val) {
 }
 
 byte Memory::readByte(ulong addr) {
+  lock_guard<mutex> lck(lock);
   if (addr >= size) {
     throw AddressOutOfMemoryException(addr, 0, size, true);
   }
@@ -22,6 +24,7 @@ byte Memory::readByte(ulong addr) {
 }
 
 void Memory::writeHWord(ulong addr, bytes val) {
+  lock_guard<mutex> lck(lock);
   if (addr + HWORD_SIZE >= size) {
     throw AddressOutOfMemoryException(addr, HWORD_SIZE, size, false);
   }
@@ -33,6 +36,7 @@ void Memory::writeHWord(ulong addr, bytes val) {
 }
 
 bytes Memory::readHWord(ulong addr) {
+  lock_guard<mutex> lck(lock);
   if (addr + HWORD_SIZE >= size) {
     throw AddressOutOfMemoryException(addr, HWORD_SIZE, size, true);
   }
@@ -40,6 +44,7 @@ bytes Memory::readHWord(ulong addr) {
 }
 
 void Memory::writeWord(ulong addr, bytes val) {
+  lock_guard<mutex> lck(lock);
   if (addr + WORD_SIZE >= size) {
     throw AddressOutOfMemoryException(addr, WORD_SIZE, size, false);
   }
@@ -53,6 +58,7 @@ void Memory::writeWord(ulong addr, bytes val) {
 }
 
 bytes Memory::readWord(ulong addr) {
+  lock_guard<mutex> lck(lock);
   if (addr + WORD_SIZE >= size) {
     throw AddressOutOfMemoryException(addr, WORD_SIZE, size, true);
   }
@@ -60,6 +66,7 @@ bytes Memory::readWord(ulong addr) {
 }
 
 void Memory::writeDWord(ulong addr, bytes val) {
+  lock_guard<mutex> lck(lock);
   if (addr + DWORD_SIZE >= size) {
     throw AddressOutOfMemoryException(addr, DWORD_SIZE, size, false);
   }
@@ -77,6 +84,7 @@ void Memory::writeDWord(ulong addr, bytes val) {
 }
 
 bytes Memory::readDWord(ulong addr) {
+  lock_guard<mutex> lck(lock);
   if (addr + DWORD_SIZE >= size) {
     throw AddressOutOfMemoryException(addr, DWORD_SIZE, size, true);
   }
@@ -85,6 +93,7 @@ bytes Memory::readDWord(ulong addr) {
 }
 
 void Memory::writeQWord(ulong addr, bytes val) {
+  lock_guard<mutex> lck(lock);
   if (addr + QWORD_SIZE >= size) {
     throw AddressOutOfMemoryException(addr, QWORD_SIZE, size, false);
   }
@@ -110,6 +119,7 @@ void Memory::writeQWord(ulong addr, bytes val) {
 }
 
 bytes Memory::readQWord(ulong addr) {
+  lock_guard<mutex> lck(lock);
   if (addr + QWORD_SIZE >= size) {
     throw AddressOutOfMemoryException(addr, QWORD_SIZE, size, true);
   }
@@ -124,6 +134,7 @@ ulong Memory::getSize() {
 }
 
 void Memory::printRegion(ulong start, ulong count, ushort outWidth) {
+  lock_guard<mutex> lck(lock);
   if (start > size || start + count > size) {
     throw AddressOutOfMemoryException(start, count, size, true);
   }

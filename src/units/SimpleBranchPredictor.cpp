@@ -26,11 +26,25 @@ SimpleBranchPredictor::SimpleBranchPredictor(Memory* memory, ushort XLEN, Regist
 
   this->PCQueue.push(initialPC);
 
-  this->workloop = thread (&SimpleBranchPredictor::predictionWorkloop, this);
+  this->workloop = new thread (&SimpleBranchPredictor::predictionWorkloop, this);
+  this->workloop->detach();
+}
+
+SimpleBranchPredictor::SimpleBranchPredictor(SimpleBranchPredictor&& obj): workloop(move(obj.workloop)) {};
+
+SimpleBranchPredictor& SimpleBranchPredictor::operator=(SimpleBranchPredictor&& obj) {
+  if (workloop->joinable()) {
+    workloop->join();
+  }
+
+  workloop = move(obj.workloop);
+  return *this;
 }
 
 bytes SimpleBranchPredictor::getNextPC() {
-  this->workloop.join();
+  lock_guard<mutex> lck(lock);
+  // this->workloop->join();
+  // delete(this->workloop);
   // Check that no exceptions have been thrown by the thread
   if (this->workloopExceptionPtr) {
     rethrow_exception(this->workloopExceptionPtr);
@@ -52,11 +66,13 @@ bytes SimpleBranchPredictor::getNextPC() {
   // Add this to the queue of waiting for execution
   this->executingQueue.push(PCQueue.front());
   // Start new thread to fetch new PC
-  this->workloop = thread (&SimpleBranchPredictor::predictionWorkloop, this);
+  this->workloop = new thread (&SimpleBranchPredictor::predictionWorkloop, this);
+  this->workloop->detach();
   return nextPC;
 }
 
 bool SimpleBranchPredictor::checkPrediction(bytes pc, bytes address) {
+  lock_guard<mutex> lck(lock);
   if (address.size() == 0) {
     throw BranchPredictorException("Provided address to check prediction is zero bytes in length");
   }
@@ -78,18 +94,20 @@ bool SimpleBranchPredictor::checkPrediction(bytes pc, bytes address) {
   // Fix the mistake here
   // Cancel any more prediction
   this->failedPrediction = true;
-  this->workloop.join();
+  // this->workloop->join();
+  // delete(this->workloop);
   while (!this->PCQueue.empty()) {
     this->PCQueue.pop();
   }
   this->PCQueue.push(address);
   // Start fetching again
   this->failedPrediction = false;
-  this->workloop = thread (&SimpleBranchPredictor::predictionWorkloop, this);
+  this->workloop = new thread(&SimpleBranchPredictor::predictionWorkloop, this);
   return false;
 }
 
 void SimpleBranchPredictor::predictionWorkloop() {
+  lock_guard<mutex> lck(lock);
   bool exception = false;
   try {
     // Check that the initial size of the queue isnt zero
@@ -98,6 +116,8 @@ void SimpleBranchPredictor::predictionWorkloop() {
       throw BranchPredictorException("Failed to start prediction, queue length 0\n");
     }
 
+    bytes b = this->PCQueue.back();
+    
     if (this->PCQueue.back()[0] % 4 != 0) {
       throw BranchPredictorException("Failed to start prediction, inital PC not 4-bytes aligned\n");
     }
@@ -111,8 +131,10 @@ void SimpleBranchPredictor::predictionWorkloop() {
     bytes nextPC;
     try {
       // TODO: Handle address-misaligned exceptions
-      bytes lastPC = PCQueue.back();
-      bytes instruction = memory->readWord(getBytesToULong(lastPC));
+      bytes lastPC = this->PCQueue.back();
+      // cout << "lpc: " << getBytesForPrint(lastPC) << "\n";
+      bytes instruction = this->memory->readWord(getBytesToULong(lastPC));
+      // cout << "inst: " << getBytesForPrint(instruction) << "\n";
       byte opcode = getContrainedBits(instruction, 0, 6)[0];
       if (opcode == 99) {
         // If opcode = beq | bne | blt | bge | bltu | bgeu
@@ -149,8 +171,8 @@ void SimpleBranchPredictor::predictionWorkloop() {
 
       // TODO: This needs changing to something that supports more than 8 bytes
       ulong pcVal = getBytesToULong(nextPC);
-      if (pcVal >= memory->getSize()) {
-        throw AddressOutOfMemoryException(pcVal, 4, memory->getSize(), true);
+      if (pcVal >= this->memory->getSize()) {
+        throw AddressOutOfMemoryException(pcVal, 4, this->memory->getSize(), true);
       }
       if (nextPC[0] % 4 != 0) {
         throw BranchPredictorException("Generated PC not 4 bytes aligned [%s]", getBytesForPrint(nextPC).c_str());
@@ -176,8 +198,10 @@ bytes SimpleBranchPredictor::peak() {
 }
 
 SimpleBranchPredictor::~SimpleBranchPredictor() {
+  cout << "destructor" << "\n";
   this->isProcessorExceptionGenerated = true;
-  if (workloop.joinable()) {
-    this->workloop.join();
+  if (workloop->joinable()) {
+    this->workloop->join();
   }
+  delete(this->workloop);
 }

@@ -127,8 +127,8 @@ void Hart::tick() {
 
 void Hart::fetch() {
   try {
-    this->fetchPC = branchPredictor->getNextPC();
-    this->fromFetch = memory->readWord(getBytesToULong(fetchPC));
+    this->fetchPC = this->branchPredictor->getNextPC();
+    this->fromFetch = this->memory->readWord(getBytesToULong(fetchPC));
   } catch (...) { 
     this->fetchException = current_exception();
   }
@@ -138,7 +138,7 @@ void Hart::decode(bytes instruction, bytes pc) {
   try {
     byte opcode = instruction[0] & 127;
     DecodeRoutine decodeRoutine = AbstractISA::findDecodeRoutineByOpcode(opcodeSpace, opcode);
-    AbstractInstruction inst = decodeRoutine(instruction, &pipelineController, &stallNextTick);
+    AbstractInstruction inst = decodeRoutine(instruction, &this->pipelineController, &this->stallNextTick);
     if (!stallNextTick) {
       inst.setPC(pc);
     }
@@ -151,7 +151,7 @@ void Hart::decode(bytes instruction, bytes pc) {
 void Hart::execute(AbstractInstruction* instruction) {
   try {
     if (instruction->execute) {
-      instruction->execute(instruction, branchPredictor, memory->getSize(), &pipelineController);
+      instruction->execute(instruction, this->branchPredictor, this->memory->getSize(), &this->pipelineController);
     }
     this->fromExecute = *instruction;
   } catch (FailedBranchPredictionException e) {
@@ -165,7 +165,7 @@ void Hart::execute(AbstractInstruction* instruction) {
 void Hart::memoryAccess(AbstractInstruction* instruction) {
   try {
     if (instruction->memoryAccess) {
-      instruction->memoryAccess(instruction, memory, &pipelineController);
+      instruction->memoryAccess(instruction, this->memory, &this->pipelineController);
     }
     this->fromMem = *instruction;
   } catch (...) {
@@ -176,7 +176,7 @@ void Hart::memoryAccess(AbstractInstruction* instruction) {
 void Hart::writeback(AbstractInstruction* instruction) {
   try {
     if (instruction->registerWriteback) {
-      instruction->registerWriteback(instruction, registerFile);
+      instruction->registerWriteback(instruction, this->registerFile);
     }
   } catch (...) {
     this->wbException = current_exception();

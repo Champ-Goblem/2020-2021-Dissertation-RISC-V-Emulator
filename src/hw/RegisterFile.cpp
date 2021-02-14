@@ -1,7 +1,7 @@
 #include "../include/hw/RegisterFile.h"
 #include "../include/bytemanip.h"
 
-RegisterFile::RegisterFile(ushort XLEN, bool isRV32E) {
+RegisterFile::RegisterFile(ushort XLEN, bool isRV32E): lock() {
   int registerCount = isRV32E ? REG16 : REG32;
   this->RV32E = isRV32E;
   this->XLEN = XLEN;
@@ -12,6 +12,7 @@ RegisterFile::RegisterFile(ushort XLEN, bool isRV32E) {
 }
 
 bytes RegisterFile::get(ushort reg) {
+  lock_guard<mutex> lck(lock);
   if (reg == 0) {
     // Return constant zero
     return bytes(XLEN);
@@ -29,6 +30,7 @@ bytes RegisterFile::get(ushort reg) {
 }
 
 void RegisterFile::write(ushort reg, bytes val) {
+  lock_guard<mutex> lck(lock);
   if (reg == 0) {
     // Ignore register write to zero
     return;
@@ -66,6 +68,7 @@ void RegisterFile::write(ushort reg, bytes val) {
 // }
 
 void RegisterFile::debug() {
+  lock_guard<mutex> lck(lock);
   // Print the current register values
   RegisterIterator itr = registerMap.begin();
   while (itr != registerMap.end()) {

@@ -53,9 +53,7 @@ class AbstractInstruction {
   bytes result;
   bytes pc;
   bool isSigned;
-  // TODO: This needs to be set up with a value
-  // TODO: Remember the thing that we could use XLEN to check for
-  ushort XLEN;
+  ushort XLEN = 0;
 
   public:
   AbstractInstruction() { this->XLEN = 0; }

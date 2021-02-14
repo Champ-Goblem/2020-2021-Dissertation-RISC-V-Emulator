@@ -7,6 +7,7 @@
 
 #include "../emustd.h"
 #include <map>
+#include <mutex>
 
 typedef map<ushort, bytes> RegisterMap;
 typedef RegisterMap::iterator RegisterIterator;
@@ -23,6 +24,7 @@ class RegisterFile {
   // bytes pc;
   bool RV32E;
   ushort XLEN;
+  mutable mutex lock;
 
   public:
   RegisterFile(ushort XLEN, bool isRV32E);
