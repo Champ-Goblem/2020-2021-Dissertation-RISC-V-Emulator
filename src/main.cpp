@@ -5,7 +5,10 @@ int main(int argc, char** argv) {
   for (uint i=0; i<r.size(); i++) {
     r[i] = bytes(4);
   }
-  Element e = screen.renderRegisterFile(r);
+  // Element e = screen.renderMemory(r, 0);
+  ostringstream oss;
+  oss << "A aodijawoidjwaiodjoiwahdwahd" << endl << "multi-line" << "\n\t" << "tabbed" << endl << "\t" << "more stufff" << endl << "\t" << "endl" << endl << "aaaa";
+  Element e = screen.renderSTDOut(oss.str());
 
   Screen out = Screen::Create(Dimension::Full(), Dimension::Fit(e));
   Render(out, e.get());

@@ -83,7 +83,7 @@ Element EmulatorScreen::renderRegisterFile(vector<bytes> registerValues) {
           text(L"   "),
           hbox(
             text(L"x"),
-            text(stringToWString(to_string(i))),
+            text(stringToWString(to_string(i+1))),
             text(L" ")
           ) | align_right | size(WIDTH, EQUAL, 4) | color(Color::Grey82),
           text(stringToWString(getBytesForPrint(registerValues[i+1]))) | color(Color::Grey58)
@@ -97,6 +97,94 @@ Element EmulatorScreen::renderRegisterFile(vector<bytes> registerValues) {
     separator(),
     move(rows)
   ) | border | color(Color::Grey93);
+}
+
+Element EmulatorScreen::renderMemory(vector<bytes> memorySegment, ulong addr) {
+  Elements entries;
+  Elements addresses;
+
+  for (uint i=0; i < memorySegment.size(); i+= MEMORY_OUTPUT_WIDTH) {
+    addresses.push_back(
+      hbox(
+        text(L" "),
+        text(stringToWString(to_string((addr + i)))) | align_right | size(WIDTH, EQUAL, 8),
+        text(L" ")
+      )
+    );
+
+    Elements row;
+    for (uint c=0; c < MEMORY_OUTPUT_WIDTH; c++) {
+      row.push_back(
+        hbox(
+          text(L" "),
+          text(stringToWString(getBytesForPrint(memorySegment[i+c]))),
+          text(L" ")
+        )
+      );
+    }
+    entries.push_back(
+      vbox(
+        hbox(
+          move(row)
+        )
+      )
+    );
+  }
+
+  return vbox(
+    text(L" Memory") | color(Color::Grey82),
+    separator(),
+    hbox(
+      vbox(
+        move(addresses)
+      ) | color(Color::Grey82),
+      separator(),
+      vbox(
+        move(entries)
+      ) | color(Color::Grey58)
+    )
+  ) | border | color(Color::Grey93);
+}
+
+Element EmulatorScreen::renderSTDOut(string message) {
+  Elements rows;
+  Elements row;
+  for (uint i=0; i < message.length(); i++) {
+    char& c = message.at(i);
+    if (c == '\n') {
+      rows.push_back(
+        vbox(
+          hbox(
+            move(row)
+          )
+        )
+      );
+      row = Elements(0);
+    } else if (c == '\t') {
+      row.push_back(
+        text(L"   ")
+      );
+    } else {
+      string str(1, c);
+      row.push_back(
+        text(stringToWString(str))
+      );
+    }
+  }
+  if (row.size() > 0) {
+    rows.push_back(
+      vbox(
+        hbox(
+          move(row)
+        )
+      )
+    );
+  }
+  return frame(
+    vbox(
+      move(rows)
+    )
+  ) | size(HEIGHT, EQUAL, 5) | border;
 }
 
 void EmulatorScreen::render(vector<bytes> pipelineStage, vector<bytes> registerValues, vector<bytes> memorySegment, string stdoutMessage) {
