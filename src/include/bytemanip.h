@@ -13,8 +13,9 @@ static string getBytesForPrint(bytes data) {
   ushort size = data.size();
   ostringstream str;
   if (size == 0) {
-    return "    nop    ";
+    return "nop";
   }
+  
   for (int i=0; i < size; i++) {
     str << setw(2) << setfill('0') << hex << (int) data[size - 1 - i] << " ";
   }

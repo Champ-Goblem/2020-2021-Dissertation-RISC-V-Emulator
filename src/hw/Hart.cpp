@@ -8,12 +8,11 @@
 #include "../include/exceptions.h"
 #include "../include/instructions/RType.h"
 
-Hart::Hart(Memory* memory, RegisterFile* registerFile, AbstractISA baseISA, ExtensionSet extensions, ushort XLEN, bytes initialPC, bool isRV32E): pipelineController(XLEN, registerFile, isRV32E) {
+Hart::Hart(Memory* memory, AbstractISA baseISA, ExtensionSet extensions, ushort XLEN, bytes initialPC, bool isRV32E): registerFile(XLEN, isRV32E), pipelineController(XLEN, &registerFile, isRV32E) {
   if (XLEN == 0) {
     throw new EmulatorException("Failed to create hart, XLEN is 0");
   }
   this->memory = memory;
-  this->registerFile = registerFile;
   this->baseISA = baseISA;
   this->extensions = extensions;
   this->XLEN = XLEN;
@@ -30,13 +29,13 @@ Hart::Hart(Memory* memory, RegisterFile* registerFile, AbstractISA baseISA, Exte
   }
 
   this->opcodeSpace = opcodeSpace;
-  this->branchPredictor = new SimpleBranchPredictor(memory, XLEN, registerFile, initialPC);
+  this->branchPredictor = new SimpleBranchPredictor(memory, XLEN, &registerFile, initialPC);
 }
 
-void Hart::tick() {
-  if (stall) cout << "stall\n";
-  cout << getBytesForPrint(branchPredictor->peak()) << "\t" << getBytesForPrint(decodePC) << "\t" << getBytesForPrint(toExecute.getPC()) << "\t"
-    << getBytesForPrint(toMem.getPC()) << "\t" << getBytesForPrint(toWB.getPC()) << "\n";
+void Hart::tick(exception_ptr exception) {
+  // if (stall) cout << "stall\n";
+  // cout << getBytesForPrint(branchPredictor->peak()) << "\t" << getBytesForPrint(decodePC) << "\t" << getBytesForPrint(toExecute.getPC()) << "\t"
+  //   << getBytesForPrint(toMem.getPC()) << "\t" << getBytesForPrint(toWB.getPC()) << "\n";
   // Reset exception pointers
   fetchException = nullptr;
   decodeException = nullptr;
@@ -109,19 +108,19 @@ void Hart::tick() {
   stall = stallNextTick;
 
   if (fetchException) {
-    rethrow_exception(fetchException);
+    exception = fetchException;
   }
   if (decodeException) {
-    rethrow_exception(decodeException);
+    exception = decodeException;
   }
   if (executeException) {
-    rethrow_exception(executeException);
+    exception = executeException;
   }
   if (memException) {
-    rethrow_exception(memException);
+    exception = memException;
   }
   if (wbException) {
-    rethrow_exception(wbException);
+    exception = wbException;
   }
 }
 
@@ -155,7 +154,6 @@ void Hart::execute(AbstractInstruction* instruction) {
     }
     this->fromExecute = *instruction;
   } catch (FailedBranchPredictionException e) {
-    cerr << e.getMessage();
     this->failedPrediction = true;
   } catch (...) {
     this->executeException = current_exception();
@@ -176,7 +174,7 @@ void Hart::memoryAccess(AbstractInstruction* instruction) {
 void Hart::writeback(AbstractInstruction* instruction) {
   try {
     if (instruction->registerWriteback) {
-      instruction->registerWriteback(instruction, this->registerFile);
+      instruction->registerWriteback(instruction, &this->registerFile);
     }
   } catch (...) {
     this->wbException = current_exception();

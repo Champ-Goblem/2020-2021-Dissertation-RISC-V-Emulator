@@ -115,8 +115,6 @@ void SimpleBranchPredictor::predictionWorkloop() {
     if (this->PCQueue.size() == 0) {
       throw BranchPredictorException("Failed to start prediction, queue length 0\n");
     }
-
-    bytes b = this->PCQueue.back();
     
     if (this->PCQueue.back()[0] % 4 != 0) {
       throw BranchPredictorException("Failed to start prediction, inital PC not 4-bytes aligned\n");

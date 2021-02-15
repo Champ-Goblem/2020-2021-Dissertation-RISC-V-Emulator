@@ -3,8 +3,11 @@ CXX=g++
 SDIR=./src
 ODIR=./obj
 BDIR=./obj/build
-IDIR=./src/include
+IDIR=./src/include ./src/lib/headers
 TDIR=./tests/emu-tests
+LDIR=./src/lib
+
+LIBRARIES=libcomponent.a libdom.a libscreen.a
 
 TARGET=$(BDIR)/RISC-Emu
 TEST_TARGET=$(TDIR)/RISC-Emu.test
@@ -18,7 +21,7 @@ vpath %.c $(SDIR)
 vpath %.o $(ODIR)
 vpath %.h $(IDIR)
 
-DIRS=hw instructions units instructions/sets
+DIRS=hw instructions units instructions/sets screen
 SOURCEDIRS=$(SDIR) $(foreach dir, $(DIRS), $(addprefix $(SDIR)/, $(dir)))
 TARGETDIRS=$(ODIR) $(foreach dir, $(DIRS), $(addprefix $(ODIR)/, $(dir)))
 DEPSDIRS=$(IDIR) $(foreach dir, $(DIRS), $(addprefix $(IDIR)/, $(dir)))
@@ -43,7 +46,11 @@ else
 	BUILD=
 endif
 
-CFLAGS=-I$(IDIR) $(BUILD)
+INCLUDES=$(foreach dir, $(IDIR), $(addprefix -I, $(dir)))
+
+CFLAGS=$(INCLUDES) -L$(LDIR) $(BUILD)
+
+LFLAGS=$(foreach lib, $(LIBRARIES), $(addprefix -l:, $(lib)))
 
 .PHONY: all clean directories testall
 
@@ -55,7 +62,7 @@ directories:
 
 $(TARGET): $(OBJS)
 	@echo Linking $@
-	$(CXX) -o $(TARGET) $(OBJS) $(BUILD) -pthread
+	$(CXX) -o $(TARGET) $(OBJS) $(BUILD) -L$(LDIR) $(LFLAGS) -pthread
 
 define generateRules
 $(1)/%.o: $(subst $(ODIR), $(SDIR), $(1))/%.cpp

@@ -3,3 +3,4 @@ obj/*
 *.test
 tests/emu-tests/**/*.cpp
 tests/emu-tests/*.cpp
+src/lib/ftxui

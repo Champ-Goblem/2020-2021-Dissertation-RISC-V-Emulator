@@ -6,19 +6,19 @@
 #include "../units/PipelineHazardController.h"
 #include "../instructions/sets/AbstractISA.h"
 #include "../instructions/AbstractInstruction.h"
+#include "../hw/RegisterFile.h"
 
 #define NOP_BYTES bytes{0x33, 0, 0, 0}
 
 typedef vector<AbstractISA> ExtensionSet;
 
 class Memory;
-class RegisterFile;
 
 class Hart {
   private:
   AbstractBranchPredictor* branchPredictor;
   Memory* memory;
-  RegisterFile* registerFile;
+  RegisterFile registerFile;
   PipelineHazardController pipelineController;
   AbstractISA baseISA;
   ExtensionSet extensions;
@@ -32,10 +32,9 @@ class Hart {
   bool stall = false, stallNextTick = false, failedPrediction = false;
 
   public:
-  Hart(Memory* memory, RegisterFile* registerFile, AbstractISA baseISA, ExtensionSet extensions, ushort XLEN, bytes initialPC, bool isRV32E);
+  Hart(Memory* memory, AbstractISA baseISA, ExtensionSet extensions, ushort XLEN, bytes initialPC, bool isRV32E);
   ~Hart();
-  // void startExecution();
-  void tick();
+  void tick(exception_ptr exception);
   
   private:
   void fetch();
