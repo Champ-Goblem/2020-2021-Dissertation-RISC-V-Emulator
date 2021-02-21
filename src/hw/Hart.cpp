@@ -7,18 +7,20 @@
 #include "../include/bytemanip.h"
 #include "../include/exceptions.h"
 #include "../include/instructions/RType.h"
+#include "../include/instructions/sets/RV32I.h"
+#include "../include/units/SimpleBranchPredictor.h"
 
-Hart::Hart(Memory* memory, AbstractISA baseISA, ExtensionSet extensions, ushort XLEN, bytes initialPC, bool isRV32E): registerFile(XLEN, isRV32E), pipelineController(XLEN, &registerFile, isRV32E) {
+Hart::Hart(Memory* memory, Bases baseISA, vector<Extensions> extensions, BranchPredictors branchPredictor, ushort XLEN, bytes initialPC, bool isRV32E): registerFile(XLEN, isRV32E), pipelineController(XLEN, &registerFile, isRV32E) {
   if (XLEN == 0) {
     throw new EmulatorException("Failed to create hart, XLEN is 0");
   }
   this->memory = memory;
-  this->baseISA = baseISA;
-  this->extensions = extensions;
+  this->baseISA = getBase(baseISA);
+  this->extensions = getExtensions(extensions);
   this->XLEN = XLEN;
-  vector<struct OpcodeSpace> opcodeSpace = baseISA.registerOpcodeSpace();
+  vector<struct OpcodeSpace> opcodeSpace = this->baseISA.registerOpcodeSpace();
 
-  for (ExtensionSet::iterator it = extensions.begin(); it != extensions.end(); ++it) {
+  for (ExtensionSet::iterator it = this->extensions.begin(); it != this->extensions.end(); ++it) {
     vector<struct OpcodeSpace> extensionSpace = it->registerOpcodeSpace();
     opcodeSpace.insert(opcodeSpace.end(), extensionSpace.begin(), extensionSpace.end());
     // TODO: Could do a check to see if an opcode is already defined
@@ -29,10 +31,10 @@ Hart::Hart(Memory* memory, AbstractISA baseISA, ExtensionSet extensions, ushort 
   }
 
   this->opcodeSpace = opcodeSpace;
-  this->branchPredictor = new SimpleBranchPredictor(memory, XLEN, &registerFile, initialPC);
+  this->branchPredictor = getBranchPredictor(branchPredictor, memory, XLEN, &registerFile, initialPC);
 }
 
-void Hart::tick(exception_ptr exception) {
+void Hart::tick(exception_ptr& exception) {
   // if (stall) cout << "stall\n";
   // cout << getBytesForPrint(branchPredictor->peak()) << "\t" << getBytesForPrint(decodePC) << "\t" << getBytesForPrint(toExecute.getPC()) << "\t"
   //   << getBytesForPrint(toMem.getPC()) << "\t" << getBytesForPrint(toWB.getPC()) << "\n";
@@ -178,6 +180,40 @@ void Hart::writeback(AbstractInstruction* instruction) {
     }
   } catch (...) {
     this->wbException = current_exception();
+  }
+}
+
+AbstractISA Hart::getBase(Bases base) {
+  switch (base) {
+    case Bases::RV32IBase:
+      return RV32I();
+  }
+};
+
+ExtensionSet Hart::getExtensions(vector<Extensions> extensions) {
+  ExtensionSet exts = ExtensionSet(0);
+
+  for (uint i=0; i < extensions.size(); i++) {
+    switch (extensions[i]) {};
+  }
+  return exts;
+};
+
+AbstractBranchPredictor* Hart::getBranchPredictor(BranchPredictors branchPredictor, Memory* memory, ushort XLEN, RegisterFile* registerFile, bytes initialPC) {
+  switch (branchPredictor) {
+    case BranchPredictors::Simple:
+      return new SimpleBranchPredictor(memory, XLEN, registerFile, initialPC);
+  }
+};
+
+vector<bytes> Hart::debug(DEBUG debug) {
+  switch (debug) {
+    case GET_PIPELINE: {
+      return vector<bytes>{branchPredictor->peak(), toDecode, toExecute.getPC(), toMem.getPC(), toWB.getPC()};
+    }
+    case GET_REGISTERS: {
+      return registerFile.debug();
+    }
   }
 }
 

@@ -3,7 +3,7 @@
 
 #include <atomic>
 #include <condition_variable>
-#include <ftxui/component/receiver.hpp>
+#include "receiver.hpp"
 #include <functional>
 #include <memory>
 #include <mutex>
@@ -17,6 +17,18 @@ class Component;
 
 class ScreenInteractive : public Screen {
  public:
+    enum class Dimension {
+      FitComponent,
+      Fixed,
+      Fullscreen,
+      TerminalOutput,
+    };
+    ScreenInteractive(
+      int dimx,
+      int dimy,
+      Dimension dimension,
+      bool use_alternative_screen
+    );
   static ScreenInteractive FixedSize(int dimx, int dimy);
   static ScreenInteractive Fullscreen();
   static ScreenInteractive FitComponent();
@@ -32,18 +44,9 @@ class ScreenInteractive : public Screen {
   void Draw(Component* component);
   void EventLoop(Component* component);
 
-  enum class Dimension {
-    FitComponent,
-    Fixed,
-    Fullscreen,
-    TerminalOutput,
-  };
   Dimension dimension_ = Dimension::Fixed;
   bool use_alternative_screen_ = false;
-  ScreenInteractive(int dimx,
-                    int dimy,
-                    Dimension dimension,
-                    bool use_alternative_screen);
+
 
   Sender<Event> event_sender_;
   Receiver<Event> event_receiver_;
@@ -51,7 +54,7 @@ class ScreenInteractive : public Screen {
   std::string set_cursor_position;
   std::string reset_cursor_position;
 
-  std::atomic<bool> quit_ = false;
+  std::atomic<bool> quit_false;
 };
 
 }  // namespace ftxui

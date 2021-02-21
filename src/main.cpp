@@ -1,19 +1,188 @@
+#include "include/main.h"
+#include "include/hw/Hart.h"
 #include "include/screen/screen.h"
+#include "include/hw/Processor.h"
+#include "include/instructions/sets/RV32I.h"
+#include <condition_variable>
+
+std::mutex localMutex;
+std::condition_variable conditionVariable;
+bool stopProcessing, shouldContinue;
+
 int main(int argc, char** argv) {
-  EmulatorScreen screen(4);
-  vector<bytes> r(32);
-  for (uint i=0; i<r.size(); i++) {
-    r[i] = bytes(4);
+  if (argc < 2) {
+    cout << printArgs() << flush;
+    return 1;
   }
-  // Element e = screen.renderMemory(r, 0);
+
+  Config config = parseArgs(argc, argv);
+  if (config.numberOfHardwareThreads == 0 || config.memorySize == 0 || config.XLEN == 0
+    || config.fileLocation == "") {
+    cout << printArgs() << flush;
+    return 1;
+  }
+
+  shouldContinue = !config.pauseOnEntry;
+
+  Processor processor(config);
+  vector<ButtonMetadata> buttonMetadata = {
+    ButtonMetadata{
+      .text = "Start",
+      .fn = std::bind<>(&start, &processor)
+    },
+    ButtonMetadata{
+      .text = "Stop",
+      .fn = std::bind<>(&stop)
+    },
+    ButtonMetadata{
+      .text = "Pause",
+      .fn = std::bind<>(&pause, &processor)
+    },
+    ButtonMetadata{
+      .text = "Resume",
+      .fn = std::bind<>(&resume, &processor)
+    },
+    ButtonMetadata{
+      .text = "Step",
+      .fn = std::bind<>(&step, &processor)
+    }
+  };
+
+  EmulatorScreen screen(config.XLEN, buttonMetadata);
+  while (!stopProcessing) {
+    if (!shouldContinue) {
+      renderUI(&screen, &processor, "Paused");
+      unique_lock<mutex> lckGuard(localMutex);
+      conditionVariable.wait(lckGuard);
+    }
+
+    try {
+      processor.step();
+    } catch (EmulatorException e) {
+      renderUI(&screen, &processor, e.getMessage() + "\nExiting...");
+      stopProcessing = true;
+    } catch (exception e) {
+      renderUI(&screen, &processor, string(e.what()) + "\nExiting...");
+      stopProcessing = true;
+    }
+  }
+
+}
+
+string printArgs() {
   ostringstream oss;
-  oss << "A aodijawoidjwaiodjoiwahdwahd" << endl << "multi-line" << "\n\t" << "tabbed" << endl << "\t" << "more stufff" << endl << "\t" << "endl" << endl << "aaaa";
-  Element e = screen.renderSTDOut(oss.str());
+  oss << "RISC-V Emulator Arguments:\n";
+  oss << "\t--base-isa= -> Select the base ISA to choose from, selection: [RV32I]\n";
+  oss << "\t--extensions= -> The set of extensions to use, selection: []\n";
+  oss << "\t--branch-predictor= -> The choice of branch predictor to use: [Simple]\n";
+  oss << "\t--memory-size= -> Number of bytes to allocate for memory\n";
+  oss << "\t--hardware-threads= -> Number of hardware threads to use\n";
+  oss << "\t--binary= -> Flat binary to load into memory\n";
+  oss << "\t--pause -> Pause on entry\n";
+  oss << "\t-h --help -> this help screen\n";
+  return oss.str();
+}
 
-  Screen out = Screen::Create(Dimension::Full(), Dimension::Fit(e));
-  Render(out, e.get());
+string getArgParameter(string arg) {
+  int pos = arg.find('=');
+  if (pos != std::string::npos) {
+    return arg.substr(pos+1, arg.size() - 1);
+  }
 
-  cout << out.ToString() << endl;
+  return "";
+}
+
+Config parseArgs(int argc, char** argv) {
+  Config config;
+  for (uint i=1; i < argc; i++) {
+    string arg(argv[i]);
+    if (arg.find("base-isa") != std::string::npos) {
+      string param = getArgParameter(arg);
+      if (param == "RV32I") {
+        config.baseISA = Bases::RV32IBase;
+        config.XLEN = 4;
+      }
+
+    } else if (arg.find("extensions") != std::string::npos) {
+      string param = getArgParameter(arg);
+      // TODO: Needs adding when extensions added
+
+    } else if (arg.find("memory-size") != std::string::npos) {
+      string param = getArgParameter(arg);
+      if (param != "") {
+        ulong size = stol(param);
+        config.memorySize = size;
+      }
+
+    } else if (arg.find("hardware-threads") != std::string::npos) {
+      string param = getArgParameter(arg);
+      if (param != "") {
+        ulong no = stol(param);
+        config.numberOfHardwareThreads = no;
+      }
+
+    } else if (arg.find("branch-predictor") != std::string::npos) {
+      string param = getArgParameter(arg);
+      if (param == "Simple") {
+        config.branchPredictor = BranchPredictors::Simple;
+      }
+    } else if (arg.find("binary") != std::string::npos) {
+      config.fileLocation = getArgParameter(arg);
+    } else if (arg.find("pause") != std::string::npos) {
+      config.pauseOnEntry = true;
+    } else if (arg.find("help") != std::string::npos || arg.find("h") != std::string::npos) {
+      config.memorySize = 0;
+      config.numberOfHardwareThreads = 0;
+    } else {
+      config.memorySize = 0;
+      config.numberOfHardwareThreads = 0;
+    }
+  }
+
+  return config;
+}
+
+void start(Processor* processor) {
+  cout << "start" << endl;
+  shouldContinue = true;
+  localMutex.unlock();
+  conditionVariable.notify_all();
+  // processor->start();
+}
+
+void stop() {
+  cout << "stop" << endl; 
+  stopProcessing = true;
+  localMutex.unlock();
+  conditionVariable.notify_all(); 
+}
+
+void pause(Processor* processor) {
+  cout << "pause" << endl;
+  localMutex.unlock();
+  shouldContinue = false;
+}
+
+void resume(Processor* processor) {
+  cout << "resume" << endl;
+  // processor->resume();
+  shouldContinue = true;
+  localMutex.unlock();
+  conditionVariable.notify_all();
+}
+
+void step(Processor* processor) {
+  cout << "step" << endl;
+  // processor->step();
+  localMutex.unlock();
+  conditionVariable.notify_all();
+}
+
+void renderUI(EmulatorScreen* screen, Processor* processor, string output) {
+  vector<bytes> pipeline = processor->debug(GET_PIPELINE, 0);
+  vector<bytes> registers = processor->debug(GET_REGISTERS, 0);
+  bytes memory = processor->getMemoryRegion(0, 128);
+  screen->render(pipeline, registers, memory, output, 0);
 }
 
 // Memory memory(3000);
@@ -41,7 +210,7 @@ int main(int argc, char** argv) {
 //         hartThread2.join();
 //     }
 // } catch (EmulatorException e) {
-//     cerr << e.getMessage();
+//     cerr << e.getMessage();  
 // } catch (exception e) {
 //     cerr << e.what();
 // }

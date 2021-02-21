@@ -1,11 +1,14 @@
+  renderUI(&screen, &processor);
 #include "../include/hw/Processor.h"
 #include <exception>
+#include <fstream>
+#include "../include/exceptions.h"
 
 Processor::Processor(Config config): memory(config.memorySize) {
   this->config = config;
   this->hardwareThreads= vector<Hart*>(config.numberOfHardwareThreads);
   for (uint i=0; i < config.numberOfHardwareThreads; i++) {
-    this->hardwareThreads[i] = new Hart(&this->memory, config.baseISA, config.extensionSet, config.XLEN, bytes{0, 0, 0, 0}, config.isRV32E);
+    this->hardwareThreads[i] = new Hart(&this->memory, config.baseISA, config.extensionSet, config.branchPredictor, config.XLEN, bytes{0, 0, 0, 0}, config.isRV32E);
   }
 }
 
@@ -36,21 +39,47 @@ void Processor::step() {
 
 void Processor::runStep() {
   vector<thread> threads;
-    vector<exception_ptr> exceptions;
+    vector<exception_ptr> exceptions(config.numberOfHardwareThreads);
     for (uint i=0; i < this->config.numberOfHardwareThreads; i++) {
-      threads[i] = thread(&Hart::tick, hardwareThreads[i], exceptions[i]);
+      threads.push_back(thread(&Hart::tick, hardwareThreads[i], ref(exceptions[i])));
     }
 
     for (uint i=0; i < this->config.numberOfHardwareThreads; i++) {
       threads[i].join();
 
       if (exceptions[i]) {
-        try {
-          rethrow_exception(exceptions[i]);
-        } catch (EmulatorException e) {
-          // TODO: Output the error to the user
-        } catch (exception e) {
-        }
+        rethrow_exception(exceptions[i]);
       }
     }
+}
+
+void Processor::loadFile(string filePath) {
+  ifstream file;
+  file.open(filePath);
+  if (!file) {
+    throw FailedToLoadProgramException(filePath, "Binary does not exist");
+  }
+  ulong addr=0;
+  while (!file.eof()) {
+    if (addr > memory.getSize()) {
+      throw FailedToLoadProgramException(filePath, "Binary larger than memory");
+    }
+    unsigned char c;
+    file >> c;
+    memory.writeByte(c, addr);
+    addr++;
+  }
+
+  file.close();
+}
+
+vector<bytes> Processor::debug(DEBUG debug, uint hartID) {
+  if (hartID > hardwareThreads.size()) {
+    throw FailedDebugException("Failed to access hart, doesn't exist");
+  }
+  return hardwareThreads[hartID]->debug(debug);
+}
+
+bytes Processor::getMemoryRegion(ulong start, ulong count) {
+  return memory.getRegion(start, count);
 }

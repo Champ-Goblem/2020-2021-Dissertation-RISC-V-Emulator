@@ -9,7 +9,7 @@
       "type": "cppdbg",
       "request": "launch",
       "program": "${workspaceFolder}/obj/build/RISC-Emu",
-      "args": [],
+      "args": ["--base-isa=RV32I", "--memory-size=300", "--hardware-threads=1", "--branch-predictor=Simple", "--pause", "--binary=test"],
       "stopAtEntry": false,
       "cwd": "${workspaceFolder}",
       "environment": [],

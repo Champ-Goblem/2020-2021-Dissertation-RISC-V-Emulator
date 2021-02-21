@@ -12,8 +12,12 @@
 
 typedef vector<AbstractISA> ExtensionSet;
 
-class Memory;
+enum DEBUG {
+  GET_PIPELINE,
+  GET_REGISTERS
+};
 
+class Memory;
 class Hart {
   private:
   AbstractBranchPredictor* branchPredictor;
@@ -32,9 +36,10 @@ class Hart {
   bool stall = false, stallNextTick = false, failedPrediction = false;
 
   public:
-  Hart(Memory* memory, AbstractISA baseISA, ExtensionSet extensions, ushort XLEN, bytes initialPC, bool isRV32E);
+  Hart(Memory* memory, Bases baseISA, vector<Extensions> extensions, BranchPredictors branchPredictor, ushort XLEN, bytes initialPC, bool isRV32E);
   ~Hart();
-  void tick(exception_ptr exception);
+  void tick(exception_ptr & exception);
+  vector<bytes> debug(DEBUG debug);
   
   private:
   void fetch();
@@ -42,6 +47,9 @@ class Hart {
   void execute(AbstractInstruction* instruction);
   void memoryAccess(AbstractInstruction* instruction);
   void writeback(AbstractInstruction* instruction);
+  AbstractISA getBase(Bases base);
+  ExtensionSet getExtensions(vector<Extensions> extensions);
+  AbstractBranchPredictor* getBranchPredictor(BranchPredictors branchPredictor, Memory* memory, ushort XLEN, RegisterFile* registerFile, bytes initialPC);
 };
 
 #endif

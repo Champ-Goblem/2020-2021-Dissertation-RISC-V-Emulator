@@ -1,11 +1,13 @@
 #ifndef FTXUI_COMPONENT_EVENT_HPP
 #define FTXUI_COMPONENT_EVENT_HPP
 
+
 #include <array>
-#include <ftxui/component/receiver.hpp>
 #include <functional>
 #include <string>
 #include <vector>
+
+#include "receiver.hpp"
 
 namespace ftxui {
 

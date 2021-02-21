@@ -10,6 +10,10 @@
 class Memory;
 class RegisterFile;
 
+enum BranchPredictors {
+  Simple
+};
+
 class BranchPredictorException: public EmulatorException {
   public:
   BranchPredictorException(string message, ...): EmulatorException(message){};

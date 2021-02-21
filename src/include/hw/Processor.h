@@ -4,14 +4,25 @@
 #include "../emustd.h"
 #include "../hw/Hart.h"
 #include "../hw/Memory.h"
-
 struct Config {
-  AbstractISA baseISA;
-  ExtensionSet extensionSet;
+  Bases baseISA;
+  vector<Extensions> extensionSet;
+  BranchPredictors branchPredictor;
   bool isRV32E;
   ushort numberOfHardwareThreads;
   ulong memorySize;
   ushort XLEN;
+  bool pauseOnEntry;
+  string fileLocation;
+  Config() {
+    extensionSet = vector<Extensions>(0);
+    isRV32E = false;
+    numberOfHardwareThreads = 0;
+    memorySize = 0;
+    XLEN = 0;
+    pauseOnEntry = false;
+    fileLocation = "";
+  }
 };
 
 class Processor {
@@ -30,7 +41,8 @@ class Processor {
   void pause();
   void resume();
   void step();
-  string debug();
+  vector<bytes> debug(DEBUG debug, uint hartID);
+  bytes getMemoryRegion(ulong start, ulong count);
 
   private:
   void runStep();

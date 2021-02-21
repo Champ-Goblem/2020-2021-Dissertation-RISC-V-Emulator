@@ -35,6 +35,7 @@ class Memory {
   bytes readQWord(ulong addr);
   ulong getSize();
 
+  vector<byte> getRegion(ulong start, ulong size);
   void printRegion(ulong start, ulong count, ushort outWidth);
 };
 

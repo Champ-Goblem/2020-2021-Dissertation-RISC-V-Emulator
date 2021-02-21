@@ -1,8 +1,10 @@
 #include "../include/screen/screen.h"
 #include "../include/bytemanip.h"
 #include "../include/screen/helpers.h"
+#include "../lib/headers/ftxui/component/input.hpp"
 
-EmulatorScreen::EmulatorScreen(ushort XLEN) {
+EmulatorScreen::EmulatorScreen(ushort XLEN, vector<ButtonMetadata> buttonMetadata): buttonComponent(buttonMetadata) {
+  this->screeni = new ScreenInteractive(0, 0, ScreenInteractive::Dimension::TerminalOutput, false);
   this->XLEN = XLEN;
 
   for (uint i=0; i < PIPELINE_LOOKBACK_COUNT; i++) {
@@ -60,8 +62,8 @@ Element EmulatorScreen::renderPipeline(vector<bytes> stages) {
       text(L"MEM") | center | size(WIDTH, EQUAL, (2 * XLEN) + XLEN),
       text(L"   "),
       text(L"WB") | center | size(WIDTH, EQUAL, (2 * XLEN) + XLEN)
-    ) | color(Color::Grey78),
-    move(renderedStages)
+    ) | color(Color::Grey78) | center,
+    move(renderedStages) | center
   ) | border | color(Color::Grey93);
 
   return box;
@@ -99,7 +101,7 @@ Element EmulatorScreen::renderRegisterFile(vector<bytes> registerValues) {
   ) | border | color(Color::Grey93);
 }
 
-Element EmulatorScreen::renderMemory(vector<bytes> memorySegment, ulong addr) {
+Element EmulatorScreen::renderMemory(vector<byte> memorySegment, ulong addr) {
   Elements entries;
   Elements addresses;
 
@@ -107,7 +109,7 @@ Element EmulatorScreen::renderMemory(vector<bytes> memorySegment, ulong addr) {
     addresses.push_back(
       hbox(
         text(L" "),
-        text(stringToWString(to_string((addr + i)))) | align_right | size(WIDTH, EQUAL, 8),
+        text(ulongToHexWstring((addr + i))) | align_right | size(WIDTH, EQUAL, (sizeof(addr) * 2)),
         text(L" ")
       )
     );
@@ -117,7 +119,7 @@ Element EmulatorScreen::renderMemory(vector<bytes> memorySegment, ulong addr) {
       row.push_back(
         hbox(
           text(L" "),
-          text(stringToWString(getBytesForPrint(memorySegment[i+c]))),
+          text(byteToHexWstring(memorySegment[i+c])),
           text(L" ")
         )
       );
@@ -155,6 +157,7 @@ Element EmulatorScreen::renderSTDOut(string message) {
       rows.push_back(
         vbox(
           hbox(
+            text(L" "),
             move(row)
           )
         )
@@ -171,30 +174,99 @@ Element EmulatorScreen::renderSTDOut(string message) {
       );
     }
   }
+
   if (row.size() > 0) {
     rows.push_back(
       vbox(
         hbox(
+          text(L" "),
           move(row)
         )
       )
     );
   }
-  return frame(
-    vbox(
-      move(rows)
-    )
-  ) | size(HEIGHT, EQUAL, 5) | border;
+
+  return vbox(
+    move(rows)
+  ) | border;
 }
 
-void EmulatorScreen::render(vector<bytes> pipelineStage, vector<bytes> registerValues, vector<bytes> memorySegment, string stdoutMessage) {
+// Element EmulatorScreen::renderButtons() {
+//   Elements buttonRow;
+//   for (uint i=0; i < buttons.size(); i++) {
+//     buttonRow.push_back(
+//       buttons[i].Render() | bgcolor(Color::Default) | color(Color::Grey93)
+//     );
+//   }
+  
+//   return vbox(
+//     hbox(
+//       move(buttonRow)
+//     )
+//   );
+// }
+
+void EmulatorScreen::render(vector<bytes> pipelineStage, vector<bytes> registerValues, vector<byte> memorySegment, string stdoutMessage, ulong startAddr) {
+  if (buttonController.joinable()) {
+    screeni->ExitLoopClosure()();
+    buttonController.join();
+    resetPosition += screeni->ResetPosition();
+    resetPosition += screeni->ResetPosition();
+    resetPosition += screeni->ResetPosition();
+    screeni = new ScreenInteractive(0, 0, ScreenInteractive::Dimension::TerminalOutput, false);
+  }
+
   Element output = vbox(
-    renderPipeline(pipelineStage)
+    hbox(
+      move(renderPipeline(pipelineStage)) | size(WIDTH, EQUAL, 85)
+    ),
+    hbox(
+      move(renderMemory(memorySegment, startAddr)) | size(WIDTH, EQUAL, 85)
+    ),
+    hbox(
+      hbox(
+        move(renderRegisterFile(registerValues))
+      ),
+      hbox(
+        move(renderSTDOut(stdoutMessage)) | size(WIDTH, EQUAL, 48)
+      ) 
+    ) | size(WIDTH, EQUAL, 85)/* ,
+    hbox(
+      move(renderButtons()) | center | size(WIDTH, EQUAL, 85)
+    ) */
   );
 
-  Screen screen = Screen::Create(Dimension::Fit(output), Dimension::Fit(output));
+  Screen screen = Screen::Create(Dimension::Full(), Dimension::Fit(output));
   Render(screen, output.get());
 
-  cout << resetPosition << screen.ToString() << flush;
+  cout << resetPosition << screen.ToString() << endl << flush;
   resetPosition = screen.ResetPosition();
+  buttonController = thread(&ScreenInteractive::Loop, screeni, &buttonComponent);
+}
+
+EmulatorScreen::~EmulatorScreen() {
+  if (buttonController.joinable()) {
+    screeni->ExitLoopClosure()();
+    buttonController.join();
+  }
+  delete(screeni);
+}
+
+ButtonComponent::ButtonComponent(vector<ButtonMetadata> buttonMetadata) {
+  Add(&container);
+
+  for (uint i=0; i < buttonMetadata.size(); i++) {
+    Button* b = new Button(stringToWString(buttonMetadata[i].text));
+    b->on_click = buttonMetadata[i].fn;
+    if (i == 0) b->Active();
+    container.Add(b);
+    buttons.push_back(move(b));
+  }
+}
+
+ButtonComponent::~ButtonComponent() {
+  for (uint i=0; i < buttons.size(); i++) {
+    delete(buttons[i]);
+  }
+  buttons.~vector();
 }

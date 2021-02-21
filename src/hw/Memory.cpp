@@ -133,6 +133,18 @@ ulong Memory::getSize() {
   return this->size;
 }
 
+vector<byte> Memory::getRegion(ulong start, ulong count) {
+  lock_guard<mutex> lck(lock);
+  if (start > size || start + count > size) {
+    throw AddressOutOfMemoryException(start, count, size, true);
+  }
+  bytes out;
+  for (uint i=start; i < count; i++) {
+    out.push_back(memory[i]);
+  }
+  return out;
+}
+
 void Memory::printRegion(ulong start, ulong count, ushort outWidth) {
   lock_guard<mutex> lck(lock);
   if (start > size || start + count > size) {

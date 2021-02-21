@@ -106,7 +106,7 @@ class ReceiverImpl {
   std::mutex mutex_;
   std::queue<T> queue_;
   std::condition_variable notifier_;
-  std::atomic<int> senders_ = 0;
+  std::atomic<int> senders_{0};
 };
 
 template <class T>

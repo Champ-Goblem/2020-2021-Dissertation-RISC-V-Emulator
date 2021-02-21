@@ -21,7 +21,6 @@ class RegisterFileException: public EmulatorException {
 class RegisterFile {
   private:
   RegisterMap registerMap;
-  // bytes pc;
   bool RV32E;
   ushort XLEN;
   mutable mutex lock;
@@ -30,10 +29,7 @@ class RegisterFile {
   RegisterFile(ushort XLEN, bool isRV32E);
   bytes get(ushort reg);
   void write(ushort reg, bytes val);
-  // void writePC(bytes addr);
-  // bytes getPC();
-  // void incPC();
-  void debug();
+  vector<bytes> debug();
 };
 
 #endif

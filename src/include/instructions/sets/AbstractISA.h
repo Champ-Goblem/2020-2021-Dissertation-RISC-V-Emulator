@@ -17,6 +17,12 @@ typedef void (*ExecuteRoutine)(AbstractInstruction*, AbstractBranchPredictor*, u
 typedef void (*WritebackRoutine)(AbstractInstruction*, RegisterFile*);
 typedef void (*MemoryAccessRoutine)(AbstractInstruction* instruction, Memory* memory, PipelineHazardController*);
 
+enum Bases {
+  RV32IBase
+};
+
+enum Extensions {};
+
 struct OpcodeSpace {
   ushort opcode;
   DecodeRoutine decodeRoutine;
@@ -29,7 +35,7 @@ class UndefinedDecodeRoutineException: public EmulatorException {
     ostringstream ost;
     ost << "Undefined decode routine for opcode" << "\n";
     ost << "Message: " << message << "\n";
-    ost << "Opcode: " << opcode << "\n";
+    ost << "\tOpcode: " << opcode << "\n";
     this->message = ost.str();
   };
 };
@@ -40,6 +46,7 @@ class AbstractISA {
 
   public:
   vector<struct OpcodeSpace> registerOpcodeSpace() { return opcodeSpace; };
+  ~AbstractISA() {};
 
   static DecodeRoutine findDecodeRoutineByOpcode(vector<struct OpcodeSpace> opcodeSpace, ushort opcode) {
     if (opcodeSpace.size() == 0) {
@@ -48,7 +55,7 @@ class AbstractISA {
 
     vector<OpcodeSpace>::iterator itr = find_if(opcodeSpace.begin(), opcodeSpace.end(), findOpcode(opcode));
     if (itr == opcodeSpace.end()) {
-      throw UndefinedDecodeRoutineException(opcode);
+      throw UndefinedDecodeRoutineException(opcode, "Check ID stage in pipeline for PC");
     }
     return itr->decodeRoutine;
   }

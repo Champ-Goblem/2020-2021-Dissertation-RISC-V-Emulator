@@ -81,4 +81,27 @@ class FailedBranchPredictionException: public EmulatorException {
   };
 };
 
+class FailedToLoadProgramException: public EmulatorException {
+  public:
+  FailedToLoadProgramException(): EmulatorException() {};
+  FailedToLoadProgramException(string filePath, string message=""): EmulatorException() {
+    ostringstream oss;
+    oss << "Failed to load binary into memory" << endl;
+    oss << "Message: " << message << endl;
+    oss << "\tPath: " << filePath << endl;
+    this->message = oss.str();
+  }
+};
+
+class FailedDebugException: public EmulatorException {
+  public:
+  FailedDebugException(): EmulatorException() {};
+  FailedDebugException(string message=""): EmulatorException() {
+    ostringstream oss;
+    oss << "Failed to debug" << endl;
+    oss << "Message: " << message << endl;
+    this->message = oss.str();
+  }
+};
+
 #endif
