@@ -209,7 +209,7 @@ AbstractBranchPredictor* Hart::getBranchPredictor(BranchPredictors branchPredict
 vector<bytes> Hart::debug(DEBUG debug) {
   switch (debug) {
     case GET_PIPELINE: {
-      return vector<bytes>{branchPredictor->peak(), toDecode, toExecute.getPC(), toMem.getPC(), toWB.getPC()};
+      return vector<bytes>{branchPredictor->peak(), decodePC, toExecute.getPC(), toMem.getPC(), toWB.getPC()};
     }
     case GET_REGISTERS: {
       return registerFile.debug();

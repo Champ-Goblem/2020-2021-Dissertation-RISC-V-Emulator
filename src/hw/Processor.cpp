@@ -1,4 +1,3 @@
-  renderUI(&screen, &processor);
 #include "../include/hw/Processor.h"
 #include <exception>
 #include <fstream>
@@ -10,6 +9,7 @@ Processor::Processor(Config config): memory(config.memorySize) {
   for (uint i=0; i < config.numberOfHardwareThreads; i++) {
     this->hardwareThreads[i] = new Hart(&this->memory, config.baseISA, config.extensionSet, config.branchPredictor, config.XLEN, bytes{0, 0, 0, 0}, config.isRV32E);
   }
+  loadFile(config.fileLocation);
 }
 
 Processor::~Processor() {
@@ -66,7 +66,7 @@ void Processor::loadFile(string filePath) {
     }
     unsigned char c;
     file >> c;
-    memory.writeByte(c, addr);
+    memory.writeByte(addr, c);
     addr++;
   }
 

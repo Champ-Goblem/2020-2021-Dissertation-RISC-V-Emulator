@@ -4,6 +4,7 @@
 #include "include/hw/Processor.h"
 #include "include/instructions/sets/RV32I.h"
 #include <condition_variable>
+#include <fstream>
 
 std::mutex localMutex;
 std::condition_variable conditionVariable;
@@ -19,6 +20,14 @@ int main(int argc, char** argv) {
   if (config.numberOfHardwareThreads == 0 || config.memorySize == 0 || config.XLEN == 0
     || config.fileLocation == "") {
     cout << printArgs() << flush;
+    return 1;
+  }
+
+  ifstream file;
+  file.open(config.fileLocation);
+  if (!file) {
+    cout << "Failed to find binary, doesnt exist" << endl;
+    cout << "\tPath: " << config.fileLocation << endl;
     return 1;
   }
 
