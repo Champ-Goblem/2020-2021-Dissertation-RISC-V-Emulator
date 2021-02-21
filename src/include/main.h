@@ -7,11 +7,11 @@
 string printArgs();
 string getArgParameter(string arg);
 Config parseArgs(int argc, char** argv);
-void start(Processor* processor);
+void start();
 void stop();
-void pause(Processor* processor);
-void resume(Processor* processor);
-void step(Processor* processor);
+void pause();
+void resume();
+void step();
 void renderUI(EmulatorScreen* screen, Processor* processor, string output="");
 
 #endif

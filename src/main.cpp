@@ -37,7 +37,7 @@ int main(int argc, char** argv) {
   vector<ButtonMetadata> buttonMetadata = {
     ButtonMetadata{
       .text = "Start",
-      .fn = std::bind<>(&start, &processor)
+      .fn = std::bind<>(&start)
     },
     ButtonMetadata{
       .text = "Stop",
@@ -45,15 +45,15 @@ int main(int argc, char** argv) {
     },
     ButtonMetadata{
       .text = "Pause",
-      .fn = std::bind<>(&pause, &processor)
+      .fn = std::bind<>(&pause)
     },
     ButtonMetadata{
       .text = "Resume",
-      .fn = std::bind<>(&resume, &processor)
+      .fn = std::bind<>(&resume)
     },
     ButtonMetadata{
       .text = "Step",
-      .fn = std::bind<>(&step, &processor)
+      .fn = std::bind<>(&step)
     }
   };
 
@@ -151,12 +151,11 @@ Config parseArgs(int argc, char** argv) {
   return config;
 }
 
-void start(Processor* processor) {
+void start() {
   cout << "start" << endl;
   shouldContinue = true;
   localMutex.unlock();
   conditionVariable.notify_all();
-  // processor->start();
 }
 
 void stop() {
@@ -166,23 +165,21 @@ void stop() {
   conditionVariable.notify_all(); 
 }
 
-void pause(Processor* processor) {
+void pause() {
   cout << "pause" << endl;
   localMutex.unlock();
   shouldContinue = false;
 }
 
-void resume(Processor* processor) {
+void resume() {
   cout << "resume" << endl;
-  // processor->resume();
   shouldContinue = true;
   localMutex.unlock();
   conditionVariable.notify_all();
 }
 
-void step(Processor* processor) {
+void step() {
   cout << "step" << endl;
-  // processor->step();
   localMutex.unlock();
   conditionVariable.notify_all();
 }
