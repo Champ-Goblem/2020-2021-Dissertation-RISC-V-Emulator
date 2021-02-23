@@ -6,7 +6,9 @@
 EmulatorScreen::EmulatorScreen(ushort XLEN, vector<ButtonMetadata> buttonMetadata): buttonComponent(buttonMetadata) {
   this->screeni = new ScreenInteractive(0, 0, ScreenInteractive::Dimension::TerminalOutput, false);
   this->XLEN = XLEN;
-
+  this->width = (XLEN * 3 * 5) + (3 * 5) + 3;
+  this->registerWidth = 13 + (XLEN * 2 * 6);
+  cout << registerWidth << endl;
   for (uint i=0; i < PIPELINE_LOOKBACK_COUNT; i++) {
     previousPipelineStages.push_back(vector<bytes>(5));
   }
@@ -82,7 +84,7 @@ Element EmulatorScreen::renderRegisterFile(vector<bytes> registerValues) {
             text(L" ")
           ) | align_right | size(WIDTH, EQUAL, 4) | color(Color::Grey82),
           text(stringToWString(getBytesForPrint(registerValues[i]))) | color(Color::Grey58),
-          text(L"   "),
+          text(L" "),
           hbox(
             text(L"x"),
             text(stringToWString(to_string(i+1))),
@@ -105,7 +107,9 @@ Element EmulatorScreen::renderMemory(vector<byte> memorySegment, ulong addr) {
   Elements entries;
   Elements addresses;
 
-  for (uint i=0; i < memorySegment.size(); i+= MEMORY_OUTPUT_WIDTH) {
+  uint outputWidth = ((width - 20) / 4);
+
+  for (uint i=0; i < memorySegment.size(); i+= outputWidth) {
     addresses.push_back(
       hbox(
         text(L" "),
@@ -115,7 +119,7 @@ Element EmulatorScreen::renderMemory(vector<byte> memorySegment, ulong addr) {
     );
 
     Elements row;
-    for (uint c=0; c < MEMORY_OUTPUT_WIDTH; c++) {
+    for (uint c=0; c < outputWidth; c++) {
       row.push_back(
         hbox(
           text(L" "),
@@ -191,21 +195,6 @@ Element EmulatorScreen::renderSTDOut(string message) {
   ) | border;
 }
 
-// Element EmulatorScreen::renderButtons() {
-//   Elements buttonRow;
-//   for (uint i=0; i < buttons.size(); i++) {
-//     buttonRow.push_back(
-//       buttons[i].Render() | bgcolor(Color::Default) | color(Color::Grey93)
-//     );
-//   }
-  
-//   return vbox(
-//     hbox(
-//       move(buttonRow)
-//     )
-//   );
-// }
-
 void EmulatorScreen::render(vector<bytes> pipelineStage, vector<bytes> registerValues, vector<byte> memorySegment, string stdoutMessage, ulong startAddr) {
   if (buttonController.joinable()) {
     screeni->ExitLoopClosure()();
@@ -218,22 +207,19 @@ void EmulatorScreen::render(vector<bytes> pipelineStage, vector<bytes> registerV
 
   Element output = vbox(
     hbox(
-      move(renderPipeline(pipelineStage)) | size(WIDTH, EQUAL, 85)
+      move(renderPipeline(pipelineStage)) | size(WIDTH, EQUAL, width)
     ),
     hbox(
-      move(renderMemory(memorySegment, startAddr)) | size(WIDTH, EQUAL, 85)
+      move(renderMemory(memorySegment, startAddr)) | size(WIDTH, EQUAL, width)
     ),
     hbox(
       hbox(
         move(renderRegisterFile(registerValues))
-      ),
+      ) | size (WIDTH, EQUAL, registerWidth),
       hbox(
-        move(renderSTDOut(stdoutMessage)) | size(WIDTH, EQUAL, 48)
+        move(renderSTDOut(stdoutMessage)) | size(WIDTH, EQUAL, width)
       ) 
-    ) | size(WIDTH, EQUAL, 85)/* ,
-    hbox(
-      move(renderButtons()) | center | size(WIDTH, EQUAL, 85)
-    ) */
+    ) | size(WIDTH, EQUAL, width - 2)
   );
 
   Screen screen = Screen::Create(Dimension::Full(), Dimension::Fit(output));

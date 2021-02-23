@@ -51,7 +51,9 @@ class WrongSizeInstructionException: public EmulatorException {
   WrongSizeInstructionException(): EmulatorException() {};
   WrongSizeInstructionException(ushort size, ushort requiredSize): EmulatorException() {
     ostringstream str;
-    str << "Wrong size instruction [size: " << size << ", required: " << requiredSize << "]\n";
+    str << "Wrong size instruction" << endl;
+    str << "\tsize: " << size << endl;
+    str << "\trequired: " << requiredSize << endl;
     this->message = str.str();
   }
 };

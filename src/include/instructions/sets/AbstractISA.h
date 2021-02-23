@@ -48,7 +48,7 @@ class AbstractISA {
   vector<struct OpcodeSpace> registerOpcodeSpace() { return opcodeSpace; };
   ~AbstractISA() {};
 
-  static DecodeRoutine findDecodeRoutineByOpcode(vector<struct OpcodeSpace> opcodeSpace, ushort opcode) {
+  static DecodeRoutine findDecodeRoutineByOpcode(vector<struct OpcodeSpace> opcodeSpace, ushort opcode) {   
     if (opcodeSpace.size() == 0) {
       throw new EmulatorException("Failed find by opcode, opcode space undefined");
     }

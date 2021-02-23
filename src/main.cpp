@@ -3,6 +3,7 @@
 #include "include/screen/screen.h"
 #include "include/hw/Processor.h"
 #include "include/instructions/sets/RV32I.h"
+#include <chrono>
 #include <condition_variable>
 #include <fstream>
 
@@ -58,11 +59,16 @@ int main(int argc, char** argv) {
   };
 
   EmulatorScreen screen(config.XLEN, buttonMetadata);
+  // ulong count;
+  // chrono::steady_clock sc;
+  // chrono::steady_clock::time_point start = std::chrono::steady_clock::now();
   while (!stopProcessing) {
     if (!shouldContinue) {
       renderUI(&screen, &processor, "Paused");
       unique_lock<mutex> lckGuard(localMutex);
       conditionVariable.wait(lckGuard);
+    } else {
+      renderUI(&screen, &processor, "Running...");
     }
 
     try {
@@ -74,6 +80,10 @@ int main(int argc, char** argv) {
       renderUI(&screen, &processor, string(e.what()) + "\nExiting...");
       stopProcessing = true;
     }
+    // count++;
+    // const double uptime = (std::chrono::steady_clock::now() - start).count();
+    // cout << uptime << "\n";
+    // cout << count / uptime << "Ops\n";
   }
 
 }

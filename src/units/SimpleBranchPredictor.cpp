@@ -30,21 +30,21 @@ SimpleBranchPredictor::SimpleBranchPredictor(Memory* memory, ushort XLEN, Regist
   this->workloop->detach();
 }
 
-SimpleBranchPredictor::SimpleBranchPredictor(SimpleBranchPredictor&& obj): workloop(move(obj.workloop)) {};
+// SimpleBranchPredictor::SimpleBranchPredictor(SimpleBranchPredictor&& obj): workloop(move(obj.workloop)) {};
 
-SimpleBranchPredictor& SimpleBranchPredictor::operator=(SimpleBranchPredictor&& obj) {
-  if (workloop->joinable()) {
-    workloop->join();
-  }
+// SimpleBranchPredictor& SimpleBranchPredictor::operator=(SimpleBranchPredictor&& obj) {
+//   if (workloop->joinable()) {
+//     workloop->join();
+//   }
 
-  workloop = move(obj.workloop);
-  return *this;
-}
+//   workloop = move(obj.workloop);
+//   return *this;
+// }
 
 bytes SimpleBranchPredictor::getNextPC() {
   lock_guard<mutex> lck(lock);
   // this->workloop->join();
-  // delete(this->workloop);
+  delete(this->workloop);
   // Check that no exceptions have been thrown by the thread
   if (this->workloopExceptionPtr) {
     rethrow_exception(this->workloopExceptionPtr);
@@ -63,7 +63,7 @@ bytes SimpleBranchPredictor::getNextPC() {
   bytes nextPC = this->PCQueue.front();
   // Drop the front of the queue
   this->PCQueue.pop();
-  // Add this to the queue of waiting for execution
+  // Add this to the queue of waiting for executionlock_guard
   this->executingQueue.push(PCQueue.front());
   // Start new thread to fetch new PC
   this->workloop = new thread (&SimpleBranchPredictor::predictionWorkloop, this);
@@ -103,6 +103,7 @@ bool SimpleBranchPredictor::checkPrediction(bytes pc, bytes address) {
   // Start fetching again
   this->failedPrediction = false;
   this->workloop = new thread(&SimpleBranchPredictor::predictionWorkloop, this);
+  this->workloop->detach();
   return false;
 }
 
@@ -192,6 +193,7 @@ void SimpleBranchPredictor::predictionWorkloop() {
 }
 
 bytes SimpleBranchPredictor::peak() {
+  lock_guard<mutex> lck(lock);
   return this->PCQueue.front();
 }
 

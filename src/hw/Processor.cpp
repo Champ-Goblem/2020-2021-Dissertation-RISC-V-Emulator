@@ -7,7 +7,7 @@ Processor::Processor(Config config): memory(config.memorySize) {
   this->config = config;
   this->hardwareThreads= vector<Hart*>(config.numberOfHardwareThreads);
   for (uint i=0; i < config.numberOfHardwareThreads; i++) {
-    this->hardwareThreads[i] = new Hart(&this->memory, config.baseISA, config.extensionSet, config.branchPredictor, config.XLEN, bytes{0, 0, 0, 0}, config.isRV32E);
+    this->hardwareThreads[i] = new Hart(&this->memory, config.baseISA, config.extensionSet, config.branchPredictor, config.XLEN, bytes(config.XLEN), config.isRV32E);
   }
   loadFile(config.fileLocation);
 }
@@ -64,8 +64,9 @@ void Processor::loadFile(string filePath) {
     if (addr > memory.getSize()) {
       throw FailedToLoadProgramException(filePath, "Binary larger than memory");
     }
-    unsigned char c;
-    file >> c;
+    unsigned char c = file.get();
+    // file >> c;
+    // cout << hex << (uint)c << endl;
     memory.writeByte(addr, c);
     addr++;
   }

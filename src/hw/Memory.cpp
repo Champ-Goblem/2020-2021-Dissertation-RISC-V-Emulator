@@ -130,6 +130,7 @@ bytes Memory::readQWord(ulong addr) {
 }
 
 ulong Memory::getSize() {
+  lock_guard<mutex> lck(lock);
   return this->size;
 }
 

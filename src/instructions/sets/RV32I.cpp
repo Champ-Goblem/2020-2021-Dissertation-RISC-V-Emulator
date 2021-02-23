@@ -580,7 +580,8 @@ void RV32I::memStore(AbstractInstruction* instruction, Memory* memory, PipelineH
     }
     case 2:
     {
-      memory->writeWord(getBytesToULong(instruction->getResult()), instruction->getRs2Val());
+      bytes value = instruction->getRs2Val();
+      memory->writeWord(getBytesToULong(instruction->getResult()), bytes{value[0], value[1], value[2], value[3]});
       break;
     }
   }

@@ -13,7 +13,6 @@
 using namespace ftxui;
 
 #define PIPELINE_LOOKBACK_COUNT 3
-#define MEMORY_OUTPUT_WIDTH 16
 
 typedef void (Processor::*ButtonFn)();
 
@@ -40,6 +39,7 @@ class EmulatorScreen {
   vector<Elements> previousMessages;
   thread buttonController;
   ScreenInteractive* screeni;
+  uint width, registerWidth;
 
   ButtonComponent buttonComponent;
 
@@ -50,7 +50,6 @@ class EmulatorScreen {
   Element renderMemory(vector<byte> segment, ulong addr);
   Element renderSTDOut(string message);
   Element renderRegisterFile(vector<bytes> registerValues);
-  Element renderButtons();
   void render(vector<bytes> pipelineStage, vector<bytes> registerValues, vector<byte> memorySegment, string stdoutMessage, ulong startAddr);
 };
 
