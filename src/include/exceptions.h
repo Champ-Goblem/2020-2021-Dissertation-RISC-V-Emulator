@@ -37,7 +37,7 @@ class AddressOutOfMemoryException: public EmulatorException {
   AddressOutOfMemoryException(): EmulatorException() {};
   AddressOutOfMemoryException(ulong addr, ulong off, ulong size, bool isRead, string message=""): EmulatorException() {
     ostringstream str;
-    str << (isRead ? "Read" : "Write") << " to address out of range of memory region\n";
+    str << (isRead ? "Read" : "Write") << " to address out of range of memory\n";
     str << "Message: " << message << "\n";
     str << "\tAddress: " << addr << "\n";
     str << "\tOffset: " << off << " Bytes\n";
@@ -75,7 +75,7 @@ class FailedBranchPredictionException: public EmulatorException {
   FailedBranchPredictionException(): EmulatorException() {};
   FailedBranchPredictionException(AbstractInstruction* instruction, string message=""): EmulatorException() {
     ostringstream str;
-    str << "Branch prediction failed to predict correctly, resetting the pipeline\n";
+    str << "Branch prediction failed to predict, resetting pipeline\n";
     str << "Message: " << message << "\n";
     str << "\tPC: " << getBytesForPrint(instruction->getPC()) << "\n";
     str << "\tTarget: " << getBytesForPrint(instruction->getResult()) << "\n";

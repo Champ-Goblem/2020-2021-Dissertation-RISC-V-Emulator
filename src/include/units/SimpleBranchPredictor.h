@@ -8,7 +8,7 @@
 class SimpleBranchPredictor: public AbstractBranchPredictor {
   private:
   queue<bytes> PCQueue;
-  thread* workloop;
+  thread workloop;
   bool failedPrediction = false;
   exception_ptr workloopExceptionPtr;
   const ushort queueSize = 4;

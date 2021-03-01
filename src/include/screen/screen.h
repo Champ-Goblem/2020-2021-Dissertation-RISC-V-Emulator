@@ -7,6 +7,7 @@
 #include "../../lib/headers/ftxui/component/button.hpp"
 #include "../../lib/headers/ftxui/screen/screen.hpp"
 #include "../../lib/headers/ftxui/component/container.hpp"
+#include "../../lib/headers/ftxui/component/input.hpp"
 #include "../../include/hw/Processor.h"
 #include "../../lib/headers/ftxui/component/screen_interactive.hpp"
 
@@ -21,14 +22,19 @@ struct ButtonMetadata {
   std::function<void()> fn;
 };
 
-class ButtonComponent: public Component {
+class InteractiveComponent: public Component {
   private:
   vector<Button*> buttons;
   Container container = Container::Horizontal();
+  Input* inputBox;
+  function<void(string)> inputOnEnterCallback;
 
   public:
-  ButtonComponent(vector<ButtonMetadata> buttonMetadata);
-  ~ButtonComponent();
+  InteractiveComponent(vector<ButtonMetadata> buttonMetadata, function<void(string)> inputOnEnterCallback);
+  ~InteractiveComponent();
+
+  private:
+  void handleInputOnEnter();
 };
 
 class EmulatorScreen {
@@ -37,20 +43,21 @@ class EmulatorScreen {
   vector<vector<bytes>> previousPipelineStages;
   ushort XLEN;
   vector<Elements> previousMessages;
-  thread buttonController;
+  thread interactiveController;
   ScreenInteractive* screeni;
   uint width, registerWidth;
 
-  ButtonComponent buttonComponent;
+  InteractiveComponent interactiveComponent;
 
   public:
-  EmulatorScreen(ushort XLEN, vector<ButtonMetadata> buttonMetadata);
+  EmulatorScreen(ushort XLEN, vector<ButtonMetadata> buttonMetadata, function<void(string)> inputOnEnterCallback);
   ~EmulatorScreen();
   Element renderPipeline(vector<bytes> stages);
   Element renderMemory(vector<byte> segment, ulong addr);
-  Element renderSTDOut(string message);
+  Element renderSTDOut(string message, uint selectedHartID);
   Element renderRegisterFile(vector<bytes> registerValues);
-  void render(vector<bytes> pipelineStage, vector<bytes> registerValues, vector<byte> memorySegment, string stdoutMessage, ulong startAddr);
+  void render(vector<bytes> pipelineStage, vector<bytes> registerValues, vector<byte> memorySegment, string stdoutMessage, ulong startAddr,
+    uint selectedHartID, bool stopRenderThread=true);
 };
 
 #endif

@@ -75,8 +75,8 @@ void Processor::loadFile(string filePath) {
 }
 
 vector<bytes> Processor::debug(DEBUG debug, uint hartID) {
-  if (hartID > hardwareThreads.size()) {
-    throw FailedDebugException("Failed to access hart, doesn't exist");
+  if (hartID > hardwareThreads.size() - 1) {
+    throw FailedDebugException("Hart doesn't exist");
   }
   return hardwareThreads[hartID]->debug(debug);
 }

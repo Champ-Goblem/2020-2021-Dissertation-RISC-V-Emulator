@@ -1,4 +1,5 @@
 #include "include/main.h"
+#include "include/exceptions.h"
 #include "include/hw/Hart.h"
 #include "include/screen/screen.h"
 #include "include/hw/Processor.h"
@@ -9,7 +10,11 @@
 
 std::mutex localMutex;
 std::condition_variable conditionVariable;
-bool stopProcessing, shouldContinue;
+int memStartAddr = 0, memSize = 128, hartID = 0;
+bool stopProcessing, shouldContinue, runningOutput = false, isPaused = false;
+string extraOutput = "";
+EmulatorScreen* screen;
+Processor* processor;
 
 int main(int argc, char** argv) {
   if (argc < 2) {
@@ -34,7 +39,7 @@ int main(int argc, char** argv) {
 
   shouldContinue = !config.pauseOnEntry;
 
-  Processor processor(config);
+  processor = new Processor(config);
   vector<ButtonMetadata> buttonMetadata = {
     ButtonMetadata{
       .text = "Start",
@@ -58,26 +63,28 @@ int main(int argc, char** argv) {
     }
   };
 
-  EmulatorScreen screen(config.XLEN, buttonMetadata);
+  screen = new EmulatorScreen(config.XLEN, buttonMetadata, parseInputContent);
   // ulong count;
   // chrono::steady_clock sc;
   // chrono::steady_clock::time_point start = std::chrono::steady_clock::now();
   while (!stopProcessing) {
     if (!shouldContinue) {
-      renderUI(&screen, &processor, "Paused");
+      renderUI(screen, processor, "Paused");
+      isPaused = true;
       unique_lock<mutex> lckGuard(localMutex);
       conditionVariable.wait(lckGuard);
-    } else {
-      renderUI(&screen, &processor, "Running...");
+      isPaused = false;
+    } else if (runningOutput) {
+      renderUI(screen, processor, "Running...");
     }
 
     try {
-      processor.step();
+      processor->step();
     } catch (EmulatorException e) {
-      renderUI(&screen, &processor, e.getMessage() + "\nExiting...");
+      renderUI(screen, processor, e.getMessage() + "\nExiting...");
       stopProcessing = true;
     } catch (exception e) {
-      renderUI(&screen, &processor, string(e.what()) + "\nExiting...");
+      renderUI(screen, processor, string(e.what()) + "\nExiting...");
       stopProcessing = true;
     }
     // count++;
@@ -86,6 +93,9 @@ int main(int argc, char** argv) {
     // cout << count / uptime << "Ops\n";
   }
 
+
+  delete(screen);
+  delete(processor);
 }
 
 string printArgs() {
@@ -98,12 +108,13 @@ string printArgs() {
   oss << "\t--hardware-threads= -> Number of hardware threads to use\n";
   oss << "\t--binary= -> Flat binary to load into memory\n";
   oss << "\t--pause -> Pause on entry\n";
+  oss << "\t--runningOutput -> Update the UI while the processor is running (Will slow down normal execution)\n";
   oss << "\t-h --help -> this help screen\n";
   return oss.str();
 }
 
-string getArgParameter(string arg) {
-  int pos = arg.find('=');
+string stringSplit(string arg, char delim) {
+  int pos = arg.find(delim);
   if (pos != std::string::npos) {
     return arg.substr(pos+1, arg.size() - 1);
   }
@@ -113,48 +124,67 @@ string getArgParameter(string arg) {
 
 Config parseArgs(int argc, char** argv) {
   Config config;
+
   for (uint i=1; i < argc; i++) {
     string arg(argv[i]);
     if (arg.find("base-isa") != std::string::npos) {
-      string param = getArgParameter(arg);
+      string param = stringSplit(arg, '=');
       if (param == "RV32I") {
         config.baseISA = Bases::RV32IBase;
         config.XLEN = 4;
       }
 
     } else if (arg.find("extensions") != std::string::npos) {
-      string param = getArgParameter(arg);
+      string param = stringSplit(arg, '=');
       // TODO: Needs adding when extensions added
 
     } else if (arg.find("memory-size") != std::string::npos) {
-      string param = getArgParameter(arg);
+      string param = stringSplit(arg, '=');
       if (param != "") {
-        ulong size = stol(param);
-        config.memorySize = size;
+        try {
+          ulong size = stol(param);
+          config.memorySize = size;
+        } catch (exception e ) {
+          cout << "Failed to set memory size" << endl;
+          config.memorySize = 0;
+          config.numberOfHardwareThreads = 0;
+          return config;
+        }
       }
 
     } else if (arg.find("hardware-threads") != std::string::npos) {
-      string param = getArgParameter(arg);
+      string param = stringSplit(arg, '=');
       if (param != "") {
-        ulong no = stol(param);
-        config.numberOfHardwareThreads = no;
+        try {
+          ulong no = stol(param);
+          config.numberOfHardwareThreads = no;
+        } catch (exception e ) {
+          cout << "Failed to set hardware threads count" << endl;
+          config.memorySize = 0;
+          config.numberOfHardwareThreads = 0;
+          return config;
+        }
       }
 
     } else if (arg.find("branch-predictor") != std::string::npos) {
-      string param = getArgParameter(arg);
+      string param = stringSplit(arg, '=');
       if (param == "Simple") {
         config.branchPredictor = BranchPredictors::Simple;
       }
     } else if (arg.find("binary") != std::string::npos) {
-      config.fileLocation = getArgParameter(arg);
+      config.fileLocation = stringSplit(arg, '=');
     } else if (arg.find("pause") != std::string::npos) {
       config.pauseOnEntry = true;
+    } else if (arg.find("runningOutput") != string::npos) {
+      runningOutput = true;
     } else if (arg.find("help") != std::string::npos || arg.find("h") != std::string::npos) {
       config.memorySize = 0;
       config.numberOfHardwareThreads = 0;
+      return config;
     } else {
       config.memorySize = 0;
       config.numberOfHardwareThreads = 0;
+      return config;
     }
   }
 
@@ -194,40 +224,89 @@ void step() {
   conditionVariable.notify_all();
 }
 
-void renderUI(EmulatorScreen* screen, Processor* processor, string output) {
-  vector<bytes> pipeline = processor->debug(GET_PIPELINE, 0);
-  vector<bytes> registers = processor->debug(GET_REGISTERS, 0);
-  bytes memory = processor->getMemoryRegion(0, 128);
-  screen->render(pipeline, registers, memory, output, 0);
+void renderUI(EmulatorScreen* screen, Processor* processor, string output, bool stopRenderThread) {
+  vector<bytes> pipeline(0);
+  vector<bytes> registers(0);
+  bytes memory(0);
+  try {
+    pipeline = processor->debug(GET_PIPELINE, hartID);
+    registers = processor->debug(GET_REGISTERS, hartID);
+  } catch (FailedDebugException e) {
+    hartID = 0;
+    pipeline = processor->debug(GET_PIPELINE, 0);
+    registers = processor->debug(GET_REGISTERS, 0);
+    extraOutput += e.getMessage() + "\n";
+  }
+
+  try {
+    memory = processor->getMemoryRegion(memStartAddr, memSize);
+  } catch (AddressOutOfMemoryException e) {
+    memStartAddr = 0;
+    memSize = 128;
+    memory = processor->getMemoryRegion(0, 128);
+    extraOutput += e.getMessage() + "\n";
+  }
+  screen->render(pipeline, registers, memory, extraOutput + output, memStartAddr, hartID, stopRenderThread);
+  extraOutput = "";
 }
 
-// Memory memory(3000);
-// RV32I base = RV32I();
-// memory.writeWord(0, bytes{0x93, 0x80, 0xa0, 0x00});
-// memory.writeWord(4, bytes{0x13, 0x01, 0x11, 0x00});
-// memory.writeWord(8, bytes{0xe3, 0x9e, 0x20, 0xfe});
-// memory.writeWord(12, bytes{0x33, 0x01, 0x00, 0x00});
-// memory.writeWord(16, bytes{239, 241, 31, 255});
-// memory.writeWord(20, bytes{0x33, 0, 0, 0});
-// memory.writeWord(24, bytes{0x33, 0, 0, 0});
-// memory.writeWord(28, bytes{0x33, 0, 0, 0});
-// memory.writeWord(32, bytes{0x33, 0, 0, 0});
-// memory.writeWord(36, bytes{0x33, 0, 0, 0});
-// memory.writeWord(40, bytes{0x33, 0, 0, 0});
-// Hart hart1(&memory, base, ExtensionSet(0), 4, bytes{0, 0, 0, 0}, false);
-// Hart hart2(&memory, base, ExtensionSet(0), 4, bytes{0, 0, 0, 0}, false);
-// try {
-//     for (int i=0; i <= 100; i++) {
-//         exception_ptr h1, h2;
-//         // hart1.tick();
-//         thread hartThread1 = thread(&Hart::tick, &hart1, h1);
-//         thread hartThread2 = thread(&Hart::tick, &hart2, h2);
-//         hartThread1.join();
-//         hartThread2.join();
-//     }
-// } catch (EmulatorException e) {
-//     cerr << e.getMessage();  
-// } catch (exception e) {
-//     cerr << e.what();
-// }
-// cout << "";
+void parseInputContent(string content) {
+  if (content.find("help") != string::npos) {
+    ostringstream oss;
+    oss << "Commands:" << endl;
+    oss << "memW <int> -> Set memory output width" << endl;
+    oss << "memA <int> -> Set memory start addr" << endl;
+    oss << "hID <int> -> Set select hart via ID" << endl;
+    oss << "hList -> List the hart IDs available" << endl;
+    extraOutput = oss.str();
+  } else if (content.find("memW") != string::npos) {
+    string param = stringSplit(content, ' ');
+    if (param != "") {
+      try {
+        memSize = stol(param);
+      } catch (exception e) {
+        extraOutput = "Failed to set memW\n";
+      }
+    } else {
+      extraOutput = "Faileds to set memW\n";
+    }
+  } else if (content.find("memA") != string::npos) {
+    string param = stringSplit(content, ' ');
+    if (param != "") {
+      try {
+        memStartAddr = stol(param);
+      } catch (exception e) {
+        extraOutput = "Failed to set memA\n";
+      }
+    } else {
+      extraOutput = "Failed to set memA\n";
+    }
+
+  } else if (content.find("hID") != string::npos) {
+    string param = stringSplit(content, ' ');
+    if (param != "") {
+      try {
+        hartID = stol(param);
+      } catch (exception e) {
+        extraOutput = "Failed to set hID\n";
+      }
+    } else {
+      extraOutput = "Failed to set hID\n";
+    }
+
+  } else if (content.find("hList") != string::npos) {
+    uint noHARTs = processor->getNumberOfHarts() - 1;
+    if (noHARTs > 0) {
+      extraOutput = "HartIDs: 0 -> " + to_string(noHARTs) + "\n";
+    } else {
+      extraOutput = "HartIDs: 0\n";
+    }
+
+  } else {
+    extraOutput = "Unknown command, 'help' for help\n";
+  }
+
+  if (isPaused) {
+    renderUI(screen, processor, "Paused\n", false);
+  }
+}

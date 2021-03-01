@@ -26,8 +26,8 @@ SimpleBranchPredictor::SimpleBranchPredictor(Memory* memory, ushort XLEN, Regist
 
   this->PCQueue.push(initialPC);
 
-  this->workloop = new thread (&SimpleBranchPredictor::predictionWorkloop, this);
-  this->workloop->detach();
+  this->workloop = thread (&SimpleBranchPredictor::predictionWorkloop, this);
+  // this->workloop->detach();
 }
 
 // SimpleBranchPredictor::SimpleBranchPredictor(SimpleBranchPredictor&& obj): workloop(move(obj.workloop)) {};
@@ -43,8 +43,8 @@ SimpleBranchPredictor::SimpleBranchPredictor(Memory* memory, ushort XLEN, Regist
 
 bytes SimpleBranchPredictor::getNextPC() {
   lock_guard<mutex> lck(lock);
-  // this->workloop->join();
-  delete(this->workloop);
+  if (this->workloop.joinable()) this->workloop.join();
+  // delete(this->workloop);
   // Check that no exceptions have been thrown by the thread
   if (this->workloopExceptionPtr) {
     rethrow_exception(this->workloopExceptionPtr);
@@ -66,13 +66,14 @@ bytes SimpleBranchPredictor::getNextPC() {
   // Add this to the queue of waiting for executionlock_guard
   this->executingQueue.push(PCQueue.front());
   // Start new thread to fetch new PC
-  this->workloop = new thread (&SimpleBranchPredictor::predictionWorkloop, this);
-  this->workloop->detach();
+  this->workloop = thread (&SimpleBranchPredictor::predictionWorkloop, this);
+  // this->workloop->detach();
   return nextPC;
 }
 
 bool SimpleBranchPredictor::checkPrediction(bytes pc, bytes address) {
   lock_guard<mutex> lck(lock);
+  if (this->workloop.joinable()) this->workloop.join();
   if (address.size() == 0) {
     throw BranchPredictorException("Provided address to check prediction is zero bytes in length");
   }
@@ -94,7 +95,7 @@ bool SimpleBranchPredictor::checkPrediction(bytes pc, bytes address) {
   // Fix the mistake here
   // Cancel any more prediction
   this->failedPrediction = true;
-  // this->workloop->join();
+  // this->workloop.join();
   // delete(this->workloop);
   while (!this->PCQueue.empty()) {
     this->PCQueue.pop();
@@ -102,13 +103,13 @@ bool SimpleBranchPredictor::checkPrediction(bytes pc, bytes address) {
   this->PCQueue.push(address);
   // Start fetching again
   this->failedPrediction = false;
-  this->workloop = new thread(&SimpleBranchPredictor::predictionWorkloop, this);
-  this->workloop->detach();
+  this->workloop = thread(&SimpleBranchPredictor::predictionWorkloop, this);
+  // this->workloop->detach();
   return false;
 }
 
 void SimpleBranchPredictor::predictionWorkloop() {
-  lock_guard<mutex> lck(lock);
+  // lock_guard<mutex> lck(lock);
   bool exception = false;
   try {
     // Check that the initial size of the queue isnt zero
@@ -198,10 +199,9 @@ bytes SimpleBranchPredictor::peak() {
 }
 
 SimpleBranchPredictor::~SimpleBranchPredictor() {
-  cout << "destructor" << "\n";
   this->isProcessorExceptionGenerated = true;
-  if (workloop->joinable()) {
-    this->workloop->join();
+  if (workloop.joinable()) {
+    this->workloop.join();
   }
-  delete(this->workloop);
+  // delete(this->workloop);
 }

@@ -27,4 +27,11 @@ inline wstring byteToHexWstring(byte input) {
   return wstring_convert<codecvt_utf8<wchar_t>>().from_bytes(oss.str());
 }
 
+inline string wstringToString(wstring input) {
+  using convert_typeX = std::codecvt_utf8<wchar_t>;
+    std::wstring_convert<convert_typeX, wchar_t> converterX;
+
+  return converterX.to_bytes(input);
+}
+
 #endif

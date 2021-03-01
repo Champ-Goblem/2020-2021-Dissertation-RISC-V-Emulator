@@ -140,7 +140,7 @@ vector<byte> Memory::getRegion(ulong start, ulong count) {
     throw AddressOutOfMemoryException(start, count, size, true);
   }
   bytes out;
-  for (uint i=start; i < count; i++) {
+  for (uint i=start; i < start+count; i++) {
     out.push_back(memory[i]);
   }
   return out;

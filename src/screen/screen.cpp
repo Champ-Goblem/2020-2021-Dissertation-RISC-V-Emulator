@@ -2,13 +2,14 @@
 #include "../include/bytemanip.h"
 #include "../include/screen/helpers.h"
 #include "../lib/headers/ftxui/component/input.hpp"
+#include "../lib/headers/ftxui/screen/box.hpp"
 
-EmulatorScreen::EmulatorScreen(ushort XLEN, vector<ButtonMetadata> buttonMetadata): buttonComponent(buttonMetadata) {
-  this->screeni = new ScreenInteractive(0, 0, ScreenInteractive::Dimension::TerminalOutput, false);
+EmulatorScreen::EmulatorScreen(ushort XLEN, vector<ButtonMetadata> buttonMetadata, function<void(string)> inputOnEnterCallback): interactiveComponent(buttonMetadata, inputOnEnterCallback) {
   this->XLEN = XLEN;
   this->width = (XLEN * 3 * 5) + (3 * 5) + 3;
   this->registerWidth = 13 + (XLEN * 2 * 6);
-  cout << registerWidth << endl;
+  this->screeni = new ScreenInteractive(width, 3, ScreenInteractive::Dimension::Fixed, false);
+
   for (uint i=0; i < PIPELINE_LOOKBACK_COUNT; i++) {
     previousPipelineStages.push_back(vector<bytes>(5));
   }
@@ -119,7 +120,8 @@ Element EmulatorScreen::renderMemory(vector<byte> memorySegment, ulong addr) {
     );
 
     Elements row;
-    for (uint c=0; c < outputWidth; c++) {
+    uint c = 0;
+    while (c+i < memorySegment.size() && c < outputWidth) {
       row.push_back(
         hbox(
           text(L" "),
@@ -127,6 +129,7 @@ Element EmulatorScreen::renderMemory(vector<byte> memorySegment, ulong addr) {
           text(L" ")
         )
       );
+      c++;
     }
     entries.push_back(
       vbox(
@@ -152,11 +155,11 @@ Element EmulatorScreen::renderMemory(vector<byte> memorySegment, ulong addr) {
   ) | border | color(Color::Grey93);
 }
 
-Element EmulatorScreen::renderSTDOut(string message) {
+Element EmulatorScreen::renderSTDOut(string message, uint selectedHartID) {
   Elements rows;
   Elements row;
   for (uint i=0; i < message.length(); i++) {
-    char& c = message.at(i);
+    char& c = message.at(i);  
     if (c == '\n') {
       rows.push_back(
         vbox(
@@ -191,18 +194,23 @@ Element EmulatorScreen::renderSTDOut(string message) {
   }
 
   return vbox(
+    hbox(
+      text(L" Hart ID: ") | color(Color::Grey82),
+      text(stringToWString(to_string(selectedHartID)) + L" ") | align_right | color(Color::Grey58)
+    ),
+    separator(),
     move(rows)
   ) | border;
 }
 
-void EmulatorScreen::render(vector<bytes> pipelineStage, vector<bytes> registerValues, vector<byte> memorySegment, string stdoutMessage, ulong startAddr) {
-  if (buttonController.joinable()) {
+void EmulatorScreen::render(vector<bytes> pipelineStage, vector<bytes> registerValues, vector<byte> memorySegment, string stdoutMessage, ulong startAddr, uint selectedHartID, bool stopRenderThread) {
+  if (interactiveController.joinable() && stopRenderThread) {
     screeni->ExitLoopClosure()();
-    buttonController.join();
+    interactiveController.join();
     resetPosition += screeni->ResetPosition();
     resetPosition += screeni->ResetPosition();
     resetPosition += screeni->ResetPosition();
-    screeni = new ScreenInteractive(0, 0, ScreenInteractive::Dimension::TerminalOutput, false);
+    screeni = new ScreenInteractive(width, 3, ScreenInteractive::Dimension::Fixed, false);
   }
 
   Element output = vbox(
@@ -217,7 +225,7 @@ void EmulatorScreen::render(vector<bytes> pipelineStage, vector<bytes> registerV
         move(renderRegisterFile(registerValues))
       ) | size (WIDTH, EQUAL, registerWidth),
       hbox(
-        move(renderSTDOut(stdoutMessage)) | size(WIDTH, EQUAL, width)
+        move(renderSTDOut(stdoutMessage, selectedHartID)) | size(WIDTH, EQUAL, width)
       ) 
     ) | size(WIDTH, EQUAL, width - 2)
   );
@@ -225,20 +233,22 @@ void EmulatorScreen::render(vector<bytes> pipelineStage, vector<bytes> registerV
   Screen screen = Screen::Create(Dimension::Full(), Dimension::Fit(output));
   Render(screen, output.get());
 
-  cout << resetPosition << screen.ToString() << endl << flush;
+  cout << resetPosition << screen.ToString() << endl << endl << flush;
   resetPosition = screen.ResetPosition();
-  buttonController = thread(&ScreenInteractive::Loop, screeni, &buttonComponent);
+  if (stopRenderThread) {
+    interactiveController = thread(&ScreenInteractive::Loop, screeni, &interactiveComponent);
+  }
 }
 
 EmulatorScreen::~EmulatorScreen() {
-  if (buttonController.joinable()) {
+  if (interactiveController.joinable()) {
     screeni->ExitLoopClosure()();
-    buttonController.join();
+    interactiveController.join();
   }
   delete(screeni);
 }
 
-ButtonComponent::ButtonComponent(vector<ButtonMetadata> buttonMetadata) {
+InteractiveComponent::InteractiveComponent(vector<ButtonMetadata> buttonMetadata, function<void(string)> inputOnEnterCallback) {
   Add(&container);
 
   for (uint i=0; i < buttonMetadata.size(); i++) {
@@ -248,9 +258,21 @@ ButtonComponent::ButtonComponent(vector<ButtonMetadata> buttonMetadata) {
     container.Add(b);
     buttons.push_back(move(b));
   }
+
+  inputBox = new Input();
+  inputBox->placeholder = L"enter command";
+  inputBox->on_enter = bind<>(&InteractiveComponent::handleInputOnEnter, this);
+  this->inputOnEnterCallback = inputOnEnterCallback;
+  container.Add(inputBox);
 }
 
-ButtonComponent::~ButtonComponent() {
+void InteractiveComponent::handleInputOnEnter() {
+  wstring content = inputBox->content;
+  inputOnEnterCallback(wstringToString(content));
+  inputBox->content = L"";
+}
+
+InteractiveComponent::~InteractiveComponent() {
   for (uint i=0; i < buttons.size(); i++) {
     delete(buttons[i]);
   }

@@ -43,6 +43,9 @@ class Processor {
   void step();
   vector<bytes> debug(DEBUG debug, uint hartID);
   bytes getMemoryRegion(ulong start, ulong count);
+  uint getNumberOfHarts() {
+    return config.numberOfHardwareThreads;
+  }
 
   private:
   void runStep();
