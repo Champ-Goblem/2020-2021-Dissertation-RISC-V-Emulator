@@ -32,7 +32,7 @@ class InteractiveComponent: public Component {
   public:
   InteractiveComponent(vector<ButtonMetadata> buttonMetadata, function<void(string)> inputOnEnterCallback);
   ~InteractiveComponent();
-
+  
   private:
   void handleInputOnEnter();
 };

@@ -12,7 +12,7 @@ class Container : public Component {
   static Container Horizontal();
   static Container Tab(int* selector);
 
-  ~Container() override = default;
+  ~Container() = default;
 
   // Component override.
   bool OnEvent(Event event) override;

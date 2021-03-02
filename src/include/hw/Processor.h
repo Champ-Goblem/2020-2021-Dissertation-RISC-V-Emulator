@@ -14,6 +14,7 @@ struct Config {
   ushort XLEN;
   bool pauseOnEntry;
   string fileLocation;
+  bytes haltAddr;
   Config() {
     extensionSet = vector<Extensions>(0);
     isRV32E = false;
@@ -22,6 +23,7 @@ struct Config {
     XLEN = 0;
     pauseOnEntry = false;
     fileLocation = "";
+    haltAddr = bytes(0);
   }
 };
 
@@ -41,6 +43,7 @@ class Processor {
   void pause();
   void resume();
   void step();
+  void flush();
   vector<bytes> debug(DEBUG debug, uint hartID);
   bytes getMemoryRegion(ulong start, ulong count);
   uint getNumberOfHarts() {

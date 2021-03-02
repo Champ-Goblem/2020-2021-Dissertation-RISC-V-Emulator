@@ -10,7 +10,8 @@
 #include "../include/instructions/sets/RV32I.h"
 #include "../include/units/SimpleBranchPredictor.h"
 
-Hart::Hart(Memory* memory, Bases baseISA, vector<Extensions> extensions, BranchPredictors branchPredictor, ushort XLEN, bytes initialPC, bool isRV32E): registerFile(XLEN, isRV32E), pipelineController(XLEN, &registerFile, isRV32E) {
+Hart::Hart(Memory* memory, Bases baseISA, vector<Extensions> extensions, BranchPredictors branchPredictor, ushort XLEN, bytes initialPC, bool isRV32E, bytes haltAddr): 
+  registerFile(XLEN, isRV32E), pipelineController(XLEN, &registerFile, isRV32E) {
   if (XLEN == 0) {
     throw new EmulatorException("Failed to create hart, XLEN is 0");
   }
@@ -18,6 +19,7 @@ Hart::Hart(Memory* memory, Bases baseISA, vector<Extensions> extensions, BranchP
   this->baseISA = getBase(baseISA);
   this->extensions = getExtensions(extensions);
   this->XLEN = XLEN;
+  this->haltAddr = haltAddr;
   vector<struct OpcodeSpace> opcodeSpace = this->baseISA.registerOpcodeSpace();
 
   for (ExtensionSet::iterator it = this->extensions.begin(); it != this->extensions.end(); ++it) {
@@ -60,7 +62,7 @@ void Hart::tick(exception_ptr& exception) {
   // fetch again otherwise that will poll branch predictor
   // causing it to become out of sync
   thread fetch, decode, execute, memoryAccess, writeback;
-  if (!stall) {
+  if (!stall && !shouldFlush) {
     fetch = thread(&Hart::fetch, this);
   }
   if (toDecode.size() > 0) {
@@ -76,7 +78,7 @@ void Hart::tick(exception_ptr& exception) {
     writeback = thread(&Hart::writeback, this, &toWB);
   }
 
-  if (!stall) {
+  if (!stall && !shouldFlush) {
     fetch.join();
   }
   if (toDecode.size() > 0) {
@@ -105,6 +107,27 @@ void Hart::tick(exception_ptr& exception) {
     pipelineController.enqueue(NOP(XLEN));
     toDecode = NOP_BYTES;
     decodePC = bytes(0);
+  } else if (shouldFlush) {
+    decodePC = bytes(0);
+    toDecode = NOP_BYTES;
+  }
+
+  if (!willHalt && haltAddr.size() > 0 && bytesGreaterOrequalToUnsigned(decodePC, haltAddr)) {
+    shouldFlush = true;
+    willHalt = true;
+    exception_ptr ep;
+    flush(ref(ep));
+    if (ep) {
+      exception = ep;
+    } else {
+      try {
+        throw HaltedProcessor();
+      } catch (...) {
+        exception = current_exception();
+      }
+    }
+
+    return;
   }
 
   stall = stallNextTick;
@@ -124,6 +147,21 @@ void Hart::tick(exception_ptr& exception) {
   if (wbException) {
     exception = wbException;
   }
+}
+
+void Hart::flush(exception_ptr & exception) {
+  shouldFlush = true;
+  for (ushort i=0; i < 4; i++) {
+    exception_ptr a;
+
+    tick(ref(a));
+
+    if (a) {
+      exception = a;
+      return;
+    }
+  }
+  shouldFlush = false;
 }
 
 void Hart::fetch() {

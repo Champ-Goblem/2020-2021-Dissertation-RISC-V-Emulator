@@ -9,7 +9,7 @@
       "type": "cppdbg",
       "request": "launch",
       "program": "${workspaceFolder}/obj/build/RISC-Emu",
-      "args": ["--base-isa=RV32I", "--memory-size=300", "--hardware-threads=1", "--branch-predictor=Simple", "--pause", "--binary=${workspaceFolder}/tests/binaries/add-loop-store"],
+      "args": ["--base-isa=RV32I", "--memory-size=300", "--hardware-threads=3", "--branch-predictor=Simple", "--pause", "--binary=${workspaceFolder}/tests/binaries/add-loop-store", "--halt=04"],
       "stopAtEntry": false,
       "cwd": "${workspaceFolder}",
       "environment": [],

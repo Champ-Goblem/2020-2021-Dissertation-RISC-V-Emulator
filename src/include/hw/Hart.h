@@ -28,17 +28,19 @@ class Hart {
   ExtensionSet extensions;
   ushort XLEN;
   vector<OpcodeSpace> opcodeSpace;
+  bytes haltAddr;
 
   bytes fromFetch, fetchPC, toDecode, decodePC;
   AbstractInstruction fromDecode, fromExecute, fromMem, toExecute, toMem, toWB;
   exception_ptr fetchException, decodeException, executeException, memException, wbException;
 
-  bool stall = false, stallNextTick = false, failedPrediction = false;
+  bool stall = false, stallNextTick = false, failedPrediction = false, shouldFlush = false, willHalt = false;
 
   public:
-  Hart(Memory* memory, Bases baseISA, vector<Extensions> extensions, BranchPredictors branchPredictor, ushort XLEN, bytes initialPC, bool isRV32E);
+  Hart(Memory* memory, Bases baseISA, vector<Extensions> extensions, BranchPredictors branchPredictor, ushort XLEN, bytes initialPC, bool isRV32E, bytes haltAddr);
   ~Hart();
   void tick(exception_ptr & exception);
+  void flush(exception_ptr& exception);
   vector<bytes> debug(DEBUG debug);
   
   private:

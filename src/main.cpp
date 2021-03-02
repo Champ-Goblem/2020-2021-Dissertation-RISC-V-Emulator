@@ -1,4 +1,5 @@
 #include "include/main.h"
+#include "include/bytemanip.h"
 #include "include/exceptions.h"
 #include "include/hw/Hart.h"
 #include "include/screen/screen.h"
@@ -8,10 +9,13 @@
 #include <condition_variable>
 #include <fstream>
 
+// TODO: Memory output size doesnt respect actual size of memory
+// TODO: Fix output looking horrible
+
 std::mutex localMutex;
 std::condition_variable conditionVariable;
 int memStartAddr = 0, memSize = 128, hartID = 0;
-bool stopProcessing, shouldContinue, runningOutput = false, isPaused = false;
+bool stopProcessing, shouldContinue, runningOutput = false, isPaused = false, updateUI = false, isHalted = false;
 string extraOutput = "";
 EmulatorScreen* screen;
 Processor* processor;
@@ -32,7 +36,7 @@ int main(int argc, char** argv) {
   ifstream file;
   file.open(config.fileLocation);
   if (!file) {
-    cout << "Failed to find binary, doesnt exist" << endl;
+    cout << "Failed to find binary, doesn't exist" << endl;
     cout << "\tPath: " << config.fileLocation << endl;
     return 1;
   }
@@ -40,11 +44,13 @@ int main(int argc, char** argv) {
   shouldContinue = !config.pauseOnEntry;
 
   processor = new Processor(config);
+
+  // Defines the button names and callback functions
   vector<ButtonMetadata> buttonMetadata = {
-    ButtonMetadata{
-      .text = "Start",
-      .fn = std::bind<>(&start)
-    },
+    // ButtonMetadata{
+    //   .text = "Start",
+    //   .fn = std::bind<>(&start)
+    // },
     ButtonMetadata{
       .text = "Stop",
       .fn = std::bind<>(&stop)
@@ -64,22 +70,31 @@ int main(int argc, char** argv) {
   };
 
   screen = new EmulatorScreen(config.XLEN, buttonMetadata, parseInputContent);
-  // ulong count;
-  // chrono::steady_clock sc;
-  // chrono::steady_clock::time_point start = std::chrono::steady_clock::now();
+
+  // Start the workloop for the program
   while (!stopProcessing) {
     if (!shouldContinue) {
       renderUI(screen, processor, "Paused");
       isPaused = true;
+      // In order to pause the main thread to stop it executing
+      // we use ConditionVariable::wait, this condition variable
+      // is signaled to start executing once a user clicks 
+      // resume
       unique_lock<mutex> lckGuard(localMutex);
       conditionVariable.wait(lckGuard);
-      isPaused = false;
-    } else if (runningOutput) {
       renderUI(screen, processor, "Running...");
+      isPaused = false;
+    } else if (runningOutput || updateUI) {
+      renderUI(screen, processor, "Running...");
+      if (updateUI) updateUI = false;
     }
 
     try {
       processor->step();
+    } catch (HaltedProcessor) {
+      renderUI(screen, processor, "Halted\nOnly 'Stop' and commands will work");
+      stopProcessing = true;
+      isHalted = true;
     } catch (EmulatorException e) {
       renderUI(screen, processor, e.getMessage() + "\nExiting...");
       stopProcessing = true;
@@ -87,14 +102,15 @@ int main(int argc, char** argv) {
       renderUI(screen, processor, string(e.what()) + "\nExiting...");
       stopProcessing = true;
     }
-    // count++;
-    // const double uptime = (std::chrono::steady_clock::now() - start).count();
-    // cout << uptime << "\n";
-    // cout << count / uptime << "Ops\n";
   }
 
+  if (isHalted) {
+    isPaused = true;
+    unique_lock<mutex> lckGuard(localMutex);
+    conditionVariable.wait(lckGuard);
+  }
+  
 
-  delete(screen);
   delete(processor);
 }
 
@@ -109,11 +125,13 @@ string printArgs() {
   oss << "\t--binary= -> Flat binary to load into memory\n";
   oss << "\t--pause -> Pause on entry\n";
   oss << "\t--runningOutput -> Update the UI while the processor is running (Will slow down normal execution)\n";
+  oss << "\t--halt=<hex> -> Specify halt address or detect it from the final address of the binary\n";
   oss << "\t-h --help -> this help screen\n";
   return oss.str();
 }
 
 string stringSplit(string arg, char delim) {
+  // Performs a simple split string on the first instance of the delimiter
   int pos = arg.find(delim);
   if (pos != std::string::npos) {
     return arg.substr(pos+1, arg.size() - 1);
@@ -123,11 +141,14 @@ string stringSplit(string arg, char delim) {
 }
 
 Config parseArgs(int argc, char** argv) {
+  // Parse commandline arguments and form out basic config
+  // struct to pass to the processor
   Config config;
 
   for (uint i=1; i < argc; i++) {
     string arg(argv[i]);
     if (arg.find("base-isa") != std::string::npos) {
+      // Set base isa
       string param = stringSplit(arg, '=');
       if (param == "RV32I") {
         config.baseISA = Bases::RV32IBase;
@@ -135,10 +156,12 @@ Config parseArgs(int argc, char** argv) {
       }
 
     } else if (arg.find("extensions") != std::string::npos) {
+      // Set extensions
       string param = stringSplit(arg, '=');
-      // TODO: Needs adding when extensions added
+      // TODO: Needs updated when extensions added
 
     } else if (arg.find("memory-size") != std::string::npos) {
+      // Set the memory size
       string param = stringSplit(arg, '=');
       if (param != "") {
         try {
@@ -153,6 +176,7 @@ Config parseArgs(int argc, char** argv) {
       }
 
     } else if (arg.find("hardware-threads") != std::string::npos) {
+      // Set the number of hardware threads
       string param = stringSplit(arg, '=');
       if (param != "") {
         try {
@@ -167,17 +191,52 @@ Config parseArgs(int argc, char** argv) {
       }
 
     } else if (arg.find("branch-predictor") != std::string::npos) {
+      // Set the branch predictor used
       string param = stringSplit(arg, '=');
       if (param == "Simple") {
         config.branchPredictor = BranchPredictors::Simple;
       }
     } else if (arg.find("binary") != std::string::npos) {
+      // Get the location of the binary to load into memory
       config.fileLocation = stringSplit(arg, '=');
+
     } else if (arg.find("pause") != std::string::npos) {
+      // Set if the emulator starts off paused
       config.pauseOnEntry = true;
+
     } else if (arg.find("runningOutput") != string::npos) {
+      // Set if output runs constantly when the simulator is running
       runningOutput = true;
+
+    } else if (arg.find("halt") != string::npos) {
+      // Set the halt related stuff
+      string param = stringSplit(arg, '=');
+      if (param != "") {
+        if (param.length() % 2 != 0) {
+          cout << "Halt address not hex encoded" << endl;
+          config.memorySize = 0;
+          config.numberOfHardwareThreads = 0;
+          return config;
+        }
+        if (param.length() > 8) {
+          cout << "Halt address longer than 8 bytes" << endl;
+          config.memorySize = 0;
+          config.numberOfHardwareThreads = 0;
+          return config;
+        }
+        bytes haltAddr(8);
+        for (uint i=0; i < param.length(); i+=2) {
+          stringstream oss;
+          uint out;
+          oss << hex << param.substr(i, i+2);
+          oss >> out;
+          haltAddr[floor((float)i/2)] = (byte)out;
+        }
+        config.haltAddr = haltAddr;
+      }
+
     } else if (arg.find("help") != std::string::npos || arg.find("h") != std::string::npos) {
+      // Return an invalid config so that commands output is displayed
       config.memorySize = 0;
       config.numberOfHardwareThreads = 0;
       return config;
@@ -191,40 +250,47 @@ Config parseArgs(int argc, char** argv) {
   return config;
 }
 
-void start() {
-  cout << "start" << endl;
-  shouldContinue = true;
-  localMutex.unlock();
-  conditionVariable.notify_all();
-}
+// void start() {
+//   // Start the simulator
+//   shouldContinue = true;
+//   localMutex.unlock();
+//   conditionVariable.notify_all();
+// }
 
 void stop() {
-  cout << "stop" << endl; 
+  // Stop the simulator
   stopProcessing = true;
   localMutex.unlock();
   conditionVariable.notify_all(); 
 }
 
 void pause() {
-  cout << "pause" << endl;
-  localMutex.unlock();
-  shouldContinue = false;
+  if (!isHalted) {
+    // Pause the simulator
+    localMutex.unlock();
+    shouldContinue = false;
+  }
 }
 
 void resume() {
-  cout << "resume" << endl;
-  shouldContinue = true;
-  localMutex.unlock();
-  conditionVariable.notify_all();
+  if (!isHalted) {
+    // Resume the simulator
+    shouldContinue = true;
+    localMutex.unlock();
+    conditionVariable.notify_all();
+  }
 }
 
 void step() {
-  cout << "step" << endl;
-  localMutex.unlock();
-  conditionVariable.notify_all();
+  if (!isHalted) {
+    // Tick the simulator for one cycle
+    localMutex.unlock();
+    conditionVariable.notify_all();
+  }
 }
 
 void renderUI(EmulatorScreen* screen, Processor* processor, string output, bool stopRenderThread) {
+  // Get all necessary debug information then call the render utility
   vector<bytes> pipeline(0);
   vector<bytes> registers(0);
   bytes memory(0);
@@ -258,8 +324,12 @@ void parseInputContent(string content) {
     oss << "memA <int> -> Set memory start addr" << endl;
     oss << "hID <int> -> Set select hart via ID" << endl;
     oss << "hList -> List the hart IDs available" << endl;
+    oss << "flush -> Flush the pipeline" << endl;
+    oss << "upd -> One time UI update" << endl;
     extraOutput = oss.str();
   } else if (content.find("memW") != string::npos) {
+    // Set the number of bytes that are output for
+    // the memory region
     string param = stringSplit(content, ' ');
     if (param != "") {
       try {
@@ -271,6 +341,7 @@ void parseInputContent(string content) {
       extraOutput = "Faileds to set memW\n";
     }
   } else if (content.find("memA") != string::npos) {
+    // Set the start address for the memory
     string param = stringSplit(content, ' ');
     if (param != "") {
       try {
@@ -283,6 +354,7 @@ void parseInputContent(string content) {
     }
 
   } else if (content.find("hID") != string::npos) {
+    // Set the hart via its ID
     string param = stringSplit(content, ' ');
     if (param != "") {
       try {
@@ -295,6 +367,7 @@ void parseInputContent(string content) {
     }
 
   } else if (content.find("hList") != string::npos) {
+    // List all the harts available to the process
     uint noHARTs = processor->getNumberOfHarts() - 1;
     if (noHARTs > 0) {
       extraOutput = "HartIDs: 0 -> " + to_string(noHARTs) + "\n";
@@ -302,11 +375,21 @@ void parseInputContent(string content) {
       extraOutput = "HartIDs: 0\n";
     }
 
+  } else if (content.find("flush") != string::npos) {
+    processor->flush();
+
+  } else if (content.find("upd") != string::npos) {
+    updateUI = true;
+
   } else {
     extraOutput = "Unknown command, 'help' for help\n";
   }
 
   if (isPaused) {
-    renderUI(screen, processor, "Paused\n", false);
+    // If processing is paused then we need to re-render the UI
+    // so that the output is update
+    renderUI(screen, processor, isHalted ? "\nHalted" : "\nPaused", false);
+  } else {
+    updateUI  = true;
   }
 }

@@ -169,7 +169,6 @@ void SimpleBranchPredictor::predictionWorkloop() {
         nextPC = addByteToBytes(lastPC, 4);
       }
 
-      // TODO: This needs changing to something that supports more than 8 bytes
       ulong pcVal = getBytesToULong(nextPC);
       if (pcVal >= this->memory->getSize()) {
         throw AddressOutOfMemoryException(pcVal, 4, this->memory->getSize(), true);

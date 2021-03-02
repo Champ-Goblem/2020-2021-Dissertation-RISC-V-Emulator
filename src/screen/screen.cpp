@@ -16,6 +16,7 @@ EmulatorScreen::EmulatorScreen(ushort XLEN, vector<ButtonMetadata> buttonMetadat
 };
 
 Element EmulatorScreen::renderPipeline(vector<bytes> stages) {
+  // Renders the pipeline stages of the processor
   Elements renderedStages;
 
   // for (uint i=0; i < PIPELINE_LOOKBACK_COUNT; i++) {
@@ -73,6 +74,7 @@ Element EmulatorScreen::renderPipeline(vector<bytes> stages) {
 };
 
 Element EmulatorScreen::renderRegisterFile(vector<bytes> registerValues) {
+  // Renders the register file output of the processor
   Elements rows;
 
   for (uint i=0; i < registerValues.size(); i+=2) {
@@ -105,6 +107,7 @@ Element EmulatorScreen::renderRegisterFile(vector<bytes> registerValues) {
 }
 
 Element EmulatorScreen::renderMemory(vector<byte> memorySegment, ulong addr) {
+  // Renders the memory output
   Elements entries;
   Elements addresses;
 
@@ -156,6 +159,7 @@ Element EmulatorScreen::renderMemory(vector<byte> memorySegment, ulong addr) {
 }
 
 Element EmulatorScreen::renderSTDOut(string message, uint selectedHartID) {
+  // Renders any messages that are useful to the operation of the simulator
   Elements rows;
   Elements row;
   for (uint i=0; i < message.length(); i++) {
@@ -204,6 +208,9 @@ Element EmulatorScreen::renderSTDOut(string message, uint selectedHartID) {
 }
 
 void EmulatorScreen::render(vector<bytes> pipelineStage, vector<bytes> registerValues, vector<byte> memorySegment, string stdoutMessage, ulong startAddr, uint selectedHartID, bool stopRenderThread) {
+  // Overall rendering function, builds one Element for all the static components
+  // Creates an interactive component for the buttons and input, starting its workloop
+  // on a new thread
   if (interactiveController.joinable() && stopRenderThread) {
     screeni->ExitLoopClosure()();
     interactiveController.join();
@@ -236,6 +243,7 @@ void EmulatorScreen::render(vector<bytes> pipelineStage, vector<bytes> registerV
   cout << resetPosition << screen.ToString() << endl << endl << flush;
   resetPosition = screen.ResetPosition();
   if (stopRenderThread) {
+    // Rendering loop for the buttons and input
     interactiveController = thread(&ScreenInteractive::Loop, screeni, &interactiveComponent);
   }
 }
@@ -245,6 +253,7 @@ EmulatorScreen::~EmulatorScreen() {
     screeni->ExitLoopClosure()();
     interactiveController.join();
   }
+  interactiveComponent.~InteractiveComponent();
   delete(screeni);
 }
 
@@ -267,6 +276,10 @@ InteractiveComponent::InteractiveComponent(vector<ButtonMetadata> buttonMetadata
 }
 
 void InteractiveComponent::handleInputOnEnter() {
+  // Callback for the on-enter of the input box
+  // It takes the current wstring in the box, converts
+  // it to a regular string, then forwards it to the correct
+  // handler
   wstring content = inputBox->content;
   inputOnEnterCallback(wstringToString(content));
   inputBox->content = L"";
@@ -276,5 +289,6 @@ InteractiveComponent::~InteractiveComponent() {
   for (uint i=0; i < buttons.size(); i++) {
     delete(buttons[i]);
   }
-  buttons.~vector();
+  buttons.clear();
+  container.~Container();
 }

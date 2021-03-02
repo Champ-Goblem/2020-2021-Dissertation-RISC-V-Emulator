@@ -55,6 +55,9 @@ bool PipelineHazardController::checkForStaleRegister(ushort reg) {
 }
 
 bytes PipelineHazardController::fetchRegisterValue(ushort reg) {
+  // Performs some rudimentary checks to ensure consistency
+  // Fetches the result stored in the structure executingQueue
+  // in order to pass it back to the decode stage
   lock_guard<mutex> lck(lock);
   if (reg >= (this->isRV32E ? 16 : 32)) {
     throw PipelineHazardException("Failed to fetch data for register, register invalid");
@@ -85,6 +88,8 @@ bytes PipelineHazardController::fetchRegisterValue(ushort reg) {
 }
 
 void PipelineHazardController::storeResultAfterExecution(bytes result) {
+  // Updates the result entry of a corresponding instruction entry in the pipeline
+  // used after an instruction executes in order to pass the value back
   lock_guard<mutex> lck(lock);
   if (result.size() == 0 || result.size() != XLEN) {
     throw PipelineHazardException("Failed to store result for RD after execution, result is wrong size");
@@ -98,6 +103,8 @@ void PipelineHazardController::storeResultAfterExecution(bytes result) {
 }
 
 void PipelineHazardController::storeResultAfterMemoryAccess(bytes result) {
+  // Updates the result entry of a corresponding instruction entry in the pipeline
+  // used after loads to pass the value back to any decode stages
   lock_guard<mutex> lck(lock);
   if (result.size() == 0 || result.size() != XLEN) {
     throw PipelineHazardException("Failed to store result for RD after execution, result is wrong size");

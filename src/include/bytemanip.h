@@ -249,8 +249,8 @@ static bool bytesLessThanBytesSigned(bytes val1, bytes val2) {
     throw EmulatorException("Failed to check less than signed, size of operand is zero\n");
   }
 
-  uint count1 = val1.size() - 1;
-  uint count2 = val2.size() - 1;
+  int count1 = val1.size() - 1;
+  int count2 = val2.size() - 1;
   while (count1 >= 0 && count2 >= 0) {
     char v1 = count1 >= count2 ? (char)val1[count1] : 0;
     char v2 = count2 >= count1 ? (char)val2[count2] : 0;
@@ -274,8 +274,8 @@ static bool bytesLessThanBytesUnsigned(bytes val1, bytes val2) {
     throw EmulatorException("Failed to check less than unsigned, size of operand is zero\n");
   }
 
-  uint count1 = val1.size() - 1;
-  uint count2 = val2.size() - 1;
+  int count1 = val1.size() - 1;
+  int count2 = val2.size() - 1;
   while (count1 >= 0 && count2 >= 0) {
     byte v1 = count1 >= count2 ? val1[count1] : 0;
     byte v2 = count2 >= count1 ? val2[count2] : 0;
@@ -299,8 +299,8 @@ static bool bytesGreaterOrequalToSigned(bytes val1, bytes val2) {
     throw EmulatorException("Failed to check ge signed, size of operand is zero\n");
   }
 
-  uint count1 = val1.size() - 1;
-  uint count2 = val2.size() - 1;
+  int count1 = val1.size() - 1;
+  int count2 = val2.size() - 1;
   while (count1 >= 0 && count2 >= 0) {
     char v1 = count1 >= count2 ? (char)val1[count1] : 0;
     char v2 = count2 >= count1 ? (char)val2[count2] : 0;
@@ -324,8 +324,8 @@ static bool bytesGreaterOrequalToUnsigned(bytes val1, bytes val2) {
     throw EmulatorException("Failed to check ge unsigned, size of operand is zero\n");
   }
 
-  uint count1 = val1.size() - 1;
-  uint count2 = val2.size() - 1;
+  int count1 = val1.size() - 1;
+  int count2 = val2.size() - 1;
   while (count1 >= 0 && count2 >= 0) {
     byte v1 = count1 >= count2 ? val1[count1] : 0;
     byte v2 = count2 >= count1 ? val2[count2] : 0;

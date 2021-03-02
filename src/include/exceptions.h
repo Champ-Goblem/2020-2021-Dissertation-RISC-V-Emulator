@@ -106,4 +106,9 @@ class FailedDebugException: public EmulatorException {
   }
 };
 
+class HaltedProcessor: public EmulatorException {
+  public:
+  HaltedProcessor(): EmulatorException() {};
+};
+
 #endif
