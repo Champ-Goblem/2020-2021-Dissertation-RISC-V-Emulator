@@ -302,10 +302,10 @@ void renderUI(EmulatorScreen* screen, Processor* processor, string output, bool 
     extraOutput += e.getMessage() + "\n";
   }
   screen->render(pipeline, registers, memory, extraOutput + output, memStartAddr, hartID, stopRenderThread);
-  extraOutput = "";
 }
 
 void parseInputContent(string content) {
+  extraOutput = "";
   if (content.find("help") != string::npos) {
     ostringstream oss;
     oss << "Commands:" << endl;

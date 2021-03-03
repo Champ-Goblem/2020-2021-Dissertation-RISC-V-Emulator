@@ -244,10 +244,17 @@ void EmulatorScreen::render(vector<bytes> pipelineStage, vector<bytes> registerV
     ) | size(WIDTH, EQUAL, width - 2)
   );
 
+  if (!stopRenderThread) {
+    resetPosition = resetPosition + "\r" + "\x1B[2K";
+    resetPosition = resetPosition + "\x1B[1A" + "\x1B[2K";
+    resetPosition = resetPosition + "\x1B[1A" + "\x1B[2K";
+    resetPosition = resetPosition + "\x1B[1A" + "\x1B[2K";
+  }
+
   Screen screen = Screen::Create(Dimension::Full(), Dimension::Fit(output));
   Render(screen, output.get());
 
-  cout << resetPosition << screen.ToString() << endl << endl << endl << flush;
+  cout << resetPosition << screen.ToString() << (!stopRenderThread ? "\n" : "\n\n\n") << flush;
   resetPosition = screen.ResetPosition();
   if (stopRenderThread) {
     // Rendering loop for the buttons and input
