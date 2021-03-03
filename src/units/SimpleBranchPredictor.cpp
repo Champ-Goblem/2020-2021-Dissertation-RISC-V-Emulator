@@ -141,12 +141,11 @@ void SimpleBranchPredictor::predictionWorkloop() {
         // then we need to check if the sign bit of the imm is negative,
         // if so take PC - imm else PC + 4
         // Uses B-Type
-        if (instruction[3] >> 7 == 1) {
-          BTypeInstruction b = BTypeInstruction(XLEN);
-          b.decode(instruction);
-          bytes imm = b.AbstractInstruction::getImm();
-          nextPC = bytesAddSignedToPC(lastPC, imm);
-        } else {
+        BTypeInstruction b = BTypeInstruction(XLEN);
+        b.decode(instruction);
+        bytes imm = b.AbstractInstruction::getImm();
+        nextPC = bytesAddSignedToPC(lastPC, imm);
+        if (instruction[3] >> 7 != 1 || nextPC[0] % 4 != 0) {
           nextPC = addByteToBytes(lastPC, 4);
         }
 

@@ -370,7 +370,7 @@ void parseInputContent(string content) {
     if (!shouldContinue) {
       processor->flush();
     } else {
-      extraOutput = "Cannot flush while running\n";
+      extraOutput = isHalted ? "Already flushed\n" : "Cannot flush while running\n";
     }
 
   } else if (content.find("upd") != string::npos) {

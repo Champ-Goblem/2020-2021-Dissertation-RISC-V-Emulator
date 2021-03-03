@@ -9,10 +9,12 @@ Processor::Processor(Config config): memory(config.memorySize) {
   if (this->config.haltAddr.size() > 0) {
     this->config.haltAddr.resize(config.XLEN);
   }
+
+  loadFile(config.fileLocation);
+  
   for (uint i=0; i < config.numberOfHardwareThreads; i++) {
     this->hardwareThreads[i] = new Hart(&this->memory, config.baseISA, config.extensionSet, config.branchPredictor, config.XLEN, bytes(config.XLEN), config.isRV32E, this->config.haltAddr);
   }
-  loadFile(config.fileLocation);
 }
 
 Processor::~Processor() {

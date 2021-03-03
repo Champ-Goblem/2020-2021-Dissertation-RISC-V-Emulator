@@ -108,18 +108,29 @@ void Hart::tick(exception_ptr& exception) {
     toDecode = NOP_BYTES;
     decodePC = bytes(0);
   } else if (shouldFlush) {
+    // Feed the pipeline with nops if we are flushing
     decodePC = bytes(0);
     toDecode = NOP_BYTES;
   }
 
+  // If halt has been set and current pc is greater than or equal to the haltAddr
   if (!willHalt && haltAddr.size() > 0 && bytesGreaterOrequalToUnsigned(decodePC, haltAddr)) {
+    // We have hit or exceeded the haltAddr
+    // We can flush the pipeline using the flush function
+    // if no exception is generated we can then send back
+    // HaltedProcessor exception to signal the processor was halted
     shouldFlush = true;
     willHalt = true;
+    // Nop the fetched instruction so its not executed
+    toDecode = NOP_BYTES;
+    decodePC = bytes(0);
     exception_ptr ep;
+    // Flush the current pipeline
     flush(ref(ep));
     if (ep) {
       exception = ep;
     } else {
+      // Throw HaltedProcessor so we can intercept it and pass it back to the caller
       try {
         throw HaltedProcessor();
       } catch (...) {
@@ -132,6 +143,7 @@ void Hart::tick(exception_ptr& exception) {
 
   stall = stallNextTick;
 
+  // Check that no exceptions were generated this cycle
   if (fetchException) {
     exception = fetchException;
   }
@@ -164,6 +176,7 @@ void Hart::flush(exception_ptr & exception) {
   shouldFlush = false;
 }
 
+// Perform the fetch
 void Hart::fetch() {
   try {
     this->fetchPC = this->branchPredictor->getNextPC();
@@ -173,6 +186,7 @@ void Hart::fetch() {
   }
 }
 
+// Perform the decode
 void Hart::decode(bytes instruction, bytes pc) {
   try {
     byte opcode = instruction[0] & 127;
@@ -187,6 +201,7 @@ void Hart::decode(bytes instruction, bytes pc) {
   }
 }
 
+// Perform the execute
 void Hart::execute(AbstractInstruction* instruction) {
   try {
     if (instruction->execute) {
@@ -200,6 +215,7 @@ void Hart::execute(AbstractInstruction* instruction) {
   }
 }
 
+// Perform the memoryAccess
 void Hart::memoryAccess(AbstractInstruction* instruction) {
   try {
     if (instruction->memoryAccess) {
@@ -211,6 +227,7 @@ void Hart::memoryAccess(AbstractInstruction* instruction) {
   }
 }
 
+// Perform the register writeback
 void Hart::writeback(AbstractInstruction* instruction) {
   try {
     if (instruction->registerWriteback) {
@@ -221,6 +238,7 @@ void Hart::writeback(AbstractInstruction* instruction) {
   }
 }
 
+// Convert enum to a class for the base architecture
 AbstractISA Hart::getBase(Bases base) {
   switch (base) {
     case Bases::RV32IBase:
@@ -228,6 +246,7 @@ AbstractISA Hart::getBase(Bases base) {
   }
 };
 
+// Convert an enum array to a set of classes for the extensions
 ExtensionSet Hart::getExtensions(vector<Extensions> extensions) {
   ExtensionSet exts = ExtensionSet(0);
 
@@ -237,6 +256,7 @@ ExtensionSet Hart::getExtensions(vector<Extensions> extensions) {
   return exts;
 };
 
+// Get the branch predictor class from an enum
 AbstractBranchPredictor* Hart::getBranchPredictor(BranchPredictors branchPredictor, Memory* memory, ushort XLEN, RegisterFile* registerFile, bytes initialPC) {
   switch (branchPredictor) {
     case BranchPredictors::Simple:
@@ -244,6 +264,7 @@ AbstractBranchPredictor* Hart::getBranchPredictor(BranchPredictors branchPredict
   }
 };
 
+// Debug states in the hart
 vector<bytes> Hart::debug(DEBUG debug) {
   switch (debug) {
     case GET_PIPELINE: {

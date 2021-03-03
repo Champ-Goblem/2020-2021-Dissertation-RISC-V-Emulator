@@ -55,7 +55,7 @@ class AbstractISA {
 
     vector<OpcodeSpace>::iterator itr = find_if(opcodeSpace.begin(), opcodeSpace.end(), findOpcode(opcode));
     if (itr == opcodeSpace.end()) {
-      throw UndefinedDecodeRoutineException(opcode, "Check ID stage in pipeline for PC");
+      throw UndefinedDecodeRoutineException(opcode, "Check ID in pipeline for PC");
     }
     return itr->decodeRoutine;
   }
