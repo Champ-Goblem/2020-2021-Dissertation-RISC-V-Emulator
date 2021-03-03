@@ -9,12 +9,9 @@
 #include <condition_variable>
 #include <fstream>
 
-// TODO: Memory output size doesnt respect actual size of memory
-// TODO: Fix output looking horrible
-
 std::mutex localMutex;
 std::condition_variable conditionVariable;
-int memStartAddr = 0, memSize = 128, hartID = 0;
+int memStartAddr = 0, memSize = 128, hartID = 0, defaultMemoryWidth = 0;
 bool stopProcessing, shouldContinue, runningOutput = false, isPaused = false, updateUI = false, isHalted = false;
 string extraOutput = "";
 EmulatorScreen* screen;
@@ -43,14 +40,13 @@ int main(int argc, char** argv) {
 
   shouldContinue = !config.pauseOnEntry;
 
+  defaultMemoryWidth = config.memorySize > 128 ? 128 : config.memorySize;
+  memSize = defaultMemoryWidth;
+
   processor = new Processor(config);
 
   // Defines the button names and callback functions
   vector<ButtonMetadata> buttonMetadata = {
-    // ButtonMetadata{
-    //   .text = "Start",
-    //   .fn = std::bind<>(&start)
-    // },
     ButtonMetadata{
       .text = "Stop",
       .fn = std::bind<>(&stop)
@@ -250,13 +246,6 @@ Config parseArgs(int argc, char** argv) {
   return config;
 }
 
-// void start() {
-//   // Start the simulator
-//   shouldContinue = true;
-//   localMutex.unlock();
-//   conditionVariable.notify_all();
-// }
-
 void stop() {
   // Stop the simulator
   stopProcessing = true;
@@ -308,8 +297,8 @@ void renderUI(EmulatorScreen* screen, Processor* processor, string output, bool 
     memory = processor->getMemoryRegion(memStartAddr, memSize);
   } catch (AddressOutOfMemoryException e) {
     memStartAddr = 0;
-    memSize = 128;
-    memory = processor->getMemoryRegion(0, 128);
+    memSize = defaultMemoryWidth;
+    memory = processor->getMemoryRegion(0, defaultMemoryWidth);
     extraOutput += e.getMessage() + "\n";
   }
   screen->render(pipeline, registers, memory, extraOutput + output, memStartAddr, hartID, stopRenderThread);
@@ -327,6 +316,7 @@ void parseInputContent(string content) {
     oss << "flush -> Flush the pipeline" << endl;
     oss << "upd -> One time UI update" << endl;
     extraOutput = oss.str();
+
   } else if (content.find("memW") != string::npos) {
     // Set the number of bytes that are output for
     // the memory region
@@ -340,6 +330,7 @@ void parseInputContent(string content) {
     } else {
       extraOutput = "Faileds to set memW\n";
     }
+
   } else if (content.find("memA") != string::npos) {
     // Set the start address for the memory
     string param = stringSplit(content, ' ');
@@ -376,7 +367,11 @@ void parseInputContent(string content) {
     }
 
   } else if (content.find("flush") != string::npos) {
-    processor->flush();
+    if (!shouldContinue) {
+      processor->flush();
+    } else {
+      extraOutput = "Cannot flush while running\n";
+    }
 
   } else if (content.find("upd") != string::npos) {
     updateUI = true;

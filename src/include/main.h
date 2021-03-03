@@ -7,7 +7,6 @@
 string printArgs();
 string stringSplit(string arg, char delim);
 Config parseArgs(int argc, char** argv);
-void start();
 void stop();
 void pause();
 void resume();

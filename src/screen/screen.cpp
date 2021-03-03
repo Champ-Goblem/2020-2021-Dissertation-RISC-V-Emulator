@@ -13,6 +13,13 @@ EmulatorScreen::EmulatorScreen(ushort XLEN, vector<ButtonMetadata> buttonMetadat
   for (uint i=0; i < PIPELINE_LOOKBACK_COUNT; i++) {
     previousPipelineStages.push_back(vector<bytes>(5));
   }
+
+  ostringstream oss;
+  oss << "\r" << "\x1B[2K";
+  for (uint i=0; i < 100; i++) {
+    oss << "\x1B[1A" << "\x1B[2K";
+  }
+  resetPosition = oss.str();
 };
 
 Element EmulatorScreen::renderPipeline(vector<bytes> stages) {
@@ -240,7 +247,7 @@ void EmulatorScreen::render(vector<bytes> pipelineStage, vector<bytes> registerV
   Screen screen = Screen::Create(Dimension::Full(), Dimension::Fit(output));
   Render(screen, output.get());
 
-  cout << resetPosition << screen.ToString() << endl << endl << flush;
+  cout << resetPosition << screen.ToString() << endl << endl << endl << flush;
   resetPosition = screen.ResetPosition();
   if (stopRenderThread) {
     // Rendering loop for the buttons and input
