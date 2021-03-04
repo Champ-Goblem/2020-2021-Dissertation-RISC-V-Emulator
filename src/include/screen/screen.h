@@ -52,12 +52,14 @@ class EmulatorScreen {
   public:
   EmulatorScreen(ushort XLEN, vector<ButtonMetadata> buttonMetadata, function<void(string)> inputOnEnterCallback);
   ~EmulatorScreen();
+  void render(vector<bytes> pipelineStage, vector<bytes> registerValues, vector<byte> memorySegment, string stdoutMessage, ulong startAddr,
+    uint selectedHartID, bool stopRenderThread=true);
+
+  private:
   Element renderPipeline(vector<bytes> stages);
   Element renderMemory(vector<byte> segment, ulong addr);
   Element renderSTDOut(string message, uint selectedHartID);
   Element renderRegisterFile(vector<bytes> registerValues);
-  void render(vector<bytes> pipelineStage, vector<bytes> registerValues, vector<byte> memorySegment, string stdoutMessage, ulong startAddr,
-    uint selectedHartID, bool stopRenderThread=true);
 };
 
 #endif
