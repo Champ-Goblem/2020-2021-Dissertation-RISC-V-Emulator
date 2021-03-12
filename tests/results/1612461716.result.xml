@@ -162,6 +162,7 @@
     <testcase classname="RV32ITests" name="testSRAI" line="913" />
     <testcase classname="RV32ITests" name="testADDPosPos" line="937" />
     <testcase classname="RV32ITests" name="testSUB" line="961" />
-    <testcase classname="RV32ITests" name="testSLL" line="985" />
+    <testcase classname="RV32ITests" name="testSLL" line="985">
         <failure></failure>
+    </testcase>
 </testsuite>
