@@ -90,7 +90,7 @@ testbuild: testclean $(TEST_TARGET)
 $(TEST_TARGET): $(SOURCES_WO_MAIN) $(TESTPARTS)
 	@echo Bulding runner
 	$(TESTBIN) --root --xunit-printer --xunit-file=$(TEST_XML_RESULTS) --have-eh -o $(TDIR)/runner.cpp
-	$(CXX) -g -o $@ -I$(TESTROOT) $(TDIR)/runner.cpp $(SOURCES_WO_MAIN) $(TESTPARTS) -pthread
+	$(CXX) -g -o $@ -I$(TESTROOT) $(TDIR)/runner.cpp $(SOURCES_WO_MAIN) $(TESTPARTS) -L$(LDIR) $(LFLAGS) -pthread
 
 define compiletestparts
 $(1)/%.part.cpp: $(1)/%.h
