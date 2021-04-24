@@ -37,6 +37,7 @@ int main(int argc, char** argv) {
     cout << "\tPath: " << config.fileLocation << endl;
     return 1;
   }
+  file.close();
 
   shouldContinue = !config.pauseOnEntry;
 
@@ -214,7 +215,7 @@ Config parseArgs(int argc, char** argv) {
           config.numberOfHardwareThreads = 0;
           return config;
         }
-        if (param.length() > 8) {
+        if (param.length() > 16) {
           cout << "Halt address longer than 8 bytes" << endl;
           config.memorySize = 0;
           config.numberOfHardwareThreads = 0;

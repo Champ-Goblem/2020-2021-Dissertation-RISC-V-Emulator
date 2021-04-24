@@ -15,7 +15,7 @@ class Memory;
 typedef AbstractInstruction (*DecodeRoutine)(bytes, PipelineHazardController*, bool*);
 typedef void (*ExecuteRoutine)(AbstractInstruction*, AbstractBranchPredictor*, ulong, PipelineHazardController*);
 typedef void (*WritebackRoutine)(AbstractInstruction*, RegisterFile*);
-typedef void (*MemoryAccessRoutine)(AbstractInstruction* instruction, Memory* memory, PipelineHazardController*);
+typedef void (*MemoryAccessRoutine)(AbstractInstruction*, Memory*, PipelineHazardController*);
 
 enum Bases {
   RV32IBase
