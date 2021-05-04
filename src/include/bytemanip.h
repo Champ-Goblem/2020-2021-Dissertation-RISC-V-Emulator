@@ -123,12 +123,12 @@ static bytes addByteToBytes(bytes val, byte operand) {
   bytes ret = bytes(val);
   byte firstByte = val[0];
   ret[0] = firstByte + operand;
-  ushort remainder = ((ushort)firstByte + operand) / 255;
+  ushort remainder = (ushort)(firstByte + (char)operand) >> 8;
   ushort currentByte = 1;
   while(remainder > 0 && currentByte < val.size()) {
     byte tmp = val[currentByte];
     ret[currentByte] = tmp + remainder;
-    remainder = ((ushort)tmp + remainder) / 255;
+    remainder = ((ushort)tmp + remainder) >> 8;
     currentByte++;
   }
 

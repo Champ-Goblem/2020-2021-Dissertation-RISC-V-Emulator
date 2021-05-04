@@ -8,6 +8,7 @@
 #include "../include/exceptions.h"
 #include "../include/instructions/RType.h"
 #include "../include/instructions/sets/RV32I.h"
+#include "../include/instructions/sets/extensions/T.h"
 #include "../include/units/SimpleBranchPredictor.h"
 
 Hart::Hart(Memory* memory, Bases baseISA, vector<Extensions> extensions, BranchPredictors branchPredictor, ushort XLEN, bytes initialPC, bool isRV32E, bytes haltAddr): 
@@ -16,23 +17,15 @@ Hart::Hart(Memory* memory, Bases baseISA, vector<Extensions> extensions, BranchP
     throw new EmulatorException("Failed to create hart, XLEN is 0");
   }
   this->memory = memory;
-  this->baseISA = getBase(baseISA);
-  this->extensions = getExtensions(extensions);
+  getBase(baseISA);
+  getExtensions(extensions);
   this->XLEN = XLEN;
   this->haltAddr = haltAddr;
-  vector<struct OpcodeSpace> opcodeSpace = this->baseISA.registerOpcodeSpace();
-
-  for (ExtensionSet::iterator it = this->extensions.begin(); it != this->extensions.end(); ++it) {
-    vector<struct OpcodeSpace> extensionSpace = it->registerOpcodeSpace();
-    opcodeSpace.insert(opcodeSpace.end(), extensionSpace.begin(), extensionSpace.end());
-    // TODO: Could do a check to see if an opcode is already defined
-  }
 
   if (opcodeSpace.size() == 0) {
     throw new EmulatorException("Failed to create hart, no instructions defined");
   }
 
-  this->opcodeSpace = opcodeSpace;
   this->branchPredictor = getBranchPredictor(branchPredictor, memory, XLEN, &registerFile, initialPC);
 }
 
@@ -242,21 +235,27 @@ void Hart::writeback(AbstractInstruction* instruction) {
 }
 
 // Convert enum to a class for the base architecture
-AbstractISA Hart::getBase(Bases base) {
+void Hart::getBase(Bases base) {
   switch (base) {
     case Bases::RV32IBase:
-      return RV32I();
+      RV32I rv32i;
+      vector<OpcodeSpace> ops = rv32i.registerOpcodeSpace();
+      this->opcodeSpace.insert(opcodeSpace.end(), ops.begin(), ops.end());
   }
 };
 
 // Convert an enum array to a set of classes for the extensions
-ExtensionSet Hart::getExtensions(vector<Extensions> extensions) {
-  ExtensionSet exts = ExtensionSet(0);
-
+void Hart::getExtensions(vector<Extensions> extensions) {
   for (uint i=0; i < extensions.size(); i++) {
-    switch (extensions[i]) {};
+    switch (extensions[i]) {
+      case T_EXTENSION: {
+        TExtension t;
+        vector<OpcodeSpace> ops = t.registerOpcodeSpace();
+        this->opcodeSpace.insert(opcodeSpace.end(), ops.begin(), ops.end());
+        break;
+      }
+    };
   }
-  return exts;
 };
 
 // Get the branch predictor class from an enum
