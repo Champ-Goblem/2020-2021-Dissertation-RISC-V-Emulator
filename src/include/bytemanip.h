@@ -628,7 +628,7 @@ static bytes bytesAddSignedToPC(bytes PC, bytes operand, bool throwForFlows=fals
   uint i = 0;
   while (i < pcSize) {
     result[i] = workingPC[i] + workingOperand[i] + remainder;
-    remainder = ((ushort)workingPC[i] + workingOperand[i] + remainder) / 255;
+    remainder = ((ushort)workingPC[i] + workingOperand[i] + remainder) >> 8;
     i++;
   }
 

@@ -1173,10 +1173,10 @@ class RV32ITests : public CxxTest::TestSuite
   void testSRAI(void) {
     // I-Type
     // imm: 00100
-    // 1100100 10000 101 01000 00100 0000100
-    // 1100 1001 0000 1010 1000 0010 0000 0100
+    // 1100100 10000 101 01000 00100 0000010
+    // 1100 1001 0000 1010 1000 0010 0000 0010
     DecodeRoutine decode = RV32I::findDecodeRoutineByOpcode(OpS, 19);
-    bytes instruction{147, 80, 65, 32};
+    bytes instruction{147, 80, 65, 64};
     bytes initialPC{4,0,0,0};
     Memory m(3000);
     m.writeWord(4, instruction);
@@ -1234,10 +1234,10 @@ class RV32ITests : public CxxTest::TestSuite
 
   void testSUB(void) {
     // R-Type
-    // 1100110 10000 000 01000 11000 0000100
-    // 1100 1101 0000 0000 1000 1100 0000 0100
+    // 1100110 10000 000 01000 11000 0000010
+    // 1100 1101 0000 0000 1000 1100 0000 0010
     DecodeRoutine decode = RV32I::findDecodeRoutineByOpcode(OpS, 51);
-    bytes instruction{179, 0, 49, 32};
+    bytes instruction{179, 0, 49, 64};
     bytes initialPC{4,0,0,0};
     Memory m(3000);
     m.writeWord(4, instruction);
@@ -1420,10 +1420,10 @@ class RV32ITests : public CxxTest::TestSuite
 
   void testSRA(void) {
     // R-Type
-    // 1100110 10000 101 01000 11000 0000100
-    // 1100 1101 0000 1010 1000 1100 0000 0100
+    // 1100110 10000 101 01000 11000 0000010
+    // 1100 1101 0000 1010 1000 1100 0000 0010
     DecodeRoutine decode = RV32I::findDecodeRoutineByOpcode(OpS, 51);
-    bytes instruction{179, 80, 49, 32};
+    bytes instruction{179, 80, 49, 64};
     bytes initialPC{4,0,0,0};
     Memory m(3000);
     m.writeWord(4, instruction);

@@ -149,15 +149,16 @@ void SimpleBranchPredictor::predictionWorkloop() {
           nextPC = addByteToBytes(lastPC, 4);
         }
 
-      } else if (opcode == 103) {
+      } /* else if (opcode == 103) {
         // Opcode = JALR
         // Uses I-Type
+        // TODO: Slight issue, we need to know if rs1 depends on another rd
         ITypeInstruction i = ITypeInstruction(XLEN);
         i.decode(instruction);
         bytes imm = i.AbstractInstruction::getImm();
         bytes rs1Val = this->registerFile->get((ushort)i.getRS1());
         nextPC = bytesAddSignedToPC(rs1Val, imm);
-      } else if (opcode == 111) {
+      } */ else if (opcode == 111) {
         // opcode - JAL
         // Uses J-Type
         JTypeInstruction j = JTypeInstruction(XLEN);
@@ -194,6 +195,15 @@ void SimpleBranchPredictor::predictionWorkloop() {
 bytes SimpleBranchPredictor::peak() {
   lock_guard<mutex> lck(lock);
   return this->PCQueue.front();
+}
+
+void SimpleBranchPredictor::handleFlush() {
+  if (this->executingQueue.size() > 2) {
+    this->executingQueue.pop();
+  }
+  // Keep the executingQueue in line with what it should be
+  // by using the same PC as a nop uses
+  this->executingQueue.push(bytes(0));
 }
 
 SimpleBranchPredictor::~SimpleBranchPredictor() {

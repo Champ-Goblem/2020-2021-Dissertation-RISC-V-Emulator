@@ -109,8 +109,8 @@ void Hart::tick(exception_ptr& exception) {
     decodePC = bytes(0);
   } else if (shouldFlush) {
     // Feed the pipeline with nops if we are flushing
-    decodePC = bytes(0);
     toDecode = NOP_BYTES;
+    decodePC = bytes(0);
   }
 
   // If halt has been set and current pc is greater than or equal to the haltAddr
@@ -166,6 +166,9 @@ void Hart::flush(exception_ptr & exception) {
   for (ushort i=0; i < 4; i++) {
     exception_ptr a;
 
+    // Call handle flush on each loop so the predictor
+    // can update its internal stores correctly
+    this->branchPredictor->handleFlush();
     tick(ref(a));
 
     if (a) {

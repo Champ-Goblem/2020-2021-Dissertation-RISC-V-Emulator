@@ -14,7 +14,7 @@ AbstractInstruction RV32I::decodeLUI(bytes instruction, PipelineHazardController
   // U-Type
   UTypeInstruction ins = UTypeInstruction(pipelineController->getXLEN());
   ins.decode(instruction);
-  ins.execute = nullptr;
+  ins.execute = &executeLUI;
   ins.memoryAccess = nullptr;
   ins.registerWriteback = &writebackLUI;
   pipelineController->enqueue(ins);
@@ -181,6 +181,10 @@ AbstractInstruction RV32I::decodeERoutines(bytes instruction, PipelineHazardCont
   ins.registerWriteback = nullptr;
   pipelineController->enqueue(ins);
   return ins;
+}
+
+void RV32I::executeLUI(AbstractInstruction* instruction, AbstractBranchPredictor* branchPredictor, ulong memorySize, PipelineHazardController* pipelineController) {
+  pipelineController->storeResultAfterExecution(instruction->getImm());
 }
 
 void RV32I::executeBranch(AbstractInstruction* instruction, AbstractBranchPredictor* branchPredictor, ulong memorySize, PipelineHazardController* pipelineController) {
@@ -395,7 +399,7 @@ void RV32I::executeBitopsImmediate(AbstractInstruction* instruction, AbstractBra
       if (getContrainedBits(instruction->getImm(), 5, 11)[0] == 0) {
         // SRLI
         instruction->setResult(bytesLogicalRightShift(instruction->getRs1Val(), instruction->getImm()[0] & 31));
-      } else if (getContrainedBits(instruction->getImm(), 5, 11)[0] == 16) {
+      } else if (getContrainedBits(instruction->getImm(), 5, 11)[0] == 32) {
         // SRAI
         instruction->setResult(bytesArithmeticRightShift(instruction->getRs1Val(), instruction->getImm()[0] & 31));
       } else {
@@ -422,7 +426,7 @@ void RV32I::executeBitops(AbstractInstruction* instruction, AbstractBranchPredic
       if (instruction->getFunc7() == 0) {
         // ADD
         instruction->setResult(bytesAdditionUnsigned(instruction->getRs1Val(), instruction->getRs2Val()));
-      } else if (instruction->getFunc7() == 16) {
+      } else if (instruction->getFunc7() == 32) {
         // SUB
         instruction->setResult(bytesSubtractionUnsigned(instruction->getRs1Val(), instruction->getRs2Val()));
       } else {
@@ -458,7 +462,7 @@ void RV32I::executeBitops(AbstractInstruction* instruction, AbstractBranchPredic
     {
       if (instruction->getFunc7() == 0) {
         instruction->setResult(bytesLogicalRightShift(instruction->getRs1Val(), instruction->getRs2Val()));
-      } else if (instruction->getFunc7() == 16) {
+      } else if (instruction->getFunc7() == 32) {
         instruction->setResult(bytesArithmeticRightShift(instruction->getRs1Val(), instruction->getRs2Val()));
       } else {
         throw UndefinedInstructionException(instruction, "Failed to decode, func7 undefined");

@@ -1,5 +1,6 @@
 #include "include/main.h"
 #include "include/bytemanip.h"
+#include "include/emustd.h"
 #include "include/exceptions.h"
 #include "include/hw/Hart.h"
 #include "include/screen/screen.h"
@@ -369,7 +370,11 @@ void parseInputContent(string content) {
 
   } else if (content.find("flush") != string::npos) {
     if (!shouldContinue) {
-      processor->flush();
+      try {
+        processor->flush();
+      } catch (EmulatorException e) {
+        extraOutput = e.getMessage();
+      }
     } else {
       extraOutput = isHalted ? "Already flushed\n" : "Cannot flush while running\n";
     }

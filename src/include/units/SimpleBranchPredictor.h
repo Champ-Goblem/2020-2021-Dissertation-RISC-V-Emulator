@@ -25,6 +25,7 @@ class SimpleBranchPredictor: public AbstractBranchPredictor {
   bytes getNextPC();
   bool checkPrediction(bytes pc, bytes address);
   bytes peak();
+  void handleFlush();
   ~SimpleBranchPredictor();
 
   private:

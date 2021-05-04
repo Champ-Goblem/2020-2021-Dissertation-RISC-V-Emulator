@@ -30,6 +30,7 @@ class AbstractBranchPredictor: public AbstractUnit {
   virtual bytes getNextPC(){ return bytes(0); };
   virtual bool checkPrediction(bytes pc, bytes addr){ return false; };
   virtual bytes peak() { return bytes(0); };
+  virtual void handleFlush() {};
 };
 
 #endif

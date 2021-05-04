@@ -9,7 +9,7 @@
       "type": "cppdbg",
       "request": "launch",
       "program": "${workspaceFolder}/obj/build/RISC-Emu",
-      "args": ["--base-isa=RV32I", "--memory-size=300", "--hardware-threads=1", "--branch-predictor=Simple", "--pause", "--binary=/home/administrator/University/Computer Science/Dissertation/RISC-V-Assembler/test"],
+      "args": ["--base-isa=RV32I", "--memory-size=1000", "--hardware-threads=1", "--branch-predictor=Simple", "--pause", "--binary=../e2e-tests/all-instructions-test/executable"],
       "stopAtEntry": false,
       "cwd": "${workspaceFolder}",
       "environment": [],
