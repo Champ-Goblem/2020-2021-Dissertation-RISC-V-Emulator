@@ -3,6 +3,7 @@
 #include "include/emustd.h"
 #include "include/exceptions.h"
 #include "include/hw/Hart.h"
+#include "include/instructions/sets/AbstractISA.h"
 #include "include/screen/screen.h"
 #include "include/hw/Processor.h"
 #include "include/instructions/sets/RV32I.h"
@@ -116,7 +117,7 @@ string printArgs() {
   ostringstream oss;
   oss << "RISC-V Emulator Arguments:\n";
   oss << "\t--base-isa= -> Select the base ISA to choose from, selection: [RV32I]\n";
-  oss << "\t--extensions= -> The set of extensions to use, selection: []\n";
+  oss << "\t--extensions= -> The set of extensions to use, selection: [T]\n";
   oss << "\t--branch-predictor= -> The choice of branch predictor to use: [Simple]\n";
   oss << "\t--memory-size= -> Number of bytes to allocate for memory\n";
   oss << "\t--hardware-threads= -> Number of hardware threads to use\n";
@@ -156,8 +157,9 @@ Config parseArgs(int argc, char** argv) {
     } else if (arg.find("extensions") != std::string::npos) {
       // Set extensions
       string param = stringSplit(arg, '=');
-      // TODO: Needs updated when extensions added
-
+      if (param == "T") {
+        config.extensionSet.push_back(T_EXTENSION);
+      }
     } else if (arg.find("memory-size") != std::string::npos) {
       // Set the memory size
       string param = stringSplit(arg, '=');

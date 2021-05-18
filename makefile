@@ -21,7 +21,7 @@ vpath %.c $(SDIR)
 vpath %.o $(ODIR)
 vpath %.h $(IDIR)
 
-DIRS=hw instructions units instructions/sets screen
+DIRS=hw instructions units instructions/sets screen instructions/sets/extensions
 SOURCEDIRS=$(SDIR) $(foreach dir, $(DIRS), $(addprefix $(SDIR)/, $(dir)))
 TARGETDIRS=$(ODIR) $(foreach dir, $(DIRS), $(addprefix $(ODIR)/, $(dir)))
 DEPSDIRS=$(IDIR) $(foreach dir, $(DIRS), $(addprefix $(IDIR)/, $(dir)))

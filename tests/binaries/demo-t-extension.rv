@@ -1,0 +1,9 @@
+.entry start
+
+.section text
+.label start
+addi x1, x0, 10
+inc x2, x1
+dec x3, x1
+.label inf
+jal x0, inf

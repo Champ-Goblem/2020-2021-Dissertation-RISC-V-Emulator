@@ -21,7 +21,9 @@ enum Bases {
   RV32IBase
 };
 
-enum Extensions {};
+enum Extensions {
+  T_EXTENSION
+};
 
 struct OpcodeSpace {
   ushort opcode;

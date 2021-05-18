@@ -24,8 +24,8 @@ class Hart {
   Memory* memory;
   RegisterFile registerFile;
   PipelineHazardController pipelineController;
-  AbstractISA baseISA;
-  ExtensionSet extensions;
+  // AbstractISA baseISA;
+  // ExtensionSet extensions;
   ushort XLEN;
   vector<OpcodeSpace> opcodeSpace;
   bytes haltAddr;
@@ -49,8 +49,8 @@ class Hart {
   void execute(AbstractInstruction* instruction);
   void memoryAccess(AbstractInstruction* instruction);
   void writeback(AbstractInstruction* instruction);
-  AbstractISA getBase(Bases base);
-  ExtensionSet getExtensions(vector<Extensions> extensions);
+  void getBase(Bases base);
+  void getExtensions(vector<Extensions> extensions);
   AbstractBranchPredictor* getBranchPredictor(BranchPredictors branchPredictor, Memory* memory, ushort XLEN, RegisterFile* registerFile, bytes initialPC);
 };
 
