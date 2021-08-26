@@ -2,6 +2,34 @@
 
 A C++ RISC-V RV32I instruction set simulator with support for extensions and multiple instruction set architectures (ISA)s. This was originally designed and built for a dissertation thesis in simulating RISC-V instruction sets to assist further work in developing a cryptographic hardware extension for RISC-V CPUs.
 
+## Building
+
+***Requires GCC version 10***
+
+**A dockerfile is the recommended way to build this project.**
+
+A [makefile](./makefile) is provided that aids with building the code and also running individual and end-to-end tests. Running `make` should be sufficient to create the build directories and output the final binary to `obj/build`. To remove all build objet files, the main binary and all files resulting from building tests run `make clean`. 
+
+The full set of tests can be built and run automatically with `make testall` and built with `make testbuild`. The test directory can also be cleaned with `make testclean`.
+
+## Running
+
+As a minimum the program requires a flat binary to run, which can be specified by the `--binary` argument. There are also a number of arguments to choose from:
+
+Arg | Description | Available Choices
+--- | --- | ---
+--base-isa= | The base architecture to use for parsing instructions | RV32I
+--extensions= | A set of extensions to choose from | T
+--memory-size= | The maximum size of memory to allocate for the emulator |
+--hardware-threads= | The number of HARTs to emulate within the processor |
+--binary= | Path to a pre-built flat binary to execute |
+--pause | Whether or not to pause the program on startup |
+--runningOutput | Sets if the UI will update live during the running of the processor (will slow execution dramatically) |
+--halt= | An address to halt the processor at if reached |
+-h --help | Show the help dialog |
+
+Some example programs can be found in the directory [tests/binaries](tests/binaries).
+
 ## The General Design
 
 ### HART
